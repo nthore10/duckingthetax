@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minnesota Timberwolves - Salary Cap Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-base:#1E2228;--bg-raised:#252A31;--bg-panel:#22272E;
+  --bg-row-hover:#262C33;--bg-input:#2A3038;
+  --accent:#00D89A;--text-bright:#F2F4F7;--text-primary:#C8D1DC;
+  --text-muted:#9AA6B4;--text-dim:#7A8694;--text-faint:#5E6873;
+  --border:#2E343D;--border-soft:#282E35;--border-input:#353C46;
+  --bar-hot:#FF6B85;--bar-warm:#FFB454;--bar-cool:#00D89A;
+  --positive:#00D89A;--negative:#FF6B85;
+  --font-display:'Space Grotesk',sans-serif;--font-mono:'Space Mono',monospace;
+  --team-primary:#0C2340;--team-text:#78BE20;
+}
+html{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-mono);}
+body{min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+.tm-header{padding:20px 24px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);background:var(--bg-raised);}
+.team-logo-header{width:50px;height:50px;object-fit:contain;flex-shrink:0;}
+.tm-title{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--text-bright);letter-spacing:-0.3px;}
+.tm-title-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;}
+.container{max-width:1300px;margin:0 auto;padding:24px;}
+.legend{display:flex;flex-wrap:wrap;gap:16px;padding:10px 16px;background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;font-family:var(--font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-po{background:#00B050}.dot-to{background:#F79646}.dot-ng{background:#C00000}
+.dot-rfa{background:#7030A0}.dot-ufa{background:#0070C0}
+.ln-full{color:#00B050}.ln-early{color:#F79646}.ln-non{color:#C00000}
+.cap-wrap{overflow-x:auto;margin-top:16px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+table.cap{width:100%;border-collapse:collapse;background:var(--bg-base);font-size:12px;}
+table.cap thead tr{background:var(--bg-raised);}
+table.cap th{padding:10px 10px;text-align:center;font-family:var(--font-mono);font-weight:400;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);white-space:nowrap;}
+table.cap th.l{text-align:left;min-width:160px;padding-left:16px;}
+th.yr{background:var(--team-primary) !important;color:var(--team-text) !important;font-family:var(--font-display) !important;font-weight:600 !important;font-size:10px !important;letter-spacing:0.5px !important;}
+table.cap td{padding:9px 10px;border:none;text-align:right;white-space:nowrap;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);border-bottom:1px solid var(--border-soft);}
+table.cap tbody tr:hover{background:var(--bg-row-hover);}
+table.cap tbody tr:last-child td{border-bottom:none;}
+td.pos{text-align:center;font-family:var(--font-mono);font-weight:700;font-size:10px;color:var(--text-dim);letter-spacing:1px;width:36px;}
+td.nm{text-align:left;padding-left:16px;font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text-bright);}
+td.sl{text-align:left;padding-left:16px;}
+td.pct{color:var(--text-dim);font-size:10px;}
+tr.sep td{height:3px;padding:0;background:var(--border);border:none;}
+tr.sum{background:var(--bg-raised) !important;}
+tr.sum td{font-family:var(--font-display);font-weight:600;font-size:12px;color:var(--text-bright);border-bottom:1px solid var(--border-soft);}
+tr.sum td.sl{font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
+.po{color:#00B050 !important;font-weight:600}.to{color:#F79646 !important;font-weight:600}
+.ng{color:#C00000 !important;font-weight:600}.rfa{color:#7030A0 !important;font-weight:600}
+.ufa{color:#0070C0 !important;font-weight:600}.nv{color:var(--negative) !important;}.pv{color:var(--positive) !important;font-weight:600}
+.sec-hdr{background:var(--team-primary);color:var(--team-text);padding:9px 16px;font-family:var(--font-display);font-weight:700;font-size:13px;margin-top:20px;border-radius:6px 6px 0 0;letter-spacing:0.3px;}
+.side-tables{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+.side-tbl{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.side-tbl h3{padding:9px 14px;font-family:var(--font-display);font-weight:700;font-size:12px;background:var(--team-primary);color:var(--team-text);letter-spacing:0.3px;}
+.side-tbl table{width:100%;border-collapse:collapse;font-size:11px;}
+.side-tbl td,.side-tbl th{padding:7px 12px;border-bottom:1px solid var(--border-soft);font-family:var(--font-mono);color:var(--text-primary);}
+.side-tbl tr:last-child td{border-bottom:none;}
+.side-tbl th{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);font-weight:400;background:var(--bg-panel);text-align:left;}
+.side-tbl td:first-child{color:var(--text-bright);font-weight:600;}
+.side-tbl td:last-child{text-align:right;color:var(--text-muted);}
+.hard-cap-note{padding:9px 12px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);background:var(--bg-panel);border-top:1px solid var(--border);}
+.loading{text-align:center;padding:60px 24px;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error{text-align:center;padding:40px;font-size:13px;color:var(--negative);font-family:var(--font-mono);}
+@media(max-width:768px){.side-tables{grid-template-columns:1fr}table.cap{font-size:10px}table.cap th,table.cap td{padding:5px 6px}.tm-header{flex-direction:column;align-items:flex-start;gap:12px;}}
+</style>
+</head>
+<body>
+<div class="tm-header">
+  <img class="team-logo-header" src="https://cdn.nba.com/logos/nba/1610612750/primary/L/logo.svg" alt="Minnesota Timberwolves">
+  <div>
+    <div class="tm-title">Minnesota Timberwolves &mdash; Cap Sheet</div>
+    <div class="tm-title-sub">// 2025&ndash;26 Salary Cap Sheet</div>
+  </div>
+</div>
+<div class="container">
+  <div id="app"><div class="loading"><div class="spinner"></div>Fetching cap data...</div></div>
+</div>
+<script>
+const TEAM_CONFIG={csvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub?gid=1495548473&single=true&output=csv',primaryColor:'#0C2340',textColor:'#78BE20',nbaId:'1610612750'};
+function parseCSV(text){const rows=[];let current='';for(let line of text.split('\n')){current+=(current?'\n':'')+line;if((current.match(/"/g)||[]).length%2===0){rows.push(parseCSVRow(current));current='';}}if(current)rows.push(parseCSVRow(current));return rows;}
+function parseCSVRow(line){const result=[];let current='';let inQ=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(inQ&&line[i+1]==='"'){current+='"';i++;}else inQ=!inQ;}else if(ch===','&&!inQ){result.push(current);current='';}else if(ch!=='\r')current+=ch;}result.push(current);return result;}
+function clean(val){return(val||'').replace(/\u00a0/g,' ').trim();}
+function col(row,idx){return clean(row&&row.length>idx?row[idx]:'');}
+function fmtMoney(val){const v=clean(val);if(!v||v==='0'||v==='$0')return'';return v;}
+function isNegative(val){const v=clean(val);return v.includes('(')||(v.startsWith('-')&&v.includes('$'));}
+function getStatusClass(status){const s=clean(status).toLowerCase();if(!s||s.startsWith('$')||s.includes('%')||s==='0'||s==='-'||s==='guaranteed')return'';if(s==='team option')return'to';if(s==='player option')return'po';if(s==='non-guaranteed'||s==='non-guarantee')return'ng';if(s==='unrestricted')return'ufa';if(s==='restricted')return'rfa';return'';}
+function getNameClass(faType){const s=clean(faType).toLowerCase();if(s.includes('full bird')||s.includes('full-bird'))return'po';if(s.includes('non bird')||s.includes('non-bird'))return'ng';if(s.includes('early bird')||s.includes('early-bird'))return'to';return'';}
+function buildPage(rows){
+  const teamName=col(rows[0],1)||'Minnesota Timberwolves';
+  document.title=teamName+' — Salary Cap Sheet';
+  const pc=TEAM_CONFIG.primaryColor,tc=TEAM_CONFIG.textColor;
+  const summaryLabels=['Total Salary','Cap Holds','Guaranteed Money','Dead Money','Total Cap','League Salary Cap','Current Cap Room','Projected Cap Room','Luxury Tax','Room Under Tax','First Apron','Room Under First Apron','Second Apron','Room Under Second Apron','Luxury Tax Payment'];
+  const playerRows=[],summaryRows=[];
+  for(let i=5;i<rows.length;i++){const r=rows[i];const label=col(r,2);if(summaryLabels.includes(label)){summaryRows.push({label,values:[0,1,2,3,4].map(n=>{return{sal:fmtMoney(r[3+n*2]),pct:col(r,4+n*2)};})});continue;}if(['Contract Incentives','Partial Guarantees','Dead Cap','Tax & Apron Only'].includes(col(r,1))||col(r,2)==='Trade Bonuses')break;const pos=col(r,1),name=label;const hasSalary=[3,5,7,9,11].some(c=>fmtMoney(r[c]));if(!pos&&!name&&!hasSalary)continue;playerRows.push({pos,name,faType:col(r,25),years:[0,1,2,3,4].map(n=>{return{sal:fmtMoney(r[3+n*2]),pct:col(r,4+n*2),status:col(r,16+n*2)};})});}
+  const firstRound=[],secondRound=[],twoWay=[],tradeExceptions=[],exceptions=[],cashInTrades=[],draftRights=[];
+  let hardCap='',rightSection='';
+  for(let i=2;i<rows.length;i++){const r=rows[i];const c13=col(r,13),c14=col(r,14);if(c13==='First Round:'){rightSection='first';continue;}if(c13==='Second Round:'){rightSection='second';continue;}if(c13==='Exceptions Available'){rightSection='exceptions';continue;}if(c13==='Hard Cap?'){hardCap=c14;rightSection='';continue;}if(c13==='Two Way Deals'){rightSection='twoway';continue;}if(c13==='Trade Exceptions'){rightSection='te';continue;}if(c13==='Date Expires'){continue;}if(c13==='Cash In Trades'){rightSection='cash';continue;}if(c13==='Draft Rights'){rightSection='draftrights';continue;}if(['RMLE','NTMLE','TMLE','BAE'].includes(c13)){exceptions.push({type:c13,amount:c14});continue;}if(rightSection==='first'&&/^\d{4}$/.test(c13))firstRound.push({year:c13,desc:c14});else if(rightSection==='second'&&/^\d{4}$/.test(c13))secondRound.push({year:c13,desc:c14});else if(rightSection==='twoway'&&c13&&c14)twoWay.push({pos:c13,name:c14});else if(rightSection==='te'&&c13&&c14)tradeExceptions.push({expires:c13,amount:c14});else if(rightSection==='cash'&&c13&&c14)cashInTrades.push({label:c13,amount:c14});else if(rightSection==='draftrights'&&c13&&c14)draftRights.push({year:c13,name:c14});}
+  const incentiveRows=[];let inSection=false;
+  for(let i=0;i<rows.length;i++){if(col(rows[i],1)==='Contract Incentives'){inSection=true;continue;}if(inSection){if(col(rows[i],1)==='Season')continue;if(col(rows[i],2)==='Trade Bonuses')break;const r=rows[i];const player=col(r,2),max=fmtMoney(r[3]),likely=fmtMoney(r[5]),unlikely=fmtMoney(r[7]),earned=fmtMoney(r[9]),pending=fmtMoney(r[11]);if(player||max||likely||unlikely||earned||pending)incentiveRows.push({season:col(r,1),player,max,likely,unlikely,earned,pending});}}
+  const tradeBonusRows=[];inSection=false;
+  for(let i=0;i<rows.length;i++){if(col(rows[i],2)==='Trade Bonuses'){inSection=true;continue;}if(inSection){if(col(rows[i],2)==='Player')continue;if(col(rows[i],1)==='Partial Guarantees')break;const r=rows[i];const player=col(r,2),amount=fmtMoney(r[3]),prorated=fmtMoney(r[4]);if(player||amount)tradeBonusRows.push({player,amount,prorated});}}
+  const partialRows=[];inSection=false;
+  for(let i=0;i<rows.length;i++){if(col(rows[i],1)==='Partial Guarantees'){inSection=true;continue;}if(inSection){if(col(rows[i],2)==='Player')continue;if(['Dead Cap','Tax & Apron Only'].includes(col(rows[i],1)))break;const r=rows[i],player=col(r,2);const vals=[fmtMoney(r[3]),fmtMoney(r[5]),fmtMoney(r[7]),fmtMoney(r[9]),fmtMoney(r[11])];if(player)partialRows.push({player,values:vals});else if(vals.some(v=>v&&v!=='$0'))partialRows.push({player:'Total',values:vals});}}
+  const deadCapPlayers=[];let deadCapTotal=null;inSection=false;
+  for(let i=0;i<rows.length;i++){if(col(rows[i],1)==='Dead Cap'&&!col(rows[i],2)){inSection=true;continue;}if(inSection){if(col(rows[i],2)==='Player')continue;if(col(rows[i],1)==='Tax & Apron Only')break;const r=rows[i],name=col(r,2);const vals=[col(r,3),col(r,5),col(r,7),col(r,9),col(r,11)];const hasV=vals.some(v=>v&&v!=='$0'&&v!=='0');if(name&&hasV)deadCapPlayers.push({name,values:vals});else if(!name&&hasV){deadCapTotal=vals;break;}}}
+  const taxApronRows=[];inSection=false;
+  for(let i=0;i<rows.length;i++){if(col(rows[i],1)==='Tax & Apron Only'){inSection=true;continue;}if(inSection){if(col(rows[i],2)==='Player')continue;const r=rows[i],player=col(r,2);const vals=[fmtMoney(r[3]),fmtMoney(r[5]),fmtMoney(r[7]),fmtMoney(r[9]),fmtMoney(r[11])];if(player)taxApronRows.push({player,values:vals});else if(vals.some(v=>v&&v!=='$0'))taxApronRows.push({player:'Total',values:vals});}}
+  let html='';
+  html+=`<div class="legend"><div class="legend-item"><div class="legend-dot dot-po"></div>Player Option</div><div class="legend-item"><div class="legend-dot dot-to"></div>Team Option</div><div class="legend-item"><div class="legend-dot dot-ng"></div>Non-Guarantee</div><div class="legend-item"><div class="legend-dot dot-rfa"></div>RFA Cap Hold</div><div class="legend-item"><div class="legend-dot dot-ufa"></div>UFA Cap Hold</div></div><div class="legend" style="margin-top:0"><span style="color:var(--text-faint);margin-right:4px">FA Bird Rights:</span><div class="legend-item"><span class="ln-non" style="font-weight:700">&#9632;</span>&nbsp;Non-Bird</div><div class="legend-item"><span class="ln-early" style="font-weight:700">&#9632;</span>&nbsp;Early Bird</div><div class="legend-item"><span class="ln-full" style="font-weight:700">&#9632;</span>&nbsp;Full Bird</div></div>`;
+  html+=`<div class="cap-wrap"><table class="cap"><thead><tr><th style="width:36px">Pos</th><th class="l">Player</th><th class="yr" colspan="2">2025/26</th><th class="yr" colspan="2">2026/27</th><th class="yr" colspan="2">2027/28</th><th class="yr" colspan="2">2028/29</th><th class="yr" colspan="2">2029/30</th></tr></thead><tbody>`;
+  playerRows.forEach(p=>{const nc=getNameClass(p.faType);html+=`<tr><td class="pos">${p.pos}</td><td class="nm${nc?' '+nc:''}">${p.name}</td>`;p.years.forEach(y=>{const sc=getStatusClass(y.status);html+=`<td${sc?' class="'+sc+'"':''}>${y.sal}</td><td class="pct">${y.pct}</td>`;});html+='</tr>';});
+  html+='<tr class="sep"><td colspan="12"></td></tr>';
+  const greenIfPositive=['Current Cap Room','Projected Cap Room','Room Under Tax','Room Under First Apron','Room Under Second Apron'];
+  summaryRows.forEach(s=>{const isRoom=greenIfPositive.includes(s.label);html+=`<tr class="sum"><td></td><td class="sl">${s.label}</td>`;s.values.forEach(v=>{const neg=isNegative(v.sal);const pos=isRoom&&v.sal&&!neg&&v.sal.includes('$');const cls=neg?' class="ng nv"':pos?' class="pv"':'';html+=`<td${cls}>${v.sal}</td><td class="pct">${v.pct}</td>`;});html+='</tr>';});
+  html+='</tbody></table></div>';
+  html+='<div class="side-tables">';
+  html+=`<div class="side-tbl"><h3>Draft Capital</h3><table>`;
+  if(firstRound.length){html+='<tr><th colspan="2">First Round</th></tr>';firstRound.forEach(d=>html+=`<tr><td style="width:50px">${d.year}</td><td style="text-align:left;color:var(--text-muted)">${d.desc}</td></tr>`);}
+  if(secondRound.length){html+='<tr><th colspan="2">Second Round</th></tr>';secondRound.forEach(d=>html+=`<tr><td style="width:50px">${d.year}</td><td style="text-align:left;color:var(--text-muted)">${d.desc}</td></tr>`);}
+  if(!firstRound.length&&!secondRound.length)html+='<tr><td colspan="2" style="color:var(--text-dim);text-align:center">—</td></tr>';
+  html+='</table></div>';
+  html+='<div class="side-tbl">';
+  if(twoWay.length){html+=`<h3>Two-Way Deals</h3><table>`;twoWay.forEach(tw=>html+=`<tr><td style="width:40px">${tw.pos}</td><td style="text-align:left;color:var(--text-muted)">${tw.name}</td></tr>`);html+='</table>';}
+  if(tradeExceptions.length){html+=`<h3>Trade Exceptions</h3><table><tr><th>Expires</th><th>Amount</th></tr>`;tradeExceptions.forEach(te=>html+=`<tr><td>${te.expires}</td><td>${te.amount}</td></tr>`);html+='</table>';}
+  if(exceptions.length){html+=`<h3>Exceptions Available</h3><table><tr><th>Type</th><th>Amount</th></tr>`;exceptions.forEach(ex=>html+=`<tr><td>${ex.type}</td><td>${ex.amount||'—'}</td></tr>`);html+='</table>';}
+  if(cashInTrades.length){html+=`<h3>Cash In Trades</h3><table>`;cashInTrades.forEach(c=>html+=`<tr><td>${c.label}</td><td>${c.amount}</td></tr>`);html+='</table>';}
+  if(draftRights.length){html+=`<h3>Draft Rights</h3><table><tr><th>Year</th><th>Player</th></tr>`;draftRights.forEach(dr=>html+=`<tr><td style="width:50px">${dr.year}</td><td style="text-align:left;color:var(--text-muted)">${dr.name}</td></tr>`);html+='</table>';}
+  if(hardCap)html+=`<div class="hard-cap-note">Hard Cap: ${hardCap}</div>`;
+  if(!twoWay.length&&!tradeExceptions.length&&!exceptions.length&&!cashInTrades.length&&!draftRights.length&&!hardCap)html+=`<h3>Roster Notes</h3><table><tr><td colspan="2" style="color:var(--text-dim);text-align:center">—</td></tr></table>`;
+  html+='</div></div>';
+  if(deadCapPlayers.length){html+='<div class="sec-hdr">Dead Cap</div>';html+=`<div class="cap-wrap" style="border-radius:0 0 6px 6px;margin-top:0"><table class="cap"><thead><tr><th class="l">Player</th><th class="yr">2025/26</th><th class="yr">2026/27</th><th class="yr">2027/28</th><th class="yr">2028/29</th><th class="yr">2029/30</th></tr></thead><tbody>`;deadCapPlayers.forEach(dc=>{html+=`<tr><td class="nm">${dc.name}</td>`;dc.values.forEach(v=>html+=`<td>${v}</td>`);html+='</tr>';});if(deadCapTotal){html+='<tr class="sum"><td class="sl">Total</td>';deadCapTotal.forEach(v=>html+=`<td>${v}</td>`);html+='</tr>';}html+='</tbody></table></div>';}
+  if(incentiveRows.length&&incentiveRows.some(r=>r.player||r.max)){html+='<div class="sec-hdr">Contract Incentives</div>';html+=`<div class="cap-wrap" style="border-radius:0 0 6px 6px;margin-top:0"><table class="cap"><thead><tr><th class="yr" style="width:60px">Season</th><th class="l yr">Player</th><th class="yr">Max</th><th class="yr">Likely</th><th class="yr">Unlikely</th><th class="yr">Earned</th><th class="yr">Pending</th></tr></thead><tbody>`;incentiveRows.forEach(r=>{html+=`<tr><td class="pos">${r.season}</td><td class="nm">${r.player}</td><td>${r.max}</td><td>${r.likely}</td><td>${r.unlikely}</td><td>${r.earned}</td><td>${r.pending}</td></tr>`;});html+='</tbody></table></div>';}
+  if(tradeBonusRows.length&&tradeBonusRows.some(r=>r.player)){html+='<div class="sec-hdr">Trade Bonuses</div>';html+=`<div class="cap-wrap" style="border-radius:0 0 6px 6px;margin-top:0"><table class="cap"><thead><tr><th class="l yr">Player</th><th class="yr">Amount</th><th class="yr">Pro-Rated</th></tr></thead><tbody>`;tradeBonusRows.forEach(r=>html+=`<tr><td class="nm">${r.player}</td><td>${r.amount}</td><td>${r.prorated}</td></tr>`);html+='</tbody></table></div>';}
+  if(partialRows.length&&partialRows.some(r=>r.player&&r.player!=='Total')){html+='<div class="sec-hdr">Partial Guarantees</div>';html+=`<div class="cap-wrap" style="border-radius:0 0 6px 6px;margin-top:0"><table class="cap"><thead><tr><th class="l yr">Player</th><th class="yr">2025/26</th><th class="yr">2026/27</th><th class="yr">2027/28</th><th class="yr">2028/29</th><th class="yr">2029/30</th></tr></thead><tbody>`;partialRows.forEach(r=>{if(r.player==='Total')html+='<tr class="sum"><td class="sl">Total</td>';else html+=`<tr><td class="nm">${r.player}</td>`;r.values.forEach(v=>html+=`<td>${v}</td>`);html+='</tr>';});html+='</tbody></table></div>';}
+  if(taxApronRows.length&&taxApronRows.some(r=>r.player&&r.player!=='Total')){html+='<div class="sec-hdr">Tax &amp; Apron Only</div>';html+=`<div class="cap-wrap" style="border-radius:0 0 6px 6px;margin-top:0"><table class="cap"><thead><tr><th class="l yr">Player</th><th class="yr">2025/26</th><th class="yr">2026/27</th><th class="yr">2027/28</th><th class="yr">2028/29</th><th class="yr">2029/30</th></tr></thead><tbody>`;taxApronRows.forEach(r=>{if(r.player==='Total')html+='<tr class="sum"><td class="sl">Total</td>';else html+=`<tr><td class="nm">${r.player}</td>`;r.values.forEach(v=>html+=`<td>${v}</td>`);html+='</tr>';});html+='</tbody></table></div>';}
+  document.getElementById('app').innerHTML=html;
+}
+async function init(){try{const resp=await fetch(TEAM_CONFIG.csvUrl);if(!resp.ok)throw new Error('HTTP '+resp.status);const text=await resp.text();buildPage(parseCSV(text));}catch(err){document.getElementById('app').innerHTML='<div class="error"><p><strong>Unable to load data</strong></p><p>'+err.message+'</p></div>';}}
+init();
+</script>
+</body>
+</html>
