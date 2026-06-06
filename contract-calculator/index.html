@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contract Calculator · Ducking The Tax</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg-base:#1E2228;--bg-raised:#252A31;--bg-panel:#22272E;
+  --bg-row-hover:#262C33;--bg-input:#2A3038;
+  --accent:#00D89A;--accent-dark:#00A878;
+  --text-bright:#F2F4F7;--text-primary:#C8D1DC;
+  --text-muted:#9AA6B4;--text-dim:#7A8694;--text-faint:#5E6873;
+  --border:#2E343D;--border-soft:#282E35;--border-input:#353C46;
+  --bar-warm:#FFB454;
+  --font-display:'Space Grotesk',sans-serif;--font-mono:'Space Mono',monospace;
+}
+html{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-mono);}
+body{min-height:100vh;}
+
+/* HEADER */
+.tm-header{padding:20px 24px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);background:var(--bg-raised);}
+.head-badge{width:50px;height:50px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--bg-base);letter-spacing:0.5px;flex-shrink:0;}
+.tm-title{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--text-bright);letter-spacing:-0.3px;}
+.tm-title-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;}
+
+/* LAYOUT */
+.container{max-width:1100px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:340px 1fr;gap:28px;align-items:start;}
+.section-label{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+/* INPUT PANEL */
+.panel{background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:22px;}
+.field{margin-bottom:22px;}
+.field:last-child{margin-bottom:0;}
+.field-label{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:9px;}
+.input-wrap{position:relative;}
+.input-prefix{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-family:var(--font-mono);font-size:14px;color:var(--text-dim);pointer-events:none;}
+.txt-input{width:100%;background:var(--bg-input);border:1px solid var(--border-input);border-radius:6px;padding:11px 13px;font-family:var(--font-mono);font-size:15px;color:var(--text-bright);transition:border-color .15s;}
+.txt-input.has-prefix{padding-left:26px;}
+.txt-input:focus{outline:none;border-color:var(--accent);}
+
+/* SEGMENTED (years) */
+.seg{display:flex;gap:6px;}
+.seg-btn{flex:1;background:var(--bg-input);border:1px solid var(--border-input);border-radius:6px;padding:10px 0;font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-muted);cursor:pointer;transition:all .15s;}
+.seg-btn:hover{border-color:var(--accent);color:var(--text-bright);}
+.seg-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg-base);}
+
+/* RAISE PRESETS */
+.preset-row{display:flex;gap:6px;margin-top:9px;}
+.preset-btn{flex:1;background:var(--bg-input);border:1px solid var(--border-input);border-radius:6px;padding:8px 6px;font-family:var(--font-mono);font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all .15s;line-height:1.4;}
+.preset-btn:hover{border-color:var(--accent);color:var(--text-bright);}
+.preset-btn.active{border-color:var(--accent);color:var(--accent);}
+.preset-btn b{display:block;font-size:13px;color:var(--text-bright);}
+.preset-btn.active b{color:var(--accent);}
+
+/* RESULTS */
+.aav-bar{display:flex;gap:14px;margin-bottom:22px;}
+.aav-card{flex:1;background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:14px 18px;}
+.aav-label{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+.aav-value{font-family:var(--font-display);font-weight:700;font-size:21px;color:var(--accent);margin-top:4px;}
+.aav-sub{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);margin-top:2px;}
+
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.res-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.res-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.res-title{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text-bright);}
+.res-tag{font-family:var(--font-mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--bg-base);background:var(--accent);padding:2px 8px;border-radius:3px;}
+.res-tag.warm{background:var(--bar-warm);}
+table.calc{width:100%;border-collapse:collapse;font-size:12px;}
+table.calc th{padding:8px 16px;text-align:right;font-family:var(--font-mono);font-weight:400;font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);}
+table.calc th:first-child{text-align:left;}
+table.calc td{padding:9px 16px;text-align:right;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);border-bottom:1px solid var(--border-soft);white-space:nowrap;}
+table.calc td:first-child{text-align:left;font-family:var(--font-display);font-weight:600;color:var(--text-bright);}
+table.calc td.pct{color:var(--text-dim);font-size:10px;}
+table.calc tr:last-child td{border-bottom:none;}
+table.calc tr.total td{background:var(--bg-panel);font-family:var(--font-display);font-weight:700;color:var(--text-bright);border-top:1px solid var(--border);}
+table.calc tr.total td.pct{color:var(--text-muted);}
+
+.note{margin-top:22px;font-family:var(--font-mono);font-size:10px;line-height:1.7;color:var(--text-dim);background:var(--bg-raised);border:1px solid var(--border);border-left:2px solid var(--accent);border-radius:6px;padding:14px 16px;}
+.note b{color:var(--text-muted);}
+
+@media(max-width:860px){
+  .container{grid-template-columns:1fr;}
+  .results-grid{grid-template-columns:1fr;}
+  .tm-header{flex-direction:column;align-items:flex-start;gap:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+
+<!-- HEADER -->
+<div class="tm-header">
+  <div class="head-badge">CALC</div>
+  <div>
+    <div class="tm-title">Contract Calculator</div>
+    <div class="tm-title-sub">// Year-by-year salary breakdown · CBA raises</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- INPUTS -->
+  <div>
+    <div class="section-label">Contract Terms</div>
+    <div class="panel">
+
+      <div class="field">
+        <label class="field-label" for="total">Total Contract Value</label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="txt-input has-prefix" id="total" inputmode="numeric" value="100,000,000">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Years</label>
+        <div class="seg" id="years"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="raise">Annual Raise</label>
+        <div class="input-wrap">
+          <input class="txt-input" id="raise" inputmode="decimal" value="8" style="padding-right:30px;">
+          <span class="input-prefix" style="left:auto;right:13px;">%</span>
+        </div>
+        <div class="preset-row">
+          <div class="preset-btn" data-raise="8"><b>8%</b>Bird / Own Team</div>
+          <div class="preset-btn" data-raise="5"><b>5%</b>Non-Bird / New Team</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="cap">Salary Cap <span style="color:var(--text-faint)">(for % of cap)</span></label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="txt-input has-prefix" id="cap" inputmode="numeric" value="154,647,000">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div>
+    <div class="section-label">Breakdown</div>
+
+    <div class="aav-bar">
+      <div class="aav-card">
+        <div class="aav-label">Average Annual Value</div>
+        <div class="aav-value" id="aav">—</div>
+        <div class="aav-sub" id="aav-pct">—</div>
+      </div>
+      <div class="aav-card">
+        <div class="aav-label">Total Value</div>
+        <div class="aav-value" id="ttl">—</div>
+        <div class="aav-sub" id="ttl-yrs">—</div>
+      </div>
+    </div>
+
+    <div class="results-grid">
+      <div class="res-card">
+        <div class="res-head"><span class="res-title">Ascending</span><span class="res-tag">Raises Up</span></div>
+        <table class="calc">
+          <thead><tr><th>Year</th><th>Salary</th><th>% of Cap</th></tr></thead>
+          <tbody id="asc-body"></tbody>
+        </table>
+      </div>
+      <div class="res-card">
+        <div class="res-head"><span class="res-title">Descending</span><span class="res-tag warm">Declines</span></div>
+        <table class="calc">
+          <thead><tr><th>Year</th><th>Salary</th><th>% of Cap</th></tr></thead>
+          <tbody id="desc-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>How it works:</b> Under the CBA, annual raises (or declines) are a flat percentage of the
+      <b>first-year</b> salary, not compounded. Ascending deals start lower and rise; descending deals
+      start higher and fall. Both sum exactly to the total. Max raise is <b>8%</b> when re-signing with
+      your own team (Bird rights), <b>5%</b> otherwise.
+    </div>
+  </div>
+
+</div>
+
+<script>
+var MAX_YEARS = 5;
+var state = { total: 100000000, years: 3, raise: 8, cap: 154647000 };
+
+var usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+function parseNum(s){ var n = parseFloat(String(s).replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : n; }
+function fmtMoney(n){ return n > 0 ? usd.format(Math.round(n)) : '—'; }
+function fmtPct(n){ return isFinite(n) && n > 0 ? (n*100).toFixed(1) + '%' : '—'; }
+
+function breakdown(total, n, r){
+  var tri = n*(n-1)/2;
+  var ascDen = n + r*tri;
+  var descDen = n - r*tri;
+  var asc = [], desc = [];
+  var ascBase = ascDen > 0 ? total/ascDen : 0;
+  var descY1 = descDen > 0 ? total/descDen : 0;
+  for (var k=0;k<n;k++){
+    asc.push(ascBase*(1+k*r));
+    desc.push(Math.max(0, descY1*(1-k*r)));
+  }
+  return { asc: asc, desc: desc };
+}
+
+function rowsHTML(arr, cap){
+  var h = '';
+  for (var i=0;i<arr.length;i++){
+    h += '<tr><td>Year '+(i+1)+'</td><td>'+fmtMoney(arr[i])+'</td><td class="pct">'+fmtPct(cap>0?arr[i]/cap:0)+'</td></tr>';
+  }
+  var sum = arr.reduce(function(a,b){return a+b;},0);
+  h += '<tr class="total"><td>Total</td><td>'+fmtMoney(sum)+'</td><td class="pct">'+fmtPct(cap>0?sum/cap:0)+'</td></tr>';
+  return h;
+}
+
+function render(){
+  var b = breakdown(state.total, state.years, state.raise/100);
+  document.getElementById('asc-body').innerHTML = rowsHTML(b.asc, state.cap);
+  document.getElementById('desc-body').innerHTML = rowsHTML(b.desc, state.cap);
+  var aav = state.years > 0 ? state.total/state.years : 0;
+  document.getElementById('aav').textContent = fmtMoney(aav);
+  document.getElementById('aav-pct').textContent = state.cap>0 ? fmtPct(aav/state.cap) + ' of cap' : '';
+  document.getElementById('ttl').textContent = fmtMoney(state.total);
+  document.getElementById('ttl-yrs').textContent = state.years + ' year' + (state.years>1?'s':'') + ' @ ' + state.raise + '% raise';
+}
+
+// Build year buttons
+var yearsWrap = document.getElementById('years');
+for (var y=1;y<=MAX_YEARS;y++){
+  (function(yr){
+    var btn = document.createElement('button');
+    btn.className = 'seg-btn' + (yr===state.years?' active':'');
+    btn.textContent = yr;
+    btn.onclick = function(){
+      state.years = yr;
+      yearsWrap.querySelectorAll('.seg-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      render();
+    };
+    yearsWrap.appendChild(btn);
+  })(y);
+}
+
+// Money inputs: live-format with commas
+function bindMoney(id, key){
+  var el = document.getElementById(id);
+  el.addEventListener('input', function(){
+    var n = parseNum(el.value);
+    state[key] = n;
+    var caret = el.selectionStart, len = el.value.length;
+    el.value = n ? n.toLocaleString('en-US') : '';
+    el.selectionStart = el.selectionEnd = Math.max(0, caret + (el.value.length - len));
+    render();
+  });
+}
+bindMoney('total','total');
+bindMoney('cap','cap');
+
+// Raise input + presets
+var raiseEl = document.getElementById('raise');
+var presets = document.querySelectorAll('.preset-btn');
+function syncPresets(){
+  presets.forEach(function(p){ p.classList.toggle('active', parseFloat(p.dataset.raise)===state.raise); });
+}
+raiseEl.addEventListener('input', function(){
+  state.raise = parseNum(raiseEl.value);
+  syncPresets(); render();
+});
+presets.forEach(function(p){
+  p.onclick = function(){
+    state.raise = parseFloat(p.dataset.raise);
+    raiseEl.value = state.raise;
+    syncPresets(); render();
+  };
+});
+
+syncPresets();
+render();
+</script>
+</body>
+</html>
