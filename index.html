@@ -83,6 +83,13 @@ a{color:inherit;text-decoration:none;}
 .read-more{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:6px;transition:gap .15s;}
 .post-card:hover .read-more{gap:10px;}
 .read-more::after{content:'→';}
+.post-card.is-link{display:block;}
+.post-card-flex{display:flex;gap:16px;align-items:stretch;}
+.post-thumb{width:150px;min-height:96px;align-self:stretch;object-fit:cover;border-radius:5px;flex-shrink:0;background:var(--bg-input);}
+.post-card-flex .post-body{flex:1;min-width:0;display:flex;flex-direction:column;}
+.post-card-flex .post-footer{margin-top:auto;}
+.blog-status{font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-dim);padding:10px 2px;}
+@media(max-width:560px){.post-thumb{display:none;}}
 
 /* SIDEBAR */
 .sidebar-widget{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;margin-bottom:18px;overflow:hidden;}
@@ -261,56 +268,9 @@ a{color:inherit;text-decoration:none;}
 
     </div>
 
-    <!-- BLOG FEED -->
+    <!-- BLOG FEED (auto-synced from Substack via posts.json) -->
     <div class="section-label">Latest Posts</div>
-
-    <article class="post-card">
-      <div class="post-card-inner">
-        <div class="post-meta"><span>Sep 30, 2022</span><span class="post-tag">Cap Analysis</span></div>
-        <a href="https://duckingthetax.com/blog/the-salary-cap-inflation-and-expressing-contracts-as-a-percentage-of-the-cap" class="post-title">The Salary Cap, Inflation, and Expressing Contracts as a Percentage of the Cap</a>
-        <p class="post-excerpt">With a new CBA and a new TV deal on the horizon, the NBA is in line for another big spike in the salary cap. Now is the best time to stop expressing player contracts in raw dollars and start using them as a percentage of the league-wide cap.</p>
-        <div class="post-footer">
-          <span class="post-author">Nick Thoreson</span>
-          <a href="https://duckingthetax.com/blog/the-salary-cap-inflation-and-expressing-contracts-as-a-percentage-of-the-cap" class="read-more">Read More</a>
-        </div>
-      </div>
-    </article>
-
-    <article class="post-card">
-      <div class="post-card-inner">
-        <div class="post-meta"><span>Aug 31, 2022</span><span class="post-tag">Trade Analysis</span></div>
-        <a href="https://duckingthetax.com/blog/why-the-rj-barrett-extension-doesnt-exclude-him-from-a-donovan-mitchell-trade" class="post-title">Why the RJ Barrett Extension Doesn't Exclude Him From a Donovan Mitchell Trade</a>
-        <p class="post-excerpt">With Barrett's 4-year, $120M rookie extension, most assume the Knicks can't include him in a Mitchell deal due to the poison pill restriction. In this specific scenario, they still could — here's how.</p>
-        <div class="post-footer">
-          <span class="post-author">Nick Thoreson</span>
-          <a href="https://duckingthetax.com/blog/why-the-rj-barrett-extension-doesnt-exclude-him-from-a-donovan-mitchell-trade" class="read-more">Read More</a>
-        </div>
-      </div>
-    </article>
-
-    <article class="post-card">
-      <div class="post-card-inner">
-        <div class="post-meta"><span>Jul 20, 2022</span><span class="post-tag">Free Agency</span></div>
-        <a href="https://duckingthetax.com/blog/best-and-worst-value-signings-of-free-agency" class="post-title">Best and Worst Value Signings of Free Agency</a>
-        <p class="post-excerpt">Free agency is wrapped up. Using EPV vs. reported salary, here's a breakdown of the clearest over and underpays across the league this offseason.</p>
-        <div class="post-footer">
-          <span class="post-author">Nick Thoreson</span>
-          <a href="https://duckingthetax.com/blog/best-and-worst-value-signings-of-free-agency" class="read-more">Read More</a>
-        </div>
-      </div>
-    </article>
-
-    <article class="post-card">
-      <div class="post-card-inner">
-        <div class="post-meta"><span>Jun 29, 2022</span><span class="post-tag">Cap Talk</span></div>
-        <a href="https://duckingthetax.com/blog/cap-talk-flurry-of-activity-with-free-agency-almost-here" class="post-title">Cap Talk: Flurry of Activity With Free Agency Almost Here</a>
-        <p class="post-excerpt">Teams have been rushing to get last-minute extensions and trades in before the closing bell. A look at the Knicks clearing cap space and the free agents most heavily impacted by recent activity.</p>
-        <div class="post-footer">
-          <span class="post-author">Nick Thoreson</span>
-          <a href="https://duckingthetax.com/blog/cap-talk-flurry-of-activity-with-free-agency-almost-here" class="read-more">Read More</a>
-        </div>
-      </div>
-    </article>
+    <div id="blog-feed"><div class="blog-status">Loading latest posts…</div></div>
 
   </div>
 
@@ -385,5 +345,44 @@ a{color:inherit;text-decoration:none;}
   </div>
 </footer>
 
+<script>
+// Render the Substack feed from posts.json (kept fresh by the Sync Substack GitHub Action).
+(function () {
+  var feed = document.getElementById('blog-feed');
+  if (!feed) return;
+  function fmtDate(s) {
+    var d = new Date(s);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  fetch('/posts.json', { cache: 'no-cache' })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (posts) {
+      if (!posts.length) { feed.innerHTML = '<div class="blog-status">No posts yet.</div>'; return; }
+      feed.innerHTML = posts.map(function (p) {
+        var thumb = p.image
+          ? '<img class="post-thumb" src="' + esc(p.image) + '" alt="" loading="lazy">'
+          : '';
+        return '<a class="post-card is-link" href="' + esc(p.url) + '" target="_blank" rel="noopener">' +
+          '<div class="post-card-inner post-card-flex">' + thumb +
+          '<div class="post-body">' +
+          '<div class="post-meta"><span>' + fmtDate(p.date) + '</span><span class="post-tag">Substack</span></div>' +
+          '<div class="post-title">' + esc(p.title) + '</div>' +
+          '<div class="post-footer"><span class="post-author">Nick Thoreson</span>' +
+          '<span class="read-more">Read More</span></div>' +
+          '</div></div></a>';
+      }).join('');
+    })
+    .catch(function () {
+      feed.innerHTML = '<div class="blog-status">Unable to load posts. ' +
+        '<a href="https://duckingthetax.substack.com" target="_blank" rel="noopener" style="color:var(--accent)">Read on Substack →</a></div>';
+    });
+})();
+</script>
 </body>
 </html>
