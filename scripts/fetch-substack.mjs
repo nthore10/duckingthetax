@@ -22,7 +22,14 @@ function decodeEntities(s) {
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
 }
 
-const res = await fetch(FEED, { headers: { 'User-Agent': 'duckingthetax-blog-sync' } });
+const res = await fetch(FEED, {
+  headers: {
+    // Substack returns 403 to non-browser agents (esp. from cloud IPs), so mimic a browser.
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7',
+    'Accept-Language': 'en-US,en;q=0.9',
+  },
+});
 if (!res.ok) throw new Error(`Feed fetch failed: HTTP ${res.status}`);
 const xml = await res.text();
 
