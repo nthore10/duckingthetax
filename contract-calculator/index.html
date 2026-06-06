@@ -57,6 +57,15 @@ body{min-height:100vh;}
 .preset-btn b{display:block;font-size:13px;color:var(--text-bright);}
 .preset-btn.active b{color:var(--accent);}
 
+/* PROJECTED CAP LIST */
+.cap-list{display:flex;flex-direction:column;gap:6px;}
+.cap-chip{display:flex;align-items:center;justify-content:space-between;background:var(--bg-input);border:1px solid var(--border-input);border-radius:6px;padding:7px 12px;transition:opacity .15s,border-color .15s;}
+.cap-chip span{font-family:var(--font-mono);color:var(--text-muted);font-size:10px;letter-spacing:.5px;}
+.cap-chip b{font-family:var(--font-mono);color:var(--text-bright);font-weight:700;font-size:11px;}
+.cap-chip.dim{opacity:.4;}
+.cap-chip.active{border-color:var(--accent);}
+.cap-src{margin-top:9px;font-family:var(--font-mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);}
+
 /* RESULTS */
 .aav-bar{display:flex;gap:14px;margin-bottom:22px;}
 .aav-card{flex:1;background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:14px 18px;}
@@ -139,11 +148,9 @@ table.calc tr.total td.pct{color:var(--text-muted);}
       </div>
 
       <div class="field">
-        <label class="field-label" for="cap">Salary Cap <span style="color:var(--text-faint)">(for % of cap)</span></label>
-        <div class="input-wrap">
-          <span class="input-prefix">$</span>
-          <input class="txt-input has-prefix" id="cap" inputmode="numeric" value="154,647,000">
-        </div>
+        <label class="field-label">Projected Salary Cap <span style="color:var(--text-faint)">(per year)</span></label>
+        <div class="cap-list" id="cap-list"></div>
+        <div class="cap-src" id="cap-src">Loading projections…</div>
       </div>
 
     </div>
@@ -195,7 +202,12 @@ table.calc tr.total td.pct{color:var(--text-muted);}
 
 <script>
 var MAX_YEARS = 5;
-var state = { total: 100000000, years: 3, raise: 8, cap: 154647000 };
+var SEASONS = ['2025-26','2026-27','2027-28','2028-29','2029-30'];
+// Fallback projected league caps (overridden live from the cap-sheet source).
+var FALLBACK_CAPS = [154647000, 165000000, 176550000, 188908500, 202132095];
+// Same published Google Sheet the cap sheets read; League Salary Cap is league-wide.
+var CAP_SRC = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub?gid=1558757909&single=true&output=csv';
+var state = { total: 100000000, years: 3, raise: 8, caps: FALLBACK_CAPS.slice() };
 
 var usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 function parseNum(s){ var n = parseFloat(String(s).replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : n; }
@@ -216,25 +228,40 @@ function breakdown(total, n, r){
   return { asc: asc, desc: desc };
 }
 
-function rowsHTML(arr, cap){
-  var h = '';
+function rowsHTML(arr, caps){
+  var h = '', sum = 0, capSum = 0;
   for (var i=0;i<arr.length;i++){
-    h += '<tr><td>Year '+(i+1)+'</td><td>'+fmtMoney(arr[i])+'</td><td class="pct">'+fmtPct(cap>0?arr[i]/cap:0)+'</td></tr>';
+    var c = caps[i] || 0;
+    sum += arr[i]; capSum += c;
+    var season = SEASONS[i] ? ' <span style="color:var(--text-faint);font-weight:400">'+SEASONS[i]+'</span>' : '';
+    h += '<tr><td>Year '+(i+1)+season+'</td><td>'+fmtMoney(arr[i])+'</td><td class="pct">'+fmtPct(c>0?arr[i]/c:0)+'</td></tr>';
   }
-  var sum = arr.reduce(function(a,b){return a+b;},0);
-  h += '<tr class="total"><td>Total</td><td>'+fmtMoney(sum)+'</td><td class="pct">'+fmtPct(cap>0?sum/cap:0)+'</td></tr>';
+  h += '<tr class="total"><td>Total</td><td>'+fmtMoney(sum)+'</td><td class="pct">'+fmtPct(capSum>0?sum/capSum:0)+'</td></tr>';
   return h;
+}
+
+function renderCapList(){
+  var el = document.getElementById('cap-list');
+  var h = '';
+  for (var i=0;i<MAX_YEARS;i++){
+    var cls = i < state.years ? 'active' : 'dim';
+    h += '<div class="cap-chip '+cls+'"><span>'+SEASONS[i]+'</span><b>'+fmtMoney(state.caps[i])+'</b></div>';
+  }
+  el.innerHTML = h;
 }
 
 function render(){
   var b = breakdown(state.total, state.years, state.raise/100);
-  document.getElementById('asc-body').innerHTML = rowsHTML(b.asc, state.cap);
-  document.getElementById('desc-body').innerHTML = rowsHTML(b.desc, state.cap);
+  document.getElementById('asc-body').innerHTML = rowsHTML(b.asc, state.caps);
+  document.getElementById('desc-body').innerHTML = rowsHTML(b.desc, state.caps);
   var aav = state.years > 0 ? state.total/state.years : 0;
+  var capSum = 0;
+  for (var i=0;i<state.years;i++) capSum += state.caps[i] || 0;
   document.getElementById('aav').textContent = fmtMoney(aav);
-  document.getElementById('aav-pct').textContent = state.cap>0 ? fmtPct(aav/state.cap) + ' of cap' : '';
+  document.getElementById('aav-pct').textContent = capSum>0 ? fmtPct(state.total/capSum) + ' of cap (avg)' : '';
   document.getElementById('ttl').textContent = fmtMoney(state.total);
   document.getElementById('ttl-yrs').textContent = state.years + ' year' + (state.years>1?'s':'') + ' @ ' + state.raise + '% raise';
+  renderCapList();
 }
 
 // Build year buttons
@@ -267,7 +294,6 @@ function bindMoney(id, key){
   });
 }
 bindMoney('total','total');
-bindMoney('cap','cap');
 
 // Raise input + presets
 var raiseEl = document.getElementById('raise');
@@ -287,8 +313,35 @@ presets.forEach(function(p){
   };
 });
 
+// --- Load live projected caps from the cap-sheet source (League Salary Cap is league-wide) ---
+function parseCSVRow(line){var r=[],cur='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else if(ch!=='\r')cur+=ch;}r.push(cur);return r;}
+function parseCSV(text){var rows=[],cur='';var lines=text.split('\n');for(var i=0;i<lines.length;i++){cur+=(cur?'\n':'')+lines[i];if((cur.match(/"/g)||[]).length%2===0){rows.push(parseCSVRow(cur));cur='';}}if(cur)rows.push(parseCSVRow(cur));return rows;}
+
+function loadCaps(){
+  fetch(CAP_SRC)
+    .then(function(r){ return r.ok ? r.text() : Promise.reject(r.status); })
+    .then(function(text){
+      var rows = parseCSV(text);
+      for (var i=0;i<rows.length;i++){
+        if ((rows[i][2]||'').replace(/ /g,' ').trim() === 'League Salary Cap'){
+          var vals = [];
+          for (var n=0;n<MAX_YEARS;n++) vals.push(parseNum(rows[i][3 + n*2]));
+          if (vals.length === MAX_YEARS && vals.every(function(v){ return v > 0; })) state.caps = vals;
+          break;
+        }
+      }
+      document.getElementById('cap-src').textContent = 'Projected caps · from cap sheets';
+      render();
+    })
+    .catch(function(){
+      document.getElementById('cap-src').textContent = 'Default projections (live source unavailable)';
+      render();
+    });
+}
+
 syncPresets();
 render();
+loadCaps();
 </script>
 </body>
 </html>
