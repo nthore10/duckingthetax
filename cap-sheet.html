@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Cap Sheet · Ducking The Tax</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg-base:#1E2228;--bg-raised:#252A31;--bg-panel:#22272E;
+  --bg-row-hover:#262C33;--bg-input:#2A3038;
+  --accent:#00D89A;--accent-dark:#00A878;
+  --text-bright:#F2F4F7;--text-primary:#C8D1DC;
+  --text-muted:#9AA6B4;--text-dim:#7A8694;--text-faint:#5E6873;
+  --border:#2E343D;--border-soft:#282E35;--border-input:#353C46;
+  --bar-hot:#FF6B85;--bar-warm:#FFB454;--bar-cool:#00D89A;
+  --positive:#00D89A;--negative:#FF6B85;--rank-num:#4E5763;
+  --font-display:'Space Grotesk',sans-serif;--font-mono:'Space Mono',monospace;
+  --team-primary:#00471B;--team-text:#EEE1C6;
+}
+html{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-mono);}
+body{min-height:100vh;display:flex;flex-direction:column;}
+a{color:inherit;text-decoration:none;}
+
+/* NAV */
+.site-nav{background:var(--bg-raised);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.nav-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;}
+.nav-logo{display:flex;align-items:center;gap:12px;}
+.nav-badge{width:34px;height:34px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:12px;color:var(--bg-base);flex-shrink:0;}
+.nav-site-name{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--text-bright);letter-spacing:-0.3px;}
+.nav-links{display:flex;align-items:center;gap:2px;list-style:none;}
+.nav-links li{position:relative;}
+.nav-links>li>a,.nav-links>li>span{display:block;padding:6px 14px;font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);border-radius:4px;cursor:pointer;transition:color .15s,background .15s;white-space:nowrap;}
+.nav-links>li>a:hover,.nav-links>li>span:hover,.nav-links>li>a.active{color:var(--text-bright);background:var(--bg-input);}
+.nav-links>li>a.active{color:var(--accent);background:transparent;}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;min-width:220px;padding:6px 0;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:200;}
+.nav-links li:hover .nav-dropdown{display:block;}
+.nav-dropdown a{display:block;padding:8px 16px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);transition:color .12s,background .12s;}
+.nav-dropdown a:hover{color:var(--text-bright);background:var(--bg-input);}
+
+/* TOOL HEADER */
+.tm-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);background:var(--bg-raised);}
+.tm-title-wrap{display:flex;align-items:center;gap:14px;}
+.tm-team-logo{width:50px;height:50px;object-fit:contain;}
+.tm-title{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--text-bright);letter-spacing:-0.3px;}
+.tm-title-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;}
+.tm-meta{display:flex;gap:28px;align-items:center;}
+.tm-meta-item{text-align:right;}
+.tm-meta-label{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+.tm-meta-value{font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--accent);margin-top:2px;}
+
+/* TEAM NAV BAR */
+.team-nav{background:var(--bg-panel);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:8px;overflow-x:auto;}
+.team-nav-label{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;margin-right:4px;}
+.team-btn{font-family:var(--font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 11px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-muted);border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.team-btn:hover{border-color:var(--accent);color:var(--text-bright);}
+.team-btn.active{background:var(--accent);color:var(--bg-base);border-color:var(--accent);}
+
+/* TABLE */
+.table-wrap{width:100%;overflow-x:auto;flex:1;}
+table.tm-table{width:100%;border-collapse:collapse;min-width:700px;}
+.tm-table thead th{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:11px 14px;text-align:right;font-weight:400;background:var(--bg-raised);border-bottom:1px solid var(--border);}
+.tm-table thead th:first-child{text-align:left;padding-left:24px;}
+.tm-table thead th:nth-child(2){text-align:left;}
+.tm-table tbody tr{border-bottom:1px solid var(--border-soft);transition:background .12s;}
+.tm-table tbody tr:hover{background:var(--bg-row-hover);}
+.tm-table td{padding:11px 14px;text-align:right;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);}
+.tm-table td:first-child{padding-left:24px;}
+
+/* SECTION HEADER ROW */
+.sec-row td{background:var(--team-primary) !important;padding:8px 24px !important;font-family:var(--font-display) !important;font-weight:700 !important;font-size:12px !important;color:var(--team-text) !important;letter-spacing:1px !important;text-transform:uppercase !important;text-align:left !important;}
+
+/* SUMMARY ROWS */
+.summary-row td{background:var(--bg-raised);font-family:var(--font-display);font-weight:600;font-size:12px;color:var(--text-bright);}
+.summary-row td:first-child{color:var(--text-muted);font-family:var(--font-mono);font-weight:400;font-size:11px;}
+
+/* TOTALS ROW */
+.totals-row td{border-top:1px solid var(--border);background:var(--bg-raised);font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text-bright);}
+
+/* CAP HOLDS */
+.ufa-hold{color:#4A9EFF;}
+.rfa-hold{color:#A878FF;}
+.two-way{color:var(--bar-hot);}
+.dead-cap{color:var(--text-dim);}
+
+/* POSITIVE / NEGATIVE */
+.val-pos{color:var(--positive);}
+.val-neg{color:var(--negative);}
+
+/* BADGE */
+.contract-badge{font-family:var(--font-mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:3px;display:inline-block;}
+.badge-max{background:rgba(0,216,154,.12);color:var(--accent);}
+.badge-ext{background:rgba(255,180,84,.1);color:var(--bar-warm);}
+.badge-two{background:rgba(255,107,133,.1);color:var(--bar-hot);}
+.badge-min{background:rgba(78,87,99,.3);color:var(--text-dim);}
+.badge-ufa{background:rgba(74,158,255,.12);color:#4A9EFF;}
+.badge-rfa{background:rgba(168,120,255,.12);color:#A878FF;}
+.badge-dead{background:rgba(200,209,220,.07);color:var(--text-dim);}
+
+/* LOADING / ERROR */
+.state-panel{padding:60px 24px;text-align:center;}
+.state-panel .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.state-panel p{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;}
+.error-msg{color:var(--negative);}
+
+/* FOOTER */
+.site-footer{background:var(--bg-panel);border-top:1px solid var(--border);padding:14px 24px;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase;}
+.footer-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-badge">DTT</div>
+      <span class="nav-site-name">Ducking The Tax</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Blog</a></li>
+      <li>
+        <span>Player Values ▾</span>
+        <div class="nav-dropdown">
+          <a href="#">Estimated Trade Value (ETV)</a>
+          <a href="#">Current Year EPV</a>
+          <a href="#">Life of Contract EPV</a>
+          <a href="#">Rookie Extension EPV</a>
+          <a href="#">Free Agent Class EPV</a>
+          <a href="#">Veteran Extension EPV</a>
+        </div>
+      </li>
+      <li><a href="cap-sheet.html" class="active">Cap Sheets ▾</a></li>
+      <li>
+        <span>Trackers ▾</span>
+        <div class="nav-dropdown">
+          <a href="#">Luxury Tax Tracker</a>
+          <a href="#">10-Day Tracker</a>
+          <a href="#">Two-Way Tracker</a>
+          <a href="#">Dead Cap Tracker</a>
+        </div>
+      </li>
+      <li><span>Agencies ▾</span></li>
+      <li><a href="#">Tools</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- TOOL HEADER (populated by JS) -->
+<div class="tm-header" id="tool-header">
+  <div class="tm-title-wrap">
+    <img class="tm-team-logo" id="header-logo" src="" alt="">
+    <div>
+      <div class="tm-title" id="header-title">Loading...</div>
+      <div class="tm-title-sub" id="header-sub">// 2025–26 Cap Sheet</div>
+    </div>
+  </div>
+  <div class="tm-meta" id="header-meta"></div>
+</div>
+
+<!-- TEAM SWITCHER -->
+<div class="team-nav">
+  <span class="team-nav-label">Team:</span>
+  <div id="team-buttons"></div>
+</div>
+
+<!-- TABLE AREA -->
+<div class="table-wrap" id="table-area">
+  <div class="state-panel">
+    <div class="spinner"></div>
+    <p>Fetching cap sheet data...</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>© 2025 Ducking The Tax · Nick Thoreson</span>
+    <span id="footer-updated">Data via Google Sheets</span>
+  </div>
+</footer>
+
+<script>
+// ─── TEAM CONFIG ─────────────────────────────────────────────────────────────
+// All 30 teams: name, gid, NBA CDN team ID, primary color, text color
+// GIDs from the published workbook (established in prior session)
+const BASE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub';
+
+const TEAMS = [
+  {name:'Atlanta Hawks',       gid:1558757909,  nbaId:'1610612737', primary:'#E03A3E', text:'#FFFFFF'},
+  {name:'Boston Celtics',      gid:373432544,   nbaId:'1610612738', primary:'#007A33', text:'#FFFFFF'},
+  {name:'Brooklyn Nets',       gid:1921423941,  nbaId:'1610612751', primary:'#000000', text:'#FFFFFF'},
+  {name:'Charlotte Hornets',   gid:777720644,   nbaId:'1610612766', primary:'#1D1160', text:'#00788C'},
+  {name:'Chicago Bulls',       gid:1899374282,  nbaId:'1610612741', primary:'#CE1141', text:'#FFFFFF'},
+  {name:'Cleveland Cavaliers', gid:2069532593,  nbaId:'1610612739', primary:'#6F263D', text:'#FFB81C'},
+  {name:'Dallas Mavericks',    gid:1009676622,  nbaId:'1610612742', primary:'#00538C', text:'#FFFFFF'},
+  {name:'Denver Nuggets',      gid:1183999206,  nbaId:'1610612743', primary:'#0E2240', text:'#FEC524'},
+  {name:'Detroit Pistons',     gid:1265585995,  nbaId:'1610612765', primary:'#1D428A', text:'#C8102E'},
+  {name:'Golden State Warriors',gid:1993585043, nbaId:'1610612744', primary:'#1D428A', text:'#FFC72C'},
+  {name:'Houston Rockets',     gid:1247303301,  nbaId:'1610612745', primary:'#CE1141', text:'#FFFFFF'},
+  {name:'Indiana Pacers',      gid:1218727253,  nbaId:'1610612754', primary:'#002D62', text:'#FDBB30'},
+  {name:'Los Angeles Clippers',gid:1081181385,  nbaId:'1610612746', primary:'#1D428A', text:'#C8102E'},
+  {name:'Los Angeles Lakers',  gid:1372973880,  nbaId:'1610612747', primary:'#552583', text:'#FDB927'},
+  {name:'Memphis Grizzlies',   gid:41528311,    nbaId:'1610612763', primary:'#5D76A9', text:'#FFFFFF'},
+  {name:'Miami Heat',          gid:1332630686,  nbaId:'1610612748', primary:'#98002E', text:'#FFFFFF'},
+  {name:'Milwaukee Bucks',     gid:364762538,   nbaId:'1610612749', primary:'#00471B', text:'#EEE1C6'},
+  {name:'Minnesota Timberwolves',gid:1495548473,nbaId:'1610612750', primary:'#0C2340', text:'#78BE20'},
+  {name:'New Orleans Pelicans',gid:394129656,   nbaId:'1610612740', primary:'#0C2340', text:'#C8102E'},
+  {name:'New York Knicks',     gid:791310728,   nbaId:'1610612752', primary:'#006BB6', text:'#F58426'},
+  {name:'Oklahoma City Thunder',gid:1221998852, nbaId:'1610612760', primary:'#007AC1', text:'#FFFFFF'},
+  {name:'Orlando Magic',       gid:1572518769,  nbaId:'1610612753', primary:'#0077C0', text:'#FFFFFF'},
+  {name:'Philadelphia 76ers',  gid:1382673238,  nbaId:'1610612755', primary:'#006BB6', text:'#ED174C'},
+  {name:'Phoenix Suns',        gid:938282106,   nbaId:'1610612756', primary:'#1D1160', text:'#E56020'},
+  {name:'Portland Trail Blazers',gid:419625780, nbaId:'1610612757', primary:'#E03A3E', text:'#FFFFFF'},
+  {name:'Sacramento Kings',    gid:84033863,    nbaId:'1610612758', primary:'#5A2D81', text:'#FFFFFF'},
+  {name:'San Antonio Spurs',   gid:1453561663,  nbaId:'1610612759', primary:'#546675', text:'#FFFFFF'},
+  {name:'Toronto Raptors',     gid:512297337,   nbaId:'1610612761', primary:'#CE1141', text:'#FFFFFF'},
+  {name:'Utah Jazz',           gid:1296134677,  nbaId:'1610612762', primary:'#002B5C', text:'#F9A01B'},
+  {name:'Washington Wizards',  gid:1656951294,  nbaId:'1610612764', primary:'#002B5C', text:'#E31837'},
+];
+
+// ─── TEAM SWITCHER BUTTONS ────────────────────────────────────────────────────
+const btnContainer = document.getElementById('team-buttons');
+TEAMS.forEach((t, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'team-btn';
+  btn.textContent = t.name.replace('Los Angeles ','LA ').replace('Golden State','GSW').replace('Oklahoma City','OKC').replace('Portland Trail Blazers','Portland').replace('Minnesota Timberwolves','Minnesota').replace('New Orleans Pelicans','New Orleans').replace('San Antonio Spurs','San Antonio').replace('Washington Wizards','Washington');
+  btn.dataset.index = i;
+  btn.onclick = () => loadTeam(i);
+  btnContainer.appendChild(btn);
+});
+
+// ─── URL PARAM: load team from ?team=index or default to team 0 ───────────────
+function getInitialTeam() {
+  const params = new URLSearchParams(window.location.search);
+  const t = parseInt(params.get('team'));
+  return (!isNaN(t) && t >= 0 && t < TEAMS.length) ? t : 0;
+}
+
+// ─── LOAD TEAM ────────────────────────────────────────────────────────────────
+async function loadTeam(idx) {
+  const team = TEAMS[idx];
+
+  // Update active button
+  document.querySelectorAll('.team-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === idx);
+  });
+
+  // Apply team colors to CSS vars
+  document.documentElement.style.setProperty('--team-primary', team.primary);
+  document.documentElement.style.setProperty('--team-text', team.text);
+
+  // Update page title + header
+  document.getElementById('page-title').textContent = `${team.name} Cap Sheet · Ducking The Tax`;
+  document.getElementById('header-title').textContent = `${team.name} — Cap Sheet`;
+  document.getElementById('header-logo').src = `https://cdn.nba.com/logos/nba/${team.nbaId}/primary/L/logo.svg`;
+  document.getElementById('header-logo').alt = team.name;
+  document.getElementById('header-meta').innerHTML = `<div class="tm-meta-item"><div class="tm-meta-label">Loading</div><div class="tm-meta-value" style="font-size:13px;color:var(--text-dim)">...</div></div>`;
+
+  // Update URL without reload
+  history.replaceState(null,'',`?team=${idx}`);
+
+  // Show loading state
+  document.getElementById('table-area').innerHTML = `
+    <div class="state-panel">
+      <div class="spinner"></div>
+      <p>Fetching ${team.name} cap data...</p>
+    </div>`;
+
+  // Fetch CSV
+  const url = `${BASE_CSV}?gid=${team.gid}&single=true&output=csv`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const csv = await resp.text();
+    renderTable(csv, team, idx);
+  } catch(e) {
+    document.getElementById('table-area').innerHTML = `
+      <div class="state-panel">
+        <p class="error-msg">Failed to load data for ${team.name}.<br>Check that the sheet is published to web.</p>
+        <p style="margin-top:8px">${e.message}</p>
+      </div>`;
+  }
+}
+
+// ─── CSV PARSER ───────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const row = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; continue; }
+      if (line[i] === ',' && !inQ) { row.push(cur.trim()); cur = ''; continue; }
+      cur += line[i];
+    }
+    row.push(cur.trim());
+    rows.push(row);
+  }
+  return rows;
+}
+
+// ─── CLASSIFY ROW TYPE ────────────────────────────────────────────────────────
+// Your CSV has: player rows, section headers (Dead Cap, Incentives etc),
+// summary rows (Cap Total, Cap Space, Tax lines), totals rows
+function classifyRow(row) {
+  const c0 = (row[0] || '').trim();
+  const c1 = (row[1] || '').trim();
+  const label = c1 || c0;  // some teams use col0, some col1 for labels
+
+  const SECTION_KEYWORDS = ['dead cap','contract incentives','trade bonus','two-way','exhibit 10','cap holds','draft picks'];
+  const SUMMARY_KEYWORDS = ['cap total','total salary','cap space','cap room','first apron','second apron','luxury tax','luxury tax payment','tax payment','hard cap','taxpayer mle','bi-annual','mid-level'];
+
+  const labelL = label.toLowerCase();
+  if (SECTION_KEYWORDS.some(k => labelL.includes(k))) return 'section';
+  if (SUMMARY_KEYWORDS.some(k => labelL.includes(k))) return 'summary';
+  if (!c1 && !c0) return 'empty';
+  return 'player';
+}
+
+// ─── FORMAT CURRENCY ─────────────────────────────────────────────────────────
+function fmtMoney(val) {
+  if (!val || val === '-' || val === '') return '—';
+  const clean = val.replace(/[$,\s]/g,'');
+  const num = parseFloat(clean);
+  if (isNaN(num)) return val;
+  if (Math.abs(num) >= 1000000) return '$' + (num/1000000).toFixed(1) + 'M';
+  if (Math.abs(num) >= 1000) return '$' + Math.round(num/1000) + 'K';
+  return '$' + Math.round(num).toLocaleString();
+}
+
+function rawNum(val) {
+  if (!val) return 0;
+  return parseFloat(val.replace(/[$,\s]/g,'')) || 0;
+}
+
+function moneyColor(val) {
+  const n = rawNum(val);
+  if (n > 0) return 'val-pos';
+  if (n < 0) return 'val-neg';
+  return '';
+}
+
+// ─── BADGE FROM CONTRACT TYPE ─────────────────────────────────────────────────
+function contractBadge(type) {
+  if (!type) return '';
+  const t = type.trim().toUpperCase();
+  if (t.includes('MAX')) return `<span class="contract-badge badge-max">${type}</span>`;
+  if (t.includes('TWO') || t.includes('2-WAY')) return `<span class="contract-badge badge-two">${type}</span>`;
+  if (t.includes('UFA')) return `<span class="contract-badge badge-ufa">UFA Hold</span>`;
+  if (t.includes('RFA')) return `<span class="contract-badge badge-rfa">RFA Hold</span>`;
+  if (t.includes('DEAD')) return `<span class="contract-badge badge-dead">${type}</span>`;
+  if (t.includes('MIN')) return `<span class="contract-badge badge-min">Min</span>`;
+  if (t.includes('EXT')) return `<span class="contract-badge badge-ext">${type}</span>`;
+  return '';
+}
+
+// ─── RENDER TABLE ─────────────────────────────────────────────────────────────
+function renderTable(csv, team, idx) {
+  const rows = parseCSV(csv);
+  if (!rows.length) {
+    document.getElementById('table-area').innerHTML = `<div class="state-panel"><p class="error-msg">No data found in sheet.</p></div>`;
+    return;
+  }
+
+  // First row = headers
+  const headers = rows[0];
+  const dataRows = rows.slice(1);
+
+  // Find year columns (columns containing a 4-digit year or salary figures)
+  // Typically: Player, Contract Type, 2025-26, 2026-27, 2027-28, 2028-29, 2029-30 ...
+  // We'll auto-detect by looking at the header row
+  const colCount = headers.length;
+
+  // Build header HTML — skip empty header cols
+  let headHtml = '<tr>';
+  headers.forEach((h, i) => {
+    const align = i <= 1 ? 'left' : 'right';
+    const pl = i === 0 ? 'padding-left:24px;' : '';
+    headHtml += `<th style="text-align:${align};${pl}">${h || ''}</th>`;
+  });
+  headHtml += '</tr>';
+
+  // Build body HTML
+  let bodyHtml = '';
+  let capTotal = 0, playerCount = 0;
+  let capTotalDisplay = '', capRoomDisplay = '', taxDisplay = '';
+
+  dataRows.forEach(row => {
+    if (!row.some(c => c)) return; // skip all-empty
+    const type = classifyRow(row);
+    const c0 = (row[0]||'').trim();
+    const c1 = (row[1]||'').trim();
+
+    if (type === 'section') {
+      const label = c1 || c0;
+      bodyHtml += `<tr class="sec-row"><td colspan="${colCount}">${label}</td></tr>`;
+      return;
+    }
+
+    if (type === 'summary') {
+      const label = c1 || c0;
+      const vals = row.slice(2);
+      const isCap = label.toLowerCase().includes('cap total') || label.toLowerCase().includes('total salary');
+      const isSpace = label.toLowerCase().includes('space') || label.toLowerCase().includes('room');
+      const isTax = label.toLowerCase().includes('luxury tax') && !label.toLowerCase().includes('payment');
+
+      if (isCap && vals[0]) capTotalDisplay = fmtMoney(vals[0]);
+      if (isSpace && vals[0]) capRoomDisplay = vals[0];
+      if (isTax && vals[0]) taxDisplay = fmtMoney(vals[0]);
+
+      bodyHtml += `<tr class="summary-row">`;
+      bodyHtml += `<td style="text-align:left;padding-left:24px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">${label}</td>`;
+      vals.forEach((v, vi) => {
+        const n = rawNum(v);
+        let cls = '';
+        if (isSpace || label.toLowerCase().includes('room')) cls = n >= 0 ? 'val-pos' : 'val-neg';
+        bodyHtml += `<td class="${cls}">${fmtMoney(v) || '—'}</td>`;
+      });
+      bodyHtml += `</tr>`;
+      return;
+    }
+
+    // Player row
+    const playerName = c1 || c0;
+    if (!playerName) return;
+    playerCount++;
+
+    // Contract type is usually in col0 if playerName is col1, or not present
+    const contractType = c1 ? c0 : '';
+    const salaryVals = row.slice(2);
+
+    bodyHtml += `<tr>`;
+    bodyHtml += `<td style="text-align:left;padding-left:24px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text-bright);">${playerName}</span>
+        ${contractBadge(contractType)}
+      </div>
+    </td>`;
+
+    salaryVals.forEach((v,i) => {
+      const isFirstSal = i === 0;
+      const n = rawNum(v);
+      if (isFirstSal && n > 0) capTotal += n;
+      const fmt = fmtMoney(v);
+      const color = contractType.toUpperCase().includes('UFA') ? 'ufa-hold'
+                  : contractType.toUpperCase().includes('RFA') ? 'rfa-hold'
+                  : '';
+      bodyHtml += `<td class="${color}" style="${isFirstSal ? 'color:var(--text-bright);font-weight:600;' : ''}">${fmt || '—'}</td>`;
+    });
+    bodyHtml += `</tr>`;
+  });
+
+  // Build final table HTML
+  const tableHtml = `
+    <table class="tm-table">
+      <thead>${headHtml}</thead>
+      <tbody>${bodyHtml}</tbody>
+    </table>`;
+
+  document.getElementById('table-area').innerHTML = tableHtml;
+
+  // Update header KPIs
+  const taxLine = 171600000;
+  const capTotalNum = capTotal || rawNum(capTotalDisplay.replace('M','000000').replace('K','000'));
+  const taxOver = capTotalNum - taxLine;
+  const taxColor = taxOver > 0 ? 'var(--bar-hot)' : 'var(--positive)';
+  const taxLabel = taxOver > 0 ? 'Tax Overage' : 'Under Tax';
+  const taxValStr = (taxOver > 0 ? '+' : '') + fmtMoney(String(taxOver));
+
+  document.getElementById('header-meta').innerHTML = `
+    <div class="tm-meta-item">
+      <div class="tm-meta-label">Total Committed</div>
+      <div class="tm-meta-value" style="color:${capTotalNum > taxLine ? 'var(--bar-hot)' : 'var(--accent)'}">
+        ${capTotalDisplay || fmtMoney(String(capTotalNum))}
+      </div>
+    </div>
+    <div class="tm-meta-item">
+      <div class="tm-meta-label">${taxLabel}</div>
+      <div class="tm-meta-value" style="color:${taxColor}">${taxValStr}</div>
+    </div>
+    <div class="tm-meta-item">
+      <div class="tm-meta-label">Players</div>
+      <div class="tm-meta-value" style="color:var(--text-bright);font-size:15px;">${playerCount}</div>
+    </div>`;
+
+  document.getElementById('footer-updated').textContent =
+    `Live data · Updated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+loadTeam(getInitialTeam());
+</script>
+</body>
+</html>

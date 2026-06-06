@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUCKING THE TAX — NBA Salary Cap Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg-base:#1E2228;--bg-raised:#252A31;--bg-panel:#22272E;
+  --bg-row-hover:#262C33;--bg-input:#2A3038;
+  --accent:#00D89A;--accent-dark:#00A878;
+  --text-bright:#F2F4F7;--text-primary:#C8D1DC;
+  --text-muted:#9AA6B4;--text-dim:#7A8694;--text-faint:#5E6873;
+  --border:#2E343D;--border-soft:#282E35;--border-input:#353C46;
+  --bar-hot:#FF6B85;--bar-warm:#FFB454;--bar-cool:#00D89A;
+  --font-display:'Space Grotesk',sans-serif;--font-mono:'Space Mono',monospace;
+}
+html{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-mono);}
+body{min-height:100vh;display:flex;flex-direction:column;}
+a{color:inherit;text-decoration:none;}
+
+/* NAV */
+.site-nav{background:var(--bg-raised);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;}
+.nav-logo{display:flex;align-items:center;gap:12px;}
+.nav-badge{width:34px;height:34px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:12px;color:var(--bg-base);flex-shrink:0;}
+.nav-site-name{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--text-bright);letter-spacing:-0.3px;}
+.nav-links{display:flex;align-items:center;gap:2px;list-style:none;}
+.nav-links li{position:relative;}
+.nav-links>li>a,.nav-links>li>span{display:block;padding:6px 14px;font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);border-radius:4px;cursor:pointer;transition:color .15s,background .15s;white-space:nowrap;}
+.nav-links>li>a:hover,.nav-links>li>span:hover{color:var(--text-bright);background:var(--bg-input);}
+.nav-links>li>a.active{color:var(--accent);}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;min-width:230px;padding:6px 0;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:200;}
+.nav-links li:hover .nav-dropdown{display:block;}
+.nav-dropdown a{display:block;padding:8px 16px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);transition:color .12s,background .12s;}
+.nav-dropdown a:hover{color:var(--text-bright);background:var(--bg-input);}
+
+/* HERO HEADER */
+.site-header{background:var(--bg-raised);border-bottom:1px solid var(--border);padding:32px 24px 28px;}
+.site-header-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.header-title-wrap{display:flex;align-items:center;gap:16px;}
+.header-badge{width:52px;height:52px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:16px;color:var(--bg-base);letter-spacing:1px;flex-shrink:0;}
+.header-title{font-family:var(--font-display);font-weight:700;font-size:26px;color:var(--text-bright);letter-spacing:-0.5px;}
+.header-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:3px;}
+.header-kpis{display:flex;gap:32px;}
+.kpi-item{text-align:right;}
+.kpi-label{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+.kpi-value{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--accent);margin-top:2px;}
+
+/* PAGE LAYOUT */
+.page-body{max-width:1280px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:1fr 300px;gap:32px;flex:1;align-items:start;}
+
+/* SECTION LABEL */
+.section-label{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+/* TOOL GRID */
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;}
+.tool-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;padding:18px 20px;display:flex;align-items:flex-start;gap:14px;transition:border-color .15s,background .15s;cursor:pointer;}
+.tool-card:hover{border-color:var(--accent);background:var(--bg-row-hover);}
+.tool-card-badge{width:36px;height:36px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:11px;color:var(--bg-base);flex-shrink:0;letter-spacing:0.5px;}
+.tool-card-badge.dim{background:var(--bg-input);color:var(--text-muted);border:1px solid var(--border-input);}
+.tool-card-body{}
+.tool-card-title{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--text-bright);margin-bottom:4px;}
+.tool-card-desc{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);line-height:1.6;letter-spacing:.3px;}
+.tool-card-arrow{margin-left:auto;font-family:var(--font-mono);font-size:14px;color:var(--text-dim);align-self:center;flex-shrink:0;transition:color .15s,transform .15s;}
+.tool-card:hover .tool-card-arrow{color:var(--accent);transform:translateX(3px);}
+
+/* BLOG FEED */
+.post-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;margin-bottom:14px;transition:border-color .15s;}
+.post-card:hover{border-color:var(--accent);}
+.post-card-inner{padding:18px 22px;}
+.post-meta{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.post-tag{background:var(--bg-input);color:var(--accent);padding:2px 8px;border-radius:3px;font-size:8px;letter-spacing:1px;}
+.post-title{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--text-bright);letter-spacing:-0.2px;margin-bottom:9px;line-height:1.35;display:block;}
+.post-title:hover{color:var(--accent);}
+.post-excerpt{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);line-height:1.7;margin-bottom:14px;}
+.post-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-soft);padding-top:12px;}
+.post-author{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;}
+.read-more{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:6px;transition:gap .15s;}
+.post-card:hover .read-more{gap:10px;}
+.read-more::after{content:'→';}
+
+/* SIDEBAR */
+.sidebar-widget{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;margin-bottom:18px;overflow:hidden;}
+.widget-header{padding:13px 18px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;}
+.widget-badge{background:var(--accent);color:var(--bg-base);padding:2px 8px;border-radius:3px;font-size:8px;font-weight:700;}
+.threshold-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border-soft);}
+.threshold-row:last-child{border-bottom:none;}
+.threshold-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+.threshold-val{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text-bright);}
+.threshold-val.accent{color:var(--accent);}
+.threshold-val.hot{color:var(--bar-hot);}
+.threshold-val.warm{color:var(--bar-warm);}
+
+/* TOP TAX TEAMS */
+.tax-row{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--border-soft);transition:background .12s;}
+.tax-row:last-child{border-bottom:none;}
+.tax-row:hover{background:var(--bg-row-hover);}
+.team-logo-sm{width:24px;height:24px;object-fit:contain;flex-shrink:0;}
+.tax-team-name{font-family:var(--font-display);font-weight:600;font-size:12px;color:var(--text-bright);}
+.tax-overage{font-family:var(--font-mono);font-size:11px;margin-left:auto;}
+
+/* ABOUT WIDGET */
+.about-body{padding:16px 18px;}
+.about-text{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);line-height:1.7;}
+.substack-link{display:inline-block;margin-top:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:6px 14px;border-radius:4px;transition:background .15s,color .15s;}
+.substack-link:hover{background:var(--accent);color:var(--bg-base);}
+
+/* FOOTER */
+.site-footer{background:var(--bg-panel);border-top:1px solid var(--border);padding:14px 24px;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase;}
+.footer-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-badge">DTT</div>
+      <span class="nav-site-name">Ducking The Tax</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Blog</a></li>
+      <li>
+        <span>Player Values ▾</span>
+        <div class="nav-dropdown">
+          <a href="https://nthore10.github.io/EPV-Current-Year/" target="_blank">Current Year EPV</a>
+          <a href="https://nthore10.github.io/EPV-Current-Year/epv-life-of-deal" target="_blank">Life of Contract EPV</a>
+          <a href="https://nthore10.github.io/ETV/" target="_blank">Estimated Trade Value (ETV)</a>
+          <a href="https://nthore10.github.io/Free-Agent-EPV/" target="_blank">Free Agent Class EPV</a>
+          <a href="https://nthore10.github.io/Rookie-Extension-EPV/" target="_blank">Rookie Extension EPV</a>
+          <a href="#" target="_blank">Veteran Extension EPV</a>
+        </div>
+      </li>
+      <li>
+        <span>Cap Sheets ▾</span>
+        <div class="nav-dropdown">
+          <a href="cap-sheet.html?team=0">Atlanta Hawks</a>
+          <a href="cap-sheet.html?team=1">Boston Celtics</a>
+          <a href="cap-sheet.html?team=2">Brooklyn Nets</a>
+          <a href="cap-sheet.html?team=3">Charlotte Hornets</a>
+          <a href="cap-sheet.html?team=4">Chicago Bulls</a>
+          <a href="cap-sheet.html?team=5">Cleveland Cavaliers</a>
+          <a href="cap-sheet.html?team=6">Dallas Mavericks</a>
+          <a href="cap-sheet.html?team=7">Denver Nuggets</a>
+          <a href="cap-sheet.html?team=8">Detroit Pistons</a>
+          <a href="cap-sheet.html?team=9">Golden State Warriors</a>
+          <a href="cap-sheet.html?team=10">Houston Rockets</a>
+          <a href="cap-sheet.html?team=11">Indiana Pacers</a>
+          <a href="cap-sheet.html?team=12">Los Angeles Clippers</a>
+          <a href="cap-sheet.html?team=13">Los Angeles Lakers</a>
+          <a href="cap-sheet.html?team=14">Memphis Grizzlies</a>
+          <a href="cap-sheet.html?team=15">Miami Heat</a>
+          <a href="cap-sheet.html?team=16">Milwaukee Bucks</a>
+          <a href="cap-sheet.html?team=17">Minnesota Timberwolves</a>
+          <a href="cap-sheet.html?team=18">New Orleans Pelicans</a>
+          <a href="cap-sheet.html?team=19">New York Knicks</a>
+          <a href="cap-sheet.html?team=20">Oklahoma City Thunder</a>
+          <a href="cap-sheet.html?team=21">Orlando Magic</a>
+          <a href="cap-sheet.html?team=22">Philadelphia 76ers</a>
+          <a href="cap-sheet.html?team=23">Phoenix Suns</a>
+          <a href="cap-sheet.html?team=24">Portland Trail Blazers</a>
+          <a href="cap-sheet.html?team=25">Sacramento Kings</a>
+          <a href="cap-sheet.html?team=26">San Antonio Spurs</a>
+          <a href="cap-sheet.html?team=27">Toronto Raptors</a>
+          <a href="cap-sheet.html?team=28">Utah Jazz</a>
+          <a href="cap-sheet.html?team=29">Washington Wizards</a>
+        </div>
+      </li>
+      <li>
+        <span>Trackers ▾</span>
+        <div class="nav-dropdown">
+          <a href="https://nthore10.github.io/Luxury-Tax-Tracker/" target="_blank">Luxury Tax Tracker</a>
+          <a href="https://nthore10.github.io/Ten-Day-Tracker/" target="_blank">10-Day Tracker</a>
+          <a href="https://nthore10.github.io/Two-Way-Tracker/" target="_blank">Two-Way Tracker</a>
+          <a href="https://nthore10.github.io/Dead-Cap-Tracker/" target="_blank">Dead Cap Tracker</a>
+        </div>
+      </li>
+      <li>
+        <span>Agencies ▾</span>
+        <div class="nav-dropdown">
+          <a href="#">Active Player Representation</a>
+          <a href="#">Assets Under Representation</a>
+        </div>
+      </li>
+      <li><a href="#">Tools</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO HEADER -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="header-title-wrap">
+      <div class="header-badge">DTT</div>
+      <div>
+        <div class="header-title">Ducking The Tax</div>
+        <div class="header-sub">// NBA Salary Cap Analysis · Cap Sheets · EPV · Trackers</div>
+      </div>
+    </div>
+    <div class="header-kpis">
+      <div class="kpi-item">
+        <div class="kpi-label">2025–26 Cap</div>
+        <div class="kpi-value">$141.1M</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-label">Luxury Tax</div>
+        <div class="kpi-value">$171.6M</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-label">First Apron</div>
+        <div class="kpi-value">$178.1M</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-label">Second Apron</div>
+        <div class="kpi-value">$189.5M</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="page-body">
+  <div>
+
+    <!-- TOOLS GRID -->
+    <div class="section-label">Tools & Trackers</div>
+    <div class="tool-grid">
+
+      <a href="https://nthore10.github.io/EPV-Current-Year/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">EPV</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Current Year EPV</div>
+          <div class="tool-card-desc">Estimated player value vs. 2025–26 salary. Sortable by team, position, over/under.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/EPV-Current-Year/epv-life-of-deal" target="_blank" class="tool-card">
+        <div class="tool-card-badge">EPV</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Life of Contract EPV</div>
+          <div class="tool-card-desc">Full-contract EPV vs. total deal value — find the biggest long-term over/underpays.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/ETV/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">ETV</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Estimated Trade Value</div>
+          <div class="tool-card-desc">Weighted contract valuation for trade analysis. Remaining years, salary, and EPV combined.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/Luxury-Tax-Tracker/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">LT</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Luxury Tax Tracker</div>
+          <div class="tool-card-desc">Projected tax bills by team, multi-year view. Who's paying, who's dodging.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/Dead-Cap-Tracker/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">DC</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Dead Cap Tracker</div>
+          <div class="tool-card-desc">All dead money on the books — buyouts, stretch provisions, and waived contracts by team.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/Free-Agent-EPV/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">FA</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Free Agent Class EPV</div>
+          <div class="tool-card-desc">Projected EPV vs. actual deal value for every free agent signing. Adjustable by years.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/Rookie-Extension-EPV/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">RX</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Rookie Extension EPV</div>
+          <div class="tool-card-desc">Extension value vs. actual terms for rookie-scale extension eligible players.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="#" target="_blank" class="tool-card">
+        <div class="tool-card-badge dim">VX</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Veteran Extension EPV</div>
+          <div class="tool-card-desc">EPV vs. extension terms for veteran-eligible players. Adjustable by years 1–5.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/Ten-Day-Tracker/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">10D</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">10-Day Tracker</div>
+          <div class="tool-card-desc">All active 10-day signings — start/end dates, days remaining, cap hit, hardship exceptions.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="https://nthore10.github.io/Two-Way-Tracker/" target="_blank" class="tool-card">
+        <div class="tool-card-badge">2W</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Two-Way Tracker</div>
+          <div class="tool-card-desc">Two-way contract service days used by player and team — watch for limit alerts.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+      <a href="cap-sheet.html" class="tool-card">
+        <div class="tool-card-badge" style="font-size:9px;">CAP</div>
+        <div class="tool-card-body">
+          <div class="tool-card-title">Team Cap Sheets</div>
+          <div class="tool-card-desc">All 30 team cap sheets — guaranteed money, cap holds, dead cap, year-by-year view.</div>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
+
+    </div>
+
+    <!-- BLOG FEED -->
+    <div class="section-label">Latest Posts</div>
+
+    <article class="post-card">
+      <div class="post-card-inner">
+        <div class="post-meta"><span>Sep 30, 2022</span><span class="post-tag">Cap Analysis</span></div>
+        <a href="https://duckingthetax.com/blog/the-salary-cap-inflation-and-expressing-contracts-as-a-percentage-of-the-cap" class="post-title">The Salary Cap, Inflation, and Expressing Contracts as a Percentage of the Cap</a>
+        <p class="post-excerpt">With a new CBA and a new TV deal on the horizon, the NBA is in line for another big spike in the salary cap. Now is the best time to stop expressing player contracts in raw dollars and start using them as a percentage of the league-wide cap.</p>
+        <div class="post-footer">
+          <span class="post-author">Nick Thoreson</span>
+          <a href="https://duckingthetax.com/blog/the-salary-cap-inflation-and-expressing-contracts-as-a-percentage-of-the-cap" class="read-more">Read More</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="post-card">
+      <div class="post-card-inner">
+        <div class="post-meta"><span>Aug 31, 2022</span><span class="post-tag">Trade Analysis</span></div>
+        <a href="https://duckingthetax.com/blog/why-the-rj-barrett-extension-doesnt-exclude-him-from-a-donovan-mitchell-trade" class="post-title">Why the RJ Barrett Extension Doesn't Exclude Him From a Donovan Mitchell Trade</a>
+        <p class="post-excerpt">With Barrett's 4-year, $120M rookie extension, most assume the Knicks can't include him in a Mitchell deal due to the poison pill restriction. In this specific scenario, they still could — here's how.</p>
+        <div class="post-footer">
+          <span class="post-author">Nick Thoreson</span>
+          <a href="https://duckingthetax.com/blog/why-the-rj-barrett-extension-doesnt-exclude-him-from-a-donovan-mitchell-trade" class="read-more">Read More</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="post-card">
+      <div class="post-card-inner">
+        <div class="post-meta"><span>Jul 20, 2022</span><span class="post-tag">Free Agency</span></div>
+        <a href="https://duckingthetax.com/blog/best-and-worst-value-signings-of-free-agency" class="post-title">Best and Worst Value Signings of Free Agency</a>
+        <p class="post-excerpt">Free agency is wrapped up. Using EPV vs. reported salary, here's a breakdown of the clearest over and underpays across the league this offseason.</p>
+        <div class="post-footer">
+          <span class="post-author">Nick Thoreson</span>
+          <a href="https://duckingthetax.com/blog/best-and-worst-value-signings-of-free-agency" class="read-more">Read More</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="post-card">
+      <div class="post-card-inner">
+        <div class="post-meta"><span>Jun 29, 2022</span><span class="post-tag">Cap Talk</span></div>
+        <a href="https://duckingthetax.com/blog/cap-talk-flurry-of-activity-with-free-agency-almost-here" class="post-title">Cap Talk: Flurry of Activity With Free Agency Almost Here</a>
+        <p class="post-excerpt">Teams have been rushing to get last-minute extensions and trades in before the closing bell. A look at the Knicks clearing cap space and the free agents most heavily impacted by recent activity.</p>
+        <div class="post-footer">
+          <span class="post-author">Nick Thoreson</span>
+          <a href="https://duckingthetax.com/blog/cap-talk-flurry-of-activity-with-free-agency-almost-here" class="read-more">Read More</a>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside>
+
+    <div class="sidebar-widget">
+      <div class="widget-header">
+        <span>Cap Thresholds</span>
+        <span class="widget-badge">2025–26</span>
+      </div>
+      <div class="threshold-row"><span class="threshold-label">Salary Cap</span><span class="threshold-val accent">$141.1M</span></div>
+      <div class="threshold-row"><span class="threshold-label">Luxury Tax Line</span><span class="threshold-val">$171.6M</span></div>
+      <div class="threshold-row"><span class="threshold-label">First Apron</span><span class="threshold-val">$178.1M</span></div>
+      <div class="threshold-row"><span class="threshold-label">Second Apron</span><span class="threshold-val hot">$189.5M</span></div>
+      <div class="threshold-row"><span class="threshold-label">Taxpayer MLE</span><span class="threshold-val">$5.1M</span></div>
+      <div class="threshold-row"><span class="threshold-label">Non-Tax MLE</span><span class="threshold-val">$12.4M</span></div>
+      <div class="threshold-row"><span class="threshold-label">Bi-Annual Exception</span><span class="threshold-val">$4.5M</span></div>
+      <div class="threshold-row"><span class="threshold-label">Vet Min (10 yrs)</span><span class="threshold-val">$3.3M</span></div>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="widget-header"><span>Top Tax Payers</span></div>
+      <a href="https://nthore10.github.io/Luxury-Tax-Tracker/" target="_blank">
+        <div class="tax-row">
+          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612749/primary/L/logo.svg" alt="MIL">
+          <span class="tax-team-name">Milwaukee Bucks</span>
+          <span class="tax-overage" style="color:var(--bar-hot);">+$94.2M</span>
+        </div>
+        <div class="tax-row">
+          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612738/primary/L/logo.svg" alt="BOS">
+          <span class="tax-team-name">Boston Celtics</span>
+          <span class="tax-overage" style="color:var(--bar-hot);">+$67.8M</span>
+        </div>
+        <div class="tax-row">
+          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg" alt="GSW">
+          <span class="tax-team-name">Golden State Warriors</span>
+          <span class="tax-overage" style="color:var(--bar-warm);">+$52.1M</span>
+        </div>
+        <div class="tax-row">
+          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612752/primary/L/logo.svg" alt="NYK">
+          <span class="tax-team-name">New York Knicks</span>
+          <span class="tax-overage" style="color:var(--bar-warm);">+$38.4M</span>
+        </div>
+        <div class="tax-row">
+          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612747/primary/L/logo.svg" alt="LAL">
+          <span class="tax-team-name">Los Angeles Lakers</span>
+          <span class="tax-overage" style="color:var(--bar-cool);">+$12.0M</span>
+        </div>
+      </a>
+      <div style="padding:10px 18px;border-top:1px solid var(--border-soft);">
+        <a href="https://nthore10.github.io/Luxury-Tax-Tracker/" target="_blank" style="font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);">Full Tax Tracker →</a>
+      </div>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="widget-header"><span>About</span></div>
+      <div class="about-body">
+        <p class="about-text">Nick Thoreson is a finance professional and NBA salary cap analyst. Ducking The Tax covers cap sheets, EPV models, luxury tax tracking, and free agency analysis for all 30 teams.</p>
+        <a href="https://duckingthetax.substack.com" target="_blank" class="substack-link">Subscribe on Substack →</a>
+      </div>
+    </div>
+
+  </aside>
+</main>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>© 2025 Ducking The Tax · Nick Thoreson</span>
+    <span>NBA Salary Cap Analysis · All figures approximate</span>
+  </div>
+</footer>
+
+</body>
+</html>
