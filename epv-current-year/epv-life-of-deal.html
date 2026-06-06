@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPV — Life of Deal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-base:#1E2228;--bg-raised:#252A31;--bg-panel:#22272E;--bg-row-hover:#262C33;--bg-input:#2A3038;
+    --accent:#00D89A;--accent-dark:#00A878;
+    --text-bright:#F2F4F7;--text-primary:#C8D1DC;--text-muted:#9AA6B4;--text-dim:#7A8694;--text-faint:#5E6873;
+    --border:#2E343D;--border-soft:#282E35;--border-input:#353C46;
+    --bar-hot:#FF6B85;--bar-warm:#FFB454;--bar-cool:#00D89A;--rank-num:#4E5763;
+    --positive:#00D89A;--negative:#FF6B85;
+    --font-display:'Space Grotesk',sans-serif;--font-mono:'Space Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-display);background:var(--bg-base);color:var(--text-primary);min-height:100vh;}
+  .tm-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg-raised);flex-wrap:wrap;gap:16px;}
+  .tm-title-wrap{display:flex;align-items:center;gap:14px;}
+  .tm-badge{width:38px;height:38px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:11px;color:var(--bg-base);}
+  .tm-title{font-family:var(--font-display);font-weight:700;font-size:19px;color:var(--text-bright);letter-spacing:-0.3px;line-height:1;}
+  .tm-title-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:3px;}
+  .tm-meta{display:flex;gap:24px;}
+  .tm-meta-item{text-align:right;}
+  .tm-meta-label{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+  .tm-meta-value{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--accent);margin-top:2px;line-height:1;}
+  .tm-controls{display:flex;gap:10px;padding:12px 24px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+  .ctrl-label{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
+  .tm-controls input,.tm-controls select{font-family:var(--font-mono);font-size:12px;padding:7px 11px;border:1px solid var(--border-input);border-radius:6px;background:var(--bg-input);color:var(--text-bright);outline:none;transition:border-color .15s;}
+  .tm-controls input:focus,.tm-controls select:focus{border-color:var(--accent);}
+  .tm-controls input{min-width:200px;}.tm-controls input::placeholder{color:var(--text-faint);}
+  .loading{display:flex;flex-direction:column;align-items:center;padding:80px;gap:14px;}
+  .spinner{width:34px;height:34px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading p{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
+  .table-container{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  thead{background:var(--bg-raised);position:sticky;top:0;z-index:10;}
+  th{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:12px 14px;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;transition:color .15s;border-bottom:1px solid var(--border);font-weight:400;}
+  th:hover{color:var(--accent);}
+  th.sorted-asc::after{content:' ▲';color:var(--accent);font-size:8px;}
+  th.sorted-desc::after{content:' ▼';color:var(--accent);font-size:8px;}
+  th.align-right{text-align:right;}
+  tbody tr{border-bottom:1px solid var(--border-soft);background:var(--bg-base);transition:background .12s;}
+  tbody tr:hover{background:var(--bg-row-hover);}
+  td{padding:11px 14px;vertical-align:middle;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);}
+  td.align-right{text-align:right;}
+  .logo-cell{display:flex;align-items:center;gap:10px;}
+  .team-logo{width:26px;height:26px;object-fit:contain;flex-shrink:0;}
+  .player-name{font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text-bright);}
+  .team-name-text{font-size:10px;color:var(--text-dim);font-family:var(--font-mono);}
+  .contract-badge{display:inline-block;font-family:var(--font-mono);font-size:8px;letter-spacing:1px;padding:3px 8px;border-radius:3px;font-weight:400;text-transform:uppercase;}
+  .badge-rookie{background:rgba(0,216,154,0.12);color:var(--accent);}
+  .badge-max{background:rgba(255,107,133,0.12);color:var(--bar-hot);}
+  .badge-veteran{background:var(--bg-input);color:var(--text-muted);}
+  .badge-standard{background:rgba(255,180,84,0.12);color:var(--bar-warm);}
+  .badge-default{background:var(--bg-input);color:var(--text-dim);}
+  .val-positive{color:var(--positive);font-weight:700;}
+  .val-negative{color:var(--negative);font-weight:700;}
+  .tm-footer{padding:13px 24px;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase;background:var(--bg-panel);border-top:1px solid var(--border);display:flex;justify-content:space-between;}
+  @media(max-width:768px){.tm-controls{flex-direction:column;align-items:stretch;}.tm-controls input,.tm-controls select{width:100%;}.tm-header{padding:16px;}}
+  ::-webkit-scrollbar{width:7px;height:7px;}::-webkit-scrollbar-track{background:var(--bg-base);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+
+<div class="tm-header">
+  <div class="tm-title-wrap">
+    <div class="tm-badge">EPV</div>
+    <div>
+      <div class="tm-title">EPV — Life of Deal</div>
+      <div class="tm-title-sub">// Full-contract value vs. salary</div>
+    </div>
+  </div>
+</div>
+
+<div class="tm-controls">
+  <div><div class="ctrl-label">Search</div><input type="text" id="searchInput" placeholder="Player name..." oninput="filterTable()"></div>
+  <div><div class="ctrl-label">Team</div><select id="teamFilter" onchange="filterTable()"><option value="">All Teams</option></select></div>
+  <div><div class="ctrl-label">Contract Type</div><select id="contractFilter" onchange="filterTable()"><option value="">All Contract Types</option></select></div>
+</div>
+
+<div id="loadingSection" class="loading"><div class="spinner"></div><p>Loading contract data...</p></div>
+
+<div id="dataSection" style="display:none;">
+  <div class="table-container">
+    <table id="dataTable">
+      <thead><tr>
+        <th onclick="sortTable(0)">Contract</th>
+        <th onclick="sortTable(1)">Player</th>
+        <th onclick="sortTable(2)">Team</th>
+        <th onclick="sortTable(3)" class="align-right">Yrs</th>
+        <th onclick="sortTable(4)" class="align-right">$ Under Contract</th>
+        <th onclick="sortTable(5)" class="align-right">Proj. Value</th>
+        <th onclick="sortTable(6)" class="align-right">Value Diff</th>
+      </tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="tm-footer">
+  <span>Source · Live Workbook</span>
+  <span>Updated Daily</span>
+</div>
+
+<script>
+(function(){
+  var _gbi = document.getElementById.bind(document);
+  var _removed = {kpiTeams:1,kpiTotal:1,kpiPayroll:1,kpiPlayers:1,kpiDiff:1,kpiNet:1,kpiPayers:1,kpiTax:1,kpiCount:1,totalPlayers:1,avgSalary:1,totalPayroll:1,totalUnderContract:1,totalProjected:1,totalDifference:1,tenDayCount:1};
+  var _stub = function(){ var s={textContent:'',innerHTML:'',value:'',style:{}}; return s; };
+  document.getElementById = function(id){ var el=_gbi(id); if(el) return el; if(_removed[id]) return _stub(); return null; };
+})();
+</script>
+<script>
+  let allData=[],filteredData=[],sortColumn=-1,sortAscending=true;
+  const GOOGLE_SHEETS_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9jJpsamj56RIR756PoJSOaRgPSc9yDZ5nkpWUjO-ECjRMGsBq_Q-_s4vPcpfCSg/pub?gid=1741426200&single=true&output=csv';
+  const teamNameToCode={'Atlanta Hawks':'ATL','Boston Celtics':'BOS','Brooklyn Nets':'BKN','Charlotte Hornets':'CHO','Chicago Bulls':'CHI','Cleveland Cavaliers':'CLE','Dallas Mavericks':'DAL','Denver Nuggets':'DEN','Detroit Pistons':'DET','Golden State Warriors':'GSW','Houston Rockets':'HOU','Indiana Pacers':'IND','LA Clippers':'LAC','Los Angeles Clippers':'LAC','LA Lakers':'LAL','Los Angeles Lakers':'LAL','Memphis Grizzlies':'MEM','Miami Heat':'MIA','Milwaukee Bucks':'MIL','Minnesota Timberwolves':'MIN','New Orleans Pelicans':'NOP','New York Knicks':'NYK','Oklahoma City Thunder':'OKC','Orlando Magic':'ORL','Philadelphia 76ers':'PHI','Phoenix Suns':'PHX','Portland Trail Blazers':'POR','Sacramento Kings':'SAC','San Antonio Spurs':'SAS','Toronto Raptors':'TOR','Utah Jazz':'UTA','Washington Wizards':'WAS'};
+  const nbaIds={ATL:1610612737,BOS:1610612738,BKN:1610612751,CHO:1610612766,CHI:1610612741,CLE:1610612739,DAL:1610612742,DEN:1610612743,DET:1610612765,GSW:1610612744,HOU:1610612745,IND:1610612754,LAC:1610612746,LAL:1610612747,MEM:1610612763,MIA:1610612748,MIL:1610612749,MIN:1610612750,NOP:1610612740,NYK:1610612752,OKC:1610612760,ORL:1610612753,PHI:1610612755,PHX:1610612756,POR:1610612757,SAC:1610612758,SAS:1610612759,TOR:1610612761,UTA:1610612762,WAS:1610612764};
+  function getLogoUrl(code){const id=nbaIds[code];return id?`https://cdn.nba.com/logos/nba/${id}/primary/L/logo.svg`:'';}
+  function getContractClass(t){if(!t)return'badge-default';const s=t.toLowerCase();if(s.includes('rookie'))return'badge-rookie';if(s.includes('max'))return'badge-max';if(s.includes('veteran'))return'badge-veteran';if(s.includes('standard'))return'badge-standard';return'badge-default';}
+  function parseNumber(v){if(!v&&v!==0)return 0;let s=v.toString().replace(/[$,"\s]/g,'');if(s.startsWith('(')&&s.endsWith(')'))s='-'+s.slice(1,-1);const n=parseFloat(s);return isNaN(n)?0:n;}
+  function formatCurrency(v){return'$'+parseNumber(v).toLocaleString('en-US',{maximumFractionDigits:0});}
+  function formatShort(v){const n=parseNumber(v);if(n===0)return'$0';return(n<0?'-$':'$')+(Math.abs(n)/1e6).toFixed(1)+'M';}
+
+  window.addEventListener('DOMContentLoaded',()=>{
+    Papa.parse(GOOGLE_SHEETS_URL,{download:true,header:true,skipEmptyLines:true,dynamicTyping:false,
+      complete(results){if(results.data?.length>0){processData(results.data);document.getElementById('loadingSection').style.display='none';document.getElementById('dataSection').style.display='block';renderTable();updateStats();}},
+      error(e){document.getElementById('loadingSection').innerHTML=`<p style="color:var(--bar-hot)">Error: ${e.message}</p>`;}});
+  });
+
+  function processData(data){
+    allData=data;filteredData=[...data];
+    const teams=[...new Set(data.map(r=>r.Team).filter(Boolean))].sort();
+    const contracts=[...new Set(data.map(r=>r['Contract Type']).filter(Boolean))].sort();
+    const tf=document.getElementById('teamFilter');teams.forEach(t=>tf.innerHTML+=`<option value="${t}">${t}</option>`);
+    const cf=document.getElementById('contractFilter');contracts.forEach(c=>cf.innerHTML+=`<option value="${c}">${c}</option>`);
+  }
+  function renderTable(){
+    const tbody=document.getElementById('tableBody');tbody.innerHTML='';
+    filteredData.forEach(row=>{
+      const contractType=row['Contract Type']||'';const player=row['Player']||'';const team=row['Team']||'';
+      const years=row['Years Under Contract']||'';const underContract=row['$ Under Contract']||0;
+      const projected=row['Projected Value Over Life of Contract(s)']||0;const valDiff=row['Value Difference']||0;
+      const valDiffNum=parseNumber(valDiff);const teamCode=teamNameToCode[team]||team;const logo=getLogoUrl(teamCode);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td><span class="contract-badge ${getContractClass(contractType)}">${contractType}</span></td>
+        <td><div class="logo-cell">${logo?`<img src="${logo}" alt="${team}" class="team-logo">`:''}<div><div class="player-name">${player}</div><div class="team-name-text">${teamCode}</div></div></div></td>
+        <td>${team}</td>
+        <td class="align-right">${years}</td>
+        <td class="align-right">${formatCurrency(underContract)}</td>
+        <td class="align-right">${formatCurrency(projected)}</td>
+        <td class="align-right ${valDiffNum>0?'val-positive':valDiffNum<0?'val-negative':''}">${formatCurrency(valDiff)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  function filterTable(){
+    const s=document.getElementById('searchInput').value.toLowerCase();const t=document.getElementById('teamFilter').value;const c=document.getElementById('contractFilter').value;
+    filteredData=allData.filter(r=>(!s||(r.Player||'').toLowerCase().includes(s))&&(!t||r.Team===t)&&(!c||r['Contract Type']===c));
+    renderTable();updateStats();
+  }
+  function sortTable(col){
+    document.querySelectorAll('th').forEach((h,i)=>{h.classList.remove('sorted-asc','sorted-desc');if(i===col)h.classList.add(sortAscending&&sortColumn===col?'sorted-desc':'sorted-asc');});
+    if(sortColumn===col)sortAscending=!sortAscending;else{sortColumn=col;sortAscending=true;}
+    const keys=['Contract Type','Player','Team','Years Under Contract','$ Under Contract','Projected Value Over Life of Contract(s)','Value Difference'];
+    filteredData.sort((a,b)=>{let av=a[keys[col]],bv=b[keys[col]];if(col>=3){av=parseNumber(av);bv=parseNumber(bv);}else{av=(av||'').toLowerCase();bv=(bv||'').toLowerCase();}return sortAscending?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);});
+    renderTable();
+  }
+  function updateStats(){
+    const total=filteredData.length;let totalDiff=0;filteredData.forEach(r=>totalDiff+=parseNumber(r['Value Difference']));
+    document.getElementById('kpiPlayers').textContent=total;
+    const diffEl=document.getElementById('kpiDiff');diffEl.textContent=formatShort(totalDiff);diffEl.style.color=totalDiff>=0?'var(--positive)':'var(--negative)';
+  }
+</script>
+</body>
+</html>

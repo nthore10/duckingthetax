@@ -1,0 +1,95 @@
+<!-- Shared site navigation — edit this ONE file to update the nav everywhere.
+     Loaded at runtime by /nav.js into the <div id="dtt-nav"></div> mount on each page.
+     Styles are self-contained (literal colors/fonts) so the nav renders identically
+     on every page regardless of that page's own CSS variables. -->
+<style>
+#dtt-nav .site-nav{background:#252A31;border-bottom:1px solid #2E343D;position:sticky;top:0;z-index:1000;font-family:'Space Mono',monospace;}
+#dtt-nav .nav-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;}
+#dtt-nav .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+#dtt-nav .nav-badge{width:32px;height:32px;border-radius:6px;background:#00D89A;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;font-size:11px;color:#1E2228;flex-shrink:0;}
+#dtt-nav .nav-site-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#F2F4F7;letter-spacing:-0.3px;}
+#dtt-nav .nav-links{display:flex;align-items:center;gap:2px;list-style:none;margin:0;padding:0;}
+#dtt-nav .nav-links li{position:relative;}
+#dtt-nav .nav-links>li>a,#dtt-nav .nav-links>li>span{display:block;padding:6px 12px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9AA6B4;border-radius:4px;cursor:pointer;transition:color .15s,background .15s;white-space:nowrap;text-decoration:none;}
+#dtt-nav .nav-links>li>a:hover,#dtt-nav .nav-links>li>span:hover{color:#F2F4F7;background:#2A3038;}
+#dtt-nav .nav-links>li>a.active,#dtt-nav .nav-links>li>span.active{color:#00D89A;}
+#dtt-nav .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#252A31;border:1px solid #2E343D;border-radius:6px;min-width:220px;padding:6px 0;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:1001;}
+#dtt-nav .nav-links li:hover .nav-dropdown{display:block;}
+#dtt-nav .nav-dropdown a{display:block;padding:8px 16px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9AA6B4;transition:color .12s,background .12s;text-decoration:none;}
+#dtt-nav .nav-dropdown a:hover{color:#F2F4F7;background:#2A3038;}
+@media(max-width:768px){#dtt-nav .nav-links{display:none;}}
+</style>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <div class="nav-badge">DTT</div>
+      <span class="nav-site-name">Ducking The Tax</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/" data-nav="blog">Blog</a></li>
+      <li>
+        <span data-nav="values">Player Values &#9660;</span>
+        <div class="nav-dropdown">
+          <a href="/epv-current-year/">Current Year EPV</a>
+          <a href="/epv-current-year/epv-life-of-deal.html">Life of Contract EPV</a>
+          <a href="/etv/">Estimated Trade Value (ETV)</a>
+          <a href="/free-agent-epv/">Free Agent Class EPV</a>
+          <a href="/rookie-extension-epv/">Rookie Extension EPV</a>
+          <a href="/veteran-extension-epv/">Veteran Extension EPV</a>
+        </div>
+      </li>
+      <li>
+        <span data-nav="capsheets">Cap Sheets &#9660;</span>
+        <div class="nav-dropdown">
+          <a href="/cap-sheet.html?team=0">Atlanta Hawks</a>
+          <a href="/cap-sheet.html?team=1">Boston Celtics</a>
+          <a href="/cap-sheet.html?team=2">Brooklyn Nets</a>
+          <a href="/cap-sheet.html?team=3">Charlotte Hornets</a>
+          <a href="/cap-sheet.html?team=4">Chicago Bulls</a>
+          <a href="/cap-sheet.html?team=5">Cleveland Cavaliers</a>
+          <a href="/cap-sheet.html?team=6">Dallas Mavericks</a>
+          <a href="/cap-sheet.html?team=7">Denver Nuggets</a>
+          <a href="/cap-sheet.html?team=8">Detroit Pistons</a>
+          <a href="/cap-sheet.html?team=9">Golden State Warriors</a>
+          <a href="/cap-sheet.html?team=10">Houston Rockets</a>
+          <a href="/cap-sheet.html?team=11">Indiana Pacers</a>
+          <a href="/cap-sheet.html?team=12">Los Angeles Clippers</a>
+          <a href="/cap-sheet.html?team=13">Los Angeles Lakers</a>
+          <a href="/cap-sheet.html?team=14">Memphis Grizzlies</a>
+          <a href="/cap-sheet.html?team=15">Miami Heat</a>
+          <a href="/cap-sheet.html?team=16">Milwaukee Bucks</a>
+          <a href="/cap-sheet.html?team=17">Minnesota Timberwolves</a>
+          <a href="/cap-sheet.html?team=18">New Orleans Pelicans</a>
+          <a href="/cap-sheet.html?team=19">New York Knicks</a>
+          <a href="/cap-sheet.html?team=20">Oklahoma City Thunder</a>
+          <a href="/cap-sheet.html?team=21">Orlando Magic</a>
+          <a href="/cap-sheet.html?team=22">Philadelphia 76ers</a>
+          <a href="/cap-sheet.html?team=23">Phoenix Suns</a>
+          <a href="/cap-sheet.html?team=24">Portland Trail Blazers</a>
+          <a href="/cap-sheet.html?team=25">Sacramento Kings</a>
+          <a href="/cap-sheet.html?team=26">San Antonio Spurs</a>
+          <a href="/cap-sheet.html?team=27">Toronto Raptors</a>
+          <a href="/cap-sheet.html?team=28">Utah Jazz</a>
+          <a href="/cap-sheet.html?team=29">Washington Wizards</a>
+        </div>
+      </li>
+      <li>
+        <span data-nav="trackers">Trackers &#9660;</span>
+        <div class="nav-dropdown">
+          <a href="/luxury-tax-tracker/">Luxury Tax Tracker</a>
+          <a href="/ten-day-tracker/">10-Day Tracker</a>
+          <a href="/two-way-tracker/">Two-Way Tracker</a>
+          <a href="/dead-cap-tracker/">Dead Cap Tracker</a>
+        </div>
+      </li>
+      <li>
+        <span data-nav="agencies">Agencies &#9660;</span>
+        <div class="nav-dropdown">
+          <a href="#">Active Player Representation</a>
+          <a href="#">Assets Under Representation</a>
+        </div>
+      </li>
+      <li><a href="#" data-nav="tools">Tools</a></li>
+    </ul>
+  </div>
+</nav>

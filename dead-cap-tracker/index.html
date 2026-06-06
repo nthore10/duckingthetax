@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dead Cap Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-base:#1E2228;--bg-raised:#252A31;--bg-panel:#22272E;--bg-row-hover:#262C33;--bg-input:#2A3038;
+    --accent:#00D89A;--accent-dark:#00A878;
+    --text-bright:#F2F4F7;--text-primary:#C8D1DC;--text-muted:#9AA6B4;--text-dim:#7A8694;--text-faint:#5E6873;
+    --border:#2E343D;--border-soft:#282E35;--border-input:#353C46;
+    --bar-hot:#FF6B85;--bar-warm:#FFB454;--bar-cool:#00D89A;--rank-num:#4E5763;
+    --font-display:'Space Grotesk',sans-serif;--font-mono:'Space Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-display);background:var(--bg-base);color:var(--text-primary);min-height:100vh;}
+
+  .tm-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg-raised);flex-wrap:wrap;gap:16px;}
+  .tm-title-wrap{display:flex;align-items:center;gap:14px;}
+  .tm-badge{width:38px;height:38px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--bg-base);}
+  .tm-title{font-family:var(--font-display);font-weight:700;font-size:19px;color:var(--text-bright);letter-spacing:-0.3px;line-height:1;}
+  .tm-title-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:3px;}
+  .tm-meta{display:flex;gap:24px;}
+  .tm-meta-item{text-align:right;}
+  .tm-meta-label{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+  .tm-meta-value{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--accent);margin-top:2px;line-height:1;}
+
+  .tm-controls{display:flex;gap:8px;padding:12px 24px;background:var(--bg-panel);border-bottom:1px solid var(--border);}
+  .tm-ctrl-btn{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+  .tm-ctrl-btn:hover{border-color:var(--accent);color:var(--text-bright);}
+
+  .loading{display:flex;flex-direction:column;align-items:center;padding:80px 20px;gap:14px;}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading p{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
+
+  .table-wrapper{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;}
+
+  thead th:first-child,tbody td:first-child{position:sticky;left:0;z-index:10;}
+  thead th:first-child{z-index:25;}
+  thead th{position:sticky;top:0;z-index:15;background:var(--bg-raised);font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:12px 16px;text-align:right;font-weight:400;white-space:nowrap;user-select:none;cursor:pointer;transition:color .15s;border-bottom:1px solid var(--border);}
+  thead th:hover{color:var(--accent);}
+  thead th:first-child{text-align:left;padding-left:24px;min-width:230px;background:var(--bg-raised);}
+  thead th .sort-arrow{font-size:8px;margin-left:3px;opacity:.4;}
+  thead th.sort-active{color:var(--accent);}
+  thead th.sort-active .sort-arrow{opacity:1;}
+  thead th.total-col{border-left:1px solid var(--border);}
+
+  tbody tr.team-row{border-bottom:1px solid var(--border-soft);background:var(--bg-base);cursor:pointer;transition:background .12s;}
+  tbody tr.team-row:hover{background:var(--bg-row-hover);}
+  tbody tr.team-row td{padding:11px 16px;text-align:right;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);white-space:nowrap;}
+  tbody tr.team-row td:first-child{text-align:left;padding-left:24px;background:inherit;}
+  tbody tr.team-row:hover td:first-child{background:var(--bg-row-hover);}
+
+  .tm-team-cell{display:flex;align-items:center;gap:12px;}
+  .tm-rank{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--rank-num);width:22px;flex-shrink:0;}
+  .tm-team-logo{width:28px;height:28px;object-fit:contain;flex-shrink:0;}
+  .tm-team-name{font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text-bright);}
+  .caret{display:inline-block;font-size:8px;color:var(--text-faint);transition:transform .2s,color .15s;flex-shrink:0;margin-right:-4px;}
+  tr.team-row.expanded .caret{transform:rotate(90deg);color:var(--accent);}
+
+  .tm-bar-cell{}
+  .tm-bar-track{display:flex;align-items:center;justify-content:flex-end;gap:10px;}
+  .tm-bar-wrap{width:72px;height:7px;background:var(--border);border-radius:4px;overflow:hidden;flex-shrink:0;}
+  .tm-bar{height:100%;border-radius:4px;}
+  .tm-bar.hot{background:var(--bar-hot);}
+  .tm-bar.warm{background:var(--bar-warm);}
+  .tm-bar.cool{background:var(--bar-cool);}
+  .tm-total{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--text-bright);min-width:62px;text-align:right;}
+  .tm-total.hot{color:var(--bar-hot);}
+  .tm-total.warm{color:var(--bar-warm);}
+  td.total-col-cell{border-left:1px solid var(--border);}
+
+  tbody tr.player-row{display:none;border-bottom:1px solid var(--border-soft);background:var(--bg-panel);transition:background .12s;}
+  tbody tr.player-row.show{display:table-row;}
+  tbody tr.player-row:hover{background:var(--bg-row-hover);}
+  tbody tr.player-row td{padding:8px 16px;text-align:right;font-family:var(--font-mono);font-size:11px;font-weight:400;white-space:nowrap;color:var(--text-dim);}
+  tbody tr.player-row td:first-child{text-align:left;padding-left:64px;background:inherit;font-family:var(--font-mono);color:var(--text-muted);}
+  tbody tr.player-row:hover td:first-child{background:var(--bg-row-hover);}
+  tbody tr.player-row .tm-total{font-size:12px;color:var(--text-primary);}
+
+  .amt-zero{color:var(--text-faint);}
+
+  .tm-footer{padding:13px 24px;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase;background:var(--bg-panel);border-top:1px solid var(--border);display:flex;justify-content:space-between;}
+
+  @media(max-width:768px){.tm-header{padding:16px;}.table-wrapper{overflow-x:auto;}thead th:first-child,tbody td:first-child{min-width:180px;}}
+  ::-webkit-scrollbar{width:7px;height:7px;}::-webkit-scrollbar-track{background:var(--bg-base);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}::-webkit-scrollbar-thumb:hover{background:var(--text-faint);}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+
+<div class="tm-header">
+  <div class="tm-title-wrap">
+    <div class="tm-badge">DC</div>
+    <div>
+      <div class="tm-title">Dead Cap Tracker</div>
+      <div class="tm-title-sub" id="subtitle">// Dead cap hit by team by year</div>
+    </div>
+  </div>
+</div>
+
+<div class="tm-controls">
+  <button class="tm-ctrl-btn" onclick="collapseAll()">By Team</button>
+  <button class="tm-ctrl-btn" onclick="expandAll()">By Team &amp; Player</button>
+</div>
+
+<div id="app">
+  <div class="loading"><div class="spinner"></div><p>Loading&hellip;</p></div>
+</div>
+
+<div class="tm-footer">
+  <span>Source · Live Workbook</span>
+  <span>Updated Daily</span>
+</div>
+
+<script>
+(function(){
+  var _gbi = document.getElementById.bind(document);
+  var _removed = {kpiTeams:1,kpiTotal:1,kpiPayroll:1,kpiPlayers:1,kpiDiff:1,kpiNet:1,kpiPayers:1,kpiTax:1,kpiCount:1,totalPlayers:1,avgSalary:1,totalPayroll:1,totalUnderContract:1,totalProjected:1,totalDifference:1,tenDayCount:1};
+  var _stub = function(){ var s={textContent:'',innerHTML:'',value:'',style:{}}; return s; };
+  document.getElementById = function(id){ var el=_gbi(id); if(el) return el; if(_removed[id]) return _stub(); return null; };
+})();
+</script>
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub?gid=829871333&single=true&output=csv';
+const FALLBACK_B64 = `VGVhbSxQbGF5ZXIsRGVhZCBDYXAgSGl0IDIwMjUtMjAyNixEZWFkIENhcCBIaXQgMjAyNi0yMDI3LERlYWQgQ2FwIEhpdCAyMDI3LTIwMjgsRGVhZCBDYXAgSGl0IDIwMjgtMjAyOSxEZWFkIENhcCBIaXQgMjAyOS0yMDMwLElELCwsVGVhbQpBdGxhbnRhIEhhd2tzLER1b3AgUmVhdGgsIiAkIDIsMjIxLDY3NyAiLCwsLCw=`;
+
+const YEAR_COUNT = 5;
+const nbaIds = {ATL:1610612737,BOS:1610612738,BKN:1610612751,CHO:1610612766,CHI:1610612741,CLE:1610612739,DAL:1610612742,DEN:1610612743,DET:1610612765,GSW:1610612744,HOU:1610612745,IND:1610612754,LAC:1610612746,LAL:1610612747,MEM:1610612763,MIA:1610612748,MIL:1610612749,MIN:1610612750,NOP:1610612740,NYK:1610612752,OKC:1610612760,ORL:1610612753,PHI:1610612755,PHX:1610612756,POR:1610612757,SAC:1610612758,SAS:1610612759,TOR:1610612761,UTA:1610612762,WAS:1610612764};
+const teamAbbrMap = {'Atlanta Hawks':'ATL','Boston Celtics':'BOS','Brooklyn Nets':'BKN','Charlotte Hornets':'CHO','Chicago Bulls':'CHI','Cleveland Cavaliers':'CLE','Dallas Mavericks':'DAL','Denver Nuggets':'DEN','Detroit Pistons':'DET','Golden State Warriors':'GSW','Houston Rockets':'HOU','Indiana Pacers':'IND','LA Clippers':'LAC','Los Angeles Clippers':'LAC','LA Lakers':'LAL','Los Angeles Lakers':'LAL','Memphis Grizzlies':'MEM','Miami Heat':'MIA','Milwaukee Bucks':'MIL','Minnesota Timberwolves':'MIN','New Orleans Pelicans':'NOP','New York Knicks':'NYK','Oklahoma City Thunder':'OKC','Orlando Magic':'ORL','Philadelphia 76ers':'PHI','Phoenix Suns':'PHX','Portland Trail Blazers':'POR','Sacramento Kings':'SAC','San Antonio Spurs':'SAS','Toronto Raptors':'TOR','Utah Jazz':'UTA','Washington Wizards':'WAS'};
+function logoUrl(team){const c=teamAbbrMap[team];const id=nbaIds[c];return id?`https://cdn.nba.com/logos/nba/${id}/primary/L/logo.svg`:'';}
+
+let rows=[],teamTotals={},yearLabels=[],sortedTeams=[],expandedSet=new Set(),maxTeamTotal=0;
+function escKey(s){return s.replace(/[^a-z0-9]/gi,'_');}
+function parseMoney(s){if(!s||!s.trim()||s.trim()==='-'||/^\$\s*-\s*$/.test(s.trim()))return 0;let c=s.replace(/[$,"\s]/g,'');if(c.startsWith('(')&&c.endsWith(')'))c='-'+c.slice(1,-1);const n=parseFloat(c);return isNaN(n)?0:n;}
+function formatMoney(n){if(n===0)return'—';return'$'+Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:0});}
+function formatShort(n){if(n===0)return'$0';const m=n/1e6;return'$'+m.toFixed(1)+'M';}
+function barClass(frac){if(frac>=0.5)return'hot';if(frac>=0.2)return'warm';return'cool';}
+
+function parseCSVLine(line){const v=[];let cur='',inQ=false;for(const ch of line){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){v.push(cur);cur='';}else cur+=ch;}v.push(cur);return v;}
+
+function parseData(csv){
+  const lines=csv.trim().split('\n');
+  const headerVals=parseCSVLine(lines[0]);
+  yearLabels=headerVals.slice(2,2+YEAR_COUNT).map(h=>h.trim().replace(/^"|"$/g,'').replace('Dead Cap Hit ',''));
+  rows=[];
+  for(let i=1;i<lines.length;i++){
+    const vals=parseCSVLine(lines[i]);
+    const team=(vals[0]||'').trim();const player=(vals[1]||'').trim();
+    if(!team||!player)continue;
+    const amounts=[];for(let j=0;j<YEAR_COUNT;j++)amounts.push(parseMoney(vals[2+j]||''));
+    rows.push({team,player,amounts});
+  }
+  teamTotals={};
+  rows.forEach(r=>{if(!teamTotals[r.team])teamTotals[r.team]={totals:Array(YEAR_COUNT).fill(0)};r.amounts.forEach((a,i)=>teamTotals[r.team].totals[i]+=a);});
+  sortedTeams=Object.keys(teamTotals).sort((a,b)=>teamTotals[b].totals.reduce((s,v)=>s+v,0)-teamTotals[a].totals.reduce((s,v)=>s+v,0));
+  maxTeamTotal=Math.max(...sortedTeams.map(t=>teamTotals[t].totals.reduce((s,v)=>s+v,0)),1);
+}
+
+function updateKPIs(){
+  const leagueTotal=sortedTeams.reduce((s,t)=>s+teamTotals[t].totals.reduce((x,v)=>x+v,0),0);
+  document.getElementById('kpiTotal').textContent=formatShort(leagueTotal);
+  document.getElementById('kpiTeams').textContent=sortedTeams.length;
+  document.getElementById('subtitle').textContent='// Dead cap hit by team by year';
+}
+
+function render(){
+  const yearCols=yearLabels.map((y,i)=>`<th onclick="sortByYear(${i})">${y}<span class="sort-arrow">⇅</span></th>`).join('');
+  let html=`<div class="table-wrapper"><table>
+    <thead><tr>
+      <th onclick="sortByName()" style="text-align:left">Team<span class="sort-arrow">⇅</span></th>
+      ${yearCols}
+      <th class="total-col" onclick="sortByTotal()" style="text-align:right">Total Exposure<span class="sort-arrow">⇅</span></th>
+    </tr></thead><tbody>`;
+
+  sortedTeams.forEach((team,idx)=>{
+    const key=escKey(team);
+    const tot=teamTotals[team];
+    const grand=tot.totals.reduce((a,b)=>a+b,0);
+    const logo=logoUrl(team);
+    const frac=grand/maxTeamTotal;
+    const bc=barClass(frac);
+    const yearCells=tot.totals.map(a=>`<td class="${a===0?'amt-zero':''}">${formatMoney(a)}</td>`).join('');
+    html+=`<tr class="team-row" data-team="${key}" onclick="toggleTeam('${key}')">
+      <td><div class="tm-team-cell">
+        <span class="caret">▶</span>
+        <span class="tm-rank">${idx+1}</span>
+        ${logo?`<img src="${logo}" alt="${team}" class="tm-team-logo">`:''}
+        <span class="tm-team-name">${team}</span>
+      </div></td>
+      ${yearCells}
+      <td class="total-col-cell tm-bar-cell"><div class="tm-bar-track"><div class="tm-bar-wrap"><div class="tm-bar ${bc}" style="width:${Math.max(frac*100,2)}%"></div></div><span class="tm-total ${bc==='hot'?'hot':bc==='warm'?'warm':''}">${formatShort(grand)}</span></div></td>
+    </tr>`;
+    rows.filter(r=>r.team===team).forEach(r=>{
+      const pg=r.amounts.reduce((a,b)=>a+b,0);
+      const pf=pg/maxTeamTotal;
+      const pbc=barClass(pf);
+      const pYearCells=r.amounts.map(a=>`<td class="${a===0?'amt-zero':''}">${formatMoney(a)}</td>`).join('');
+      html+=`<tr class="player-row" data-team="${key}">
+        <td>${r.player}</td>
+        ${pYearCells}
+        <td class="total-col-cell tm-bar-cell"><div class="tm-bar-track"><div class="tm-bar-wrap"><div class="tm-bar ${pbc}" style="width:${Math.max(pf*100,2)}%"></div></div><span class="tm-total">${formatShort(pg)}</span></div></td>
+      </tr>`;
+    });
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('app').innerHTML=html;
+  updateVisibility();
+}
+
+function toggleTeam(key){expandedSet.has(key)?expandedSet.delete(key):expandedSet.add(key);updateVisibility();}
+function expandAll(){sortedTeams.forEach(t=>expandedSet.add(escKey(t)));updateVisibility();}
+function collapseAll(){expandedSet.clear();updateVisibility();}
+function updateVisibility(){
+  document.querySelectorAll('tr.player-row').forEach(el=>el.classList.toggle('show',expandedSet.has(el.dataset.team)));
+  document.querySelectorAll('tr.team-row').forEach(tr=>tr.classList.toggle('expanded',expandedSet.has(tr.dataset.team)));
+}
+function sortByName(){sortedTeams.sort((a,b)=>a.localeCompare(b));render();}
+function sortByYear(i){sortedTeams.sort((a,b)=>teamTotals[b].totals[i]-teamTotals[a].totals[i]);render();}
+function sortByTotal(){sortedTeams.sort((a,b)=>teamTotals[b].totals.reduce((s,v)=>s+v,0)-teamTotals[a].totals.reduce((s,v)=>s+v,0));render();}
+
+async function init(){
+  try{
+    const resp=await fetch(CSV_URL);
+    if(!resp.ok)throw new Error();
+    parseData(await resp.text());updateKPIs();render();
+  }catch(e){
+    try{parseData(atob(FALLBACK_B64));updateKPIs();render();}
+    catch(e2){document.getElementById('app').innerHTML='<div style="text-align:center;padding:80px;color:var(--bar-hot)">Failed to load data.</div>';}
+  }
+}
+init();
+</script>
+</body>
+</html>

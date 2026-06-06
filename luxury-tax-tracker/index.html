@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxury Tax Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-base:#1E2228;--bg-raised:#252A31;--bg-panel:#22272E;--bg-row-hover:#262C33;--bg-input:#2A3038;
+    --accent:#00D89A;--accent-dark:#00A878;
+    --text-bright:#F2F4F7;--text-primary:#C8D1DC;--text-muted:#9AA6B4;--text-dim:#7A8694;--text-faint:#5E6873;
+    --border:#2E343D;--border-soft:#282E35;--border-input:#353C46;
+    --bar-hot:#FF6B85;--bar-warm:#FFB454;--bar-cool:#00D89A;--rank-num:#4E5763;
+    --font-display:'Space Grotesk',sans-serif;--font-mono:'Space Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-display);background:var(--bg-base);color:var(--text-primary);min-height:100vh;}
+  .tm-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg-raised);flex-wrap:wrap;gap:16px;}
+  .tm-title-wrap{display:flex;align-items:center;gap:14px;}
+  .tm-badge{width:38px;height:38px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--bg-base);}
+  .tm-title{font-family:var(--font-display);font-weight:700;font-size:19px;color:var(--text-bright);letter-spacing:-0.3px;line-height:1;}
+  .tm-title-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:3px;}
+  .tm-meta{display:flex;gap:24px;}
+  .tm-meta-item{text-align:right;}
+  .tm-meta-label{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+  .tm-meta-value{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--accent);margin-top:2px;line-height:1;}
+  .tm-controls{display:flex;gap:8px;padding:12px 24px;background:var(--bg-panel);border-bottom:1px solid var(--border);}
+  .tm-ctrl-btn{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-muted);border-radius:4px;cursor:pointer;transition:all .15s;}
+  .tm-ctrl-btn:hover{border-color:var(--accent);color:var(--text-bright);}
+  .loading{display:flex;flex-direction:column;align-items:center;padding:80px 20px;gap:14px;}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading p{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
+  .table-wrapper{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;}
+  thead th:first-child,tbody td:first-child{position:sticky;left:0;z-index:10;}
+  thead th:first-child{z-index:25;}
+  thead th{position:sticky;top:0;z-index:15;background:var(--bg-raised);font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:12px 14px;text-align:right;font-weight:400;white-space:nowrap;user-select:none;cursor:pointer;transition:color .15s;border-bottom:1px solid var(--border);}
+  thead th:hover{color:var(--accent);}
+  thead th.sort-active{color:var(--accent);}
+  thead th:first-child{text-align:left;padding-left:24px;min-width:210px;background:var(--bg-raised);}
+  thead th.total-col{border-left:1px solid var(--border);}
+  tbody tr.team-row{border-bottom:1px solid var(--border-soft);background:var(--bg-base);cursor:pointer;transition:background .12s;}
+  tbody tr.team-row:hover{background:var(--bg-row-hover);}
+  tbody tr.team-row td{padding:11px 14px;text-align:right;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);white-space:nowrap;}
+  tbody tr.team-row td:first-child{text-align:left;padding-left:24px;background:inherit;}
+  tbody tr.team-row:hover td:first-child{background:var(--bg-row-hover);}
+  .tm-team-cell{display:flex;align-items:center;gap:12px;}
+  .tm-rank{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--rank-num);width:22px;flex-shrink:0;}
+  .tm-team-logo{width:28px;height:28px;object-fit:contain;flex-shrink:0;}
+  .tm-team-name{font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text-bright);}
+  .caret{display:inline-block;font-size:8px;color:var(--text-faint);transition:transform .2s,color .15s;flex-shrink:0;margin-right:-4px;}
+  tr.team-row.expanded .caret{transform:rotate(90deg);color:var(--accent);}
+  .repeater-badge{font-family:var(--font-mono);font-size:8px;font-weight:400;letter-spacing:1px;text-transform:uppercase;color:var(--bar-hot);background:rgba(255,107,133,0.12);padding:2px 7px;border-radius:3px;display:inline-block;}
+  .tm-bar-cell{}
+  .tm-bar-track{display:flex;align-items:center;justify-content:flex-end;gap:10px;}
+  .tm-bar-wrap{width:70px;height:7px;background:var(--border);border-radius:4px;overflow:hidden;flex-shrink:0;}
+  .tm-bar{height:100%;border-radius:4px;}
+  .tm-bar.hot{background:var(--bar-hot);}.tm-bar.warm{background:var(--bar-warm);}.tm-bar.cool{background:var(--bar-cool);}
+  .tm-total{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--text-bright);min-width:58px;text-align:right;}
+  .tm-total.hot{color:var(--bar-hot);}.tm-total.warm{color:var(--bar-warm);}
+  td.total-col-cell{border-left:1px solid var(--border);}
+  tbody tr.year-row{display:none;border-bottom:1px solid var(--border-soft);background:var(--bg-panel);transition:background .12s;}
+  tbody tr.year-row.show{display:table-row;}
+  tbody tr.year-row:hover{background:var(--bg-row-hover);}
+  tbody tr.year-row td{padding:8px 14px;text-align:right;font-family:var(--font-mono);font-size:11px;font-weight:400;white-space:nowrap;color:var(--text-dim);}
+  tbody tr.year-row td:first-child{text-align:left;padding-left:60px;background:inherit;color:var(--text-muted);}
+  tbody tr.year-row:hover td:first-child{background:var(--bg-row-hover);}
+  tbody tr.year-row .tm-total{font-size:12px;color:var(--text-primary);}
+  .amt-zero{color:var(--text-faint);}.amt-green{color:var(--accent);}
+  .tm-footer{padding:13px 24px;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase;background:var(--bg-panel);border-top:1px solid var(--border);display:flex;justify-content:space-between;}
+  @media(max-width:768px){.tm-header{padding:16px;}thead th:first-child,tbody td:first-child{min-width:170px;}}
+  ::-webkit-scrollbar{width:7px;height:7px;}::-webkit-scrollbar-track{background:var(--bg-base);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+
+<div class="tm-header">
+  <div class="tm-title-wrap">
+    <div class="tm-badge">LT</div>
+    <div>
+      <div class="tm-title">Luxury Tax Tracker</div>
+      <div class="tm-title-sub">// Projected tax by team by year</div>
+    </div>
+  </div>
+</div>
+
+<div class="tm-controls">
+  <button class="tm-ctrl-btn" onclick="collapseAll()">By Team</button>
+  <button class="tm-ctrl-btn" onclick="expandAll()">By Team &amp; Year</button>
+</div>
+
+<div id="app">
+  <div class="loading"><div class="spinner"></div><p>Loading&hellip;</p></div>
+</div>
+
+<div class="tm-footer">
+  <span>Source · Live Workbook</span>
+  <span>Updated Daily</span>
+</div>
+
+<script>
+(function(){
+  var _gbi = document.getElementById.bind(document);
+  var _removed = {kpiTeams:1,kpiTotal:1,kpiPayroll:1,kpiPlayers:1,kpiDiff:1,kpiNet:1,kpiPayers:1,kpiTax:1,kpiCount:1,totalPlayers:1,avgSalary:1,totalPayroll:1,totalUnderContract:1,totalProjected:1,totalDifference:1,tenDayCount:1};
+  var _stub = function(){ var s={textContent:'',innerHTML:'',value:'',style:{}}; return s; };
+  document.getElementById = function(id){ var el=_gbi(id); if(el) return el; if(_removed[id]) return _stub(); return null; };
+})();
+</script>
+<script>
+const CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub?gid=1262804733&single=true&output=csv';
+const FALLBACK_B64='LCwyMDI1LzIwMjYgQnJhY2tldHM=';
+const nbaIds={ATL:1610612737,BOS:1610612738,BKN:1610612751,CHO:1610612766,CHI:1610612741,CLE:1610612739,DAL:1610612742,DEN:1610612743,DET:1610612765,GSW:1610612744,HOU:1610612745,IND:1610612754,LAC:1610612746,LAL:1610612747,MEM:1610612763,MIA:1610612748,MIL:1610612749,MIN:1610612750,NOP:1610612740,NYK:1610612752,OKC:1610612760,ORL:1610612753,PHI:1610612755,PHX:1610612756,POR:1610612757,SAC:1610612758,SAS:1610612759,TOR:1610612761,UTA:1610612762,WAS:1610612764};
+const teamAbbrMap={'Atlanta Hawks':'ATL','Boston Celtics':'BOS','Brooklyn Nets':'BKN','Charlotte Hornets':'CHO','Chicago Bulls':'CHI','Cleveland Cavaliers':'CLE','Dallas Mavericks':'DAL','Denver Nuggets':'DEN','Detroit Pistons':'DET','Golden State Warriors':'GSW','Houston Rockets':'HOU','Indiana Pacers':'IND','Los Angeles Clippers':'LAC','LA Clippers':'LAC','Los Angeles Lakers':'LAL','LA Lakers':'LAL','Memphis Grizzlies':'MEM','Miami Heat':'MIA','Milwaukee Bucks':'MIL','Minnesota Timberwolves':'MIN','New Orleans Pelicans':'NOP','New York Knicks':'NYK','Oklahoma City Thunder':'OKC','Orlando Magic':'ORL','Philadelphia 76ers':'PHI','Phoenix Suns':'PHX','Portland Trail Blazers':'POR','Sacramento Kings':'SAC','San Antonio Spurs':'SAS','Toronto Raptors':'TOR','Utah Jazz':'UTA','Washington Wizards':'WAS'};
+function logoUrl(team){const c=teamAbbrMap[team];const id=nbaIds[c];return id?`https://cdn.nba.com/logos/nba/${id}/primary/L/logo.svg`:'';}
+
+let allTeamData={},sortedTeams=[],expandedSet=new Set(),maxTotal=1,sortKey='total',sortAsc=false;
+function escKey(s){return s.replace(/[^a-z0-9]/gi,'_');}
+function parseMoney(s){if(!s||!s.trim()||s.trim()==='-'||s.includes('$ -'))return 0;let c=s.replace(/[$,"\s]/g,'');if(c.startsWith('(')&&c.endsWith(')'))c='-'+c.slice(1,-1);const n=parseFloat(c);return isNaN(n)?0:n;}
+function formatMoney(n){if(n===0)return'—';const abs=Math.abs(n);const fmt='$'+abs.toLocaleString('en-US',{maximumFractionDigits:0});return n<0?`(${fmt})`:fmt;}
+function formatShort(n){if(n===0)return'$0';const m=Math.abs(n)/1e6;return(n<0?'-$':'$')+m.toFixed(1)+'M';}
+function barClass(frac){if(frac>=0.5)return'hot';if(frac>=0.2)return'warm';return'cool';}
+function parseLine(line){const v=[];let cur='',inQ=false;for(const ch of line){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){v.push(cur.trim());cur='';}else cur+=ch;}v.push(cur.trim());return v;}
+
+function parseData(csv){
+  // Real CSV structure:
+  //  col0 = "Team Name 'YY/YY" (team + year combined, e.g. "Atlanta Hawks '25/26")
+  //  col1 = Tax Space, col2 = Repeater?, col3-13 = Bracket 1-11, col14 = Total
+  //  First ~6 rows are bracket reference / league totals junk — skip them.
+  const lines=csv.trim().split('\n');
+  allTeamData={};
+  for(let i=0;i<lines.length;i++){
+    const vals=parseLine(lines[i]);
+    let c0=(vals[0]||'').trim();
+    if(!c0)continue;
+    // Skip header/junk rows
+    if(c0.includes('Brackets')||c0.includes('Totals')||c0==='Team/Year'||c0.includes('Bracket'))continue;
+    // Team rows look like "Atlanta Hawks '25/26" — must contain an apostrophe-year
+    const m=c0.match(/^(.*?)\s+'?(\d{2}\/\d{2})\s*$/);
+    if(!m)continue;
+    const team=m[1].trim();
+    const yr=m[2].trim();
+    if(!teamAbbrMap[team])continue; // only real teams
+    const taxSpace=parseMoney(vals[1]||'');
+    const repeater=(vals[2]||'').trim();
+    const taxAmts=[];for(let j=3;j<=13;j++)taxAmts.push(parseMoney(vals[j]||''));
+    const total=parseMoney(vals[14]||'');
+    if(!allTeamData[team])allTeamData[team]=[];
+    allTeamData[team].push({yr,taxSpace,repeater,taxAmts,total});
+  }
+  sortedTeams=Object.keys(allTeamData).sort((a,b)=>{
+    const at=Math.abs(allTeamData[a].reduce((s,y)=>s+y.total,0));const bt=Math.abs(allTeamData[b].reduce((s,y)=>s+y.total,0));return bt-at;
+  });
+  maxTotal=Math.max(...sortedTeams.map(t=>Math.abs(allTeamData[t].reduce((s,y)=>s+y.total,0))),1);
+}
+
+function updateKPIs(){
+  const totalTax=sortedTeams.reduce((s,t)=>s+allTeamData[t].reduce((x,y)=>x+y.total,0),0);
+  const payers=sortedTeams.filter(t=>allTeamData[t].reduce((x,y)=>x+y.total,0)>0).length;
+  document.getElementById('kpiTax').textContent=formatShort(totalTax);
+  document.getElementById('kpiPayers').textContent=payers;
+}
+
+function renderMainTable(){
+  if(!sortedTeams.length){document.getElementById('app').innerHTML='<div style="text-align:center;padding:60px;color:var(--text-dim)">No team data found</div>';return;}
+  const years=['25/26','26/27','27/28','28/29','29/30'];
+  const arrow=k=>sortKey===k?(sortAsc?' ▲':' ▼'):'';
+  const yearCols=years.map((y,i)=>`<th onclick="sortByYear(${i})" class="${sortKey==='yr'+i?'sort-active':''}">${y}<span style="opacity:.5;font-size:8px;margin-left:3px">${sortKey==='yr'+i?(sortAsc?'▲':'▼'):'⇅'}</span></th>`).join('');
+  let html=`<div class="table-wrapper"><table><thead><tr>
+    <th style="text-align:left" onclick="sortByName()" class="${sortKey==='name'?'sort-active':''}">Team<span style="opacity:.5;font-size:8px;margin-left:3px">${sortKey==='name'?(sortAsc?'▲':'▼'):'⇅'}</span></th>
+    ${yearCols}
+    <th class="total-col ${sortKey==='total'?'sort-active':''}" style="text-align:right" onclick="sortByTotal()">Total Tax<span style="opacity:.5;font-size:8px;margin-left:3px">${sortKey==='total'?(sortAsc?'▲':'▼'):'⇅'}</span></th>
+  </tr></thead><tbody>`;
+  sortedTeams.forEach((team,idx)=>{
+    const key=escKey(team);const yd=allTeamData[team]||[];const logo=logoUrl(team);
+    const grand=yd.reduce((s,y)=>s+y.total,0);const frac=Math.abs(grand)/maxTotal;const bc=barClass(frac);
+    const isRep=yd.some(y=>y.repeater&&y.repeater.toLowerCase().includes('repeater'));
+    // Map each season to its total, aligned to the 5 year columns
+    const byYear={};yd.forEach(y=>byYear[y.yr]=y);
+    const yearCells=years.map(yr=>{const e=byYear[yr];const v=e?e.total:0;return`<td class="${v===0?'amt-zero':''}">${formatMoney(v)}</td>`;}).join('');
+    html+=`<tr class="team-row" data-team="${key}" onclick="toggleTeam('${key}')">
+      <td><div class="tm-team-cell"><span class="caret">▶</span><span class="tm-rank">${idx+1}</span>${logo?`<img src="${logo}" class="tm-team-logo" alt="${team}">`:''}<span class="tm-team-name">${team}</span>${isRep?'<span class="repeater-badge" style="margin-left:6px">Rep</span>':''}</div></td>
+      ${yearCells}
+      <td class="total-col-cell tm-bar-cell"><div class="tm-bar-track"><div class="tm-bar-wrap"><div class="tm-bar ${bc}" style="width:${Math.max(frac*100,2)}%"></div></div><span class="tm-total ${bc==='hot'?'hot':bc==='warm'?'warm':''}">${formatShort(grand)}</span></div></td>
+    </tr>`;
+    // Year detail rows: show tax space + total per season, aligned under each year column
+    yd.forEach(y=>{
+      const yearCells2=years.map(yr=>{
+        if(yr===y.yr)return`<td class="${(y.taxSpace||0)<0?'amt-green':''}" style="color:var(--text-primary)">${formatMoney(y.total)}</td>`;
+        return`<td class="amt-zero"></td>`;
+      }).join('');
+      html+=`<tr class="year-row" data-team="${key}">
+        <td>${y.yr} &nbsp;·&nbsp; <span style="color:var(--text-faint)">Tax Space ${formatShort(y.taxSpace)}</span></td>
+        ${yearCells2}
+        <td class="total-col-cell"><span class="tm-total">${formatShort(y.total)}</span></td>
+      </tr>`;
+    });
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('app').innerHTML=html;
+  updateVisibility();
+}
+function toggleTeam(key){expandedSet.has(key)?expandedSet.delete(key):expandedSet.add(key);updateVisibility();}
+function expandAll(){sortedTeams.forEach(t=>expandedSet.add(escKey(t)));updateVisibility();}
+function collapseAll(){expandedSet.clear();updateVisibility();}
+function updateVisibility(){
+  document.querySelectorAll('tr.year-row').forEach(el=>el.classList.toggle('show',expandedSet.has(el.dataset.team)));
+  document.querySelectorAll('tr.team-row').forEach(tr=>tr.classList.toggle('expanded',expandedSet.has(tr.dataset.team)));
+}
+function teamGrand(t){return allTeamData[t].reduce((s,y)=>s+y.total,0);}
+function yrTotal(t,i){const years=['25/26','26/27','27/28','28/29','29/30'];const e=(allTeamData[t]||[]).find(y=>y.yr===years[i]);return e?e.total:0;}
+function applySort(){
+  if(sortKey==='name'){sortedTeams.sort((a,b)=>sortAsc?a.localeCompare(b):b.localeCompare(a));}
+  else if(sortKey==='total'){sortedTeams.sort((a,b)=>{const d=Math.abs(teamGrand(b))-Math.abs(teamGrand(a));return sortAsc?-d:d;});}
+  else if(sortKey.startsWith('yr')){const i=parseInt(sortKey.slice(2));sortedTeams.sort((a,b)=>{const d=Math.abs(yrTotal(b,i))-Math.abs(yrTotal(a,i));return sortAsc?-d:d;});}
+  renderMainTable();
+}
+function toggleSort(key,defaultAsc){if(sortKey===key){sortAsc=!sortAsc;}else{sortKey=key;sortAsc=defaultAsc;}applySort();}
+function sortByName(){toggleSort('name',true);}
+function sortByTotal(){toggleSort('total',false);}
+function sortByYear(i){toggleSort('yr'+i,false);}
+async function init(){
+  try{const resp=await fetch(CSV_URL);if(!resp.ok)throw new Error();parseData(await resp.text());}
+  catch(e){try{parseData(atob(FALLBACK_B64));}catch(e2){document.getElementById('app').innerHTML='<div style="text-align:center;padding:80px;color:var(--bar-hot)">Failed to load data.</div>';return;}}
+  updateKPIs();renderMainTable();
+}
+init();
+</script>
+</body>
+</html>
