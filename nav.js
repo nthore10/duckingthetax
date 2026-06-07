@@ -3,6 +3,21 @@
    This fetches /nav.html, injects it, and highlights the active section.
    Edit /nav.html to change the nav for the entire site. */
 (function () {
+  // Site-wide accessibility baseline (UI-skills standards), injected once for every page:
+  // honor reduced-motion, show keyboard focus rings, and lift the faintest text to WCAG-AA contrast.
+  if (!document.getElementById('dtt-a11y')) {
+    var s = document.createElement('style');
+    s.id = 'dtt-a11y';
+    s.textContent =
+      ':root{--text-dim:#8A95A3;--text-faint:#828D9B;}' +
+      '@media (prefers-reduced-motion: reduce){*,*::before,*::after{' +
+        'animation-duration:.01ms!important;animation-iteration-count:1!important;' +
+        'transition-duration:.01ms!important;scroll-behavior:auto!important;}}' +
+      'a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{' +
+        'outline:2px solid #00D89A;outline-offset:2px;border-radius:3px;}';
+    document.head.appendChild(s);
+  }
+
   // Cloudflare Web Analytics — loaded site-wide here so it covers every page.
   if (!document.querySelector('script[src*="cloudflareinsights.com/beacon"]')) {
     var cf = document.createElement('script');
