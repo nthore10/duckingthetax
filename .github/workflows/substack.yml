@@ -18,6 +18,8 @@ jobs:
           node-version: '20'
       - name: Fetch latest posts
         run: node scripts/fetch-substack.mjs
+        env:
+          RSS2JSON_API_KEY: ${{ secrets.RSS2JSON_API_KEY }}
       - name: Commit if changed
         run: |
           if git diff --quiet -- posts.json; then

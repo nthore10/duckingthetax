@@ -44,8 +44,12 @@ async function fromSubstackApi() {
 }
 
 // Source 2: rss2json fetches the feed server-side and returns structured JSON.
+// A free API key (env RSS2JSON_API_KEY) gives a private quota — the keyless
+// endpoint rate-limits shared CI IPs (HTTP 422). Strongly recommended for CI.
 async function fromRss2Json() {
-  const u = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(FEED)}&count=${MAX_POSTS}`;
+  const key = process.env.RSS2JSON_API_KEY;
+  let u = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(FEED)}&count=${MAX_POSTS}`;
+  if (key) u += `&api_key=${encodeURIComponent(key)}`;
   const res = await fetch(u, { headers: { 'User-Agent': UA } });
   if (!res.ok) throw new Error(`rss2json HTTP ${res.status}`);
   const data = await res.json();
