@@ -3,6 +3,15 @@
    This fetches /nav.html, injects it, and highlights the active section.
    Edit /nav.html to change the nav for the entire site. */
 (function () {
+  // Cloudflare Web Analytics — loaded site-wide here so it covers every page.
+  if (!document.querySelector('script[src*="cloudflareinsights.com/beacon"]')) {
+    var cf = document.createElement('script');
+    cf.defer = true;
+    cf.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    cf.setAttribute('data-cf-beacon', '{"token": "0174f5bc8ef74d9c83594fe1cfb6f7ff"}');
+    document.head.appendChild(cf);
+  }
+
   // Ensure the nav's fonts are available even on pages that don't load them.
   if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
     var f = document.createElement('link');
