@@ -58,7 +58,7 @@ a{color:inherit;text-decoration:none;}
 .section-label{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
 
 /* TOOL GRID */
-.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;}
+.tool-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:24px;}
 .tool-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;padding:18px 20px;display:flex;align-items:flex-start;gap:14px;transition:border-color .15s,background .15s;cursor:pointer;}
 .tool-card:hover{border-color:var(--accent);background:var(--bg-row-hover);}
 .tool-card-badge{width:36px;height:36px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:11px;color:var(--bg-base);flex-shrink:0;letter-spacing:0.5px;}
@@ -138,24 +138,6 @@ a{color:inherit;text-decoration:none;}
         <div class="header-sub">// NBA Salary Cap Analysis · Cap Sheets · EPV · Trackers</div>
       </div>
     </div>
-    <div class="header-kpis">
-      <div class="kpi-item">
-        <div class="kpi-label">2025–26 Cap</div>
-        <div class="kpi-value">$154.6M</div>
-      </div>
-      <div class="kpi-item">
-        <div class="kpi-label">Luxury Tax</div>
-        <div class="kpi-value">$187.9M</div>
-      </div>
-      <div class="kpi-item">
-        <div class="kpi-label">First Apron</div>
-        <div class="kpi-value">$195.9M</div>
-      </div>
-      <div class="kpi-item">
-        <div class="kpi-label">Second Apron</div>
-        <div class="kpi-value">$207.8M</div>
-      </div>
-    </div>
   </div>
 </header>
 
@@ -163,7 +145,16 @@ a{color:inherit;text-decoration:none;}
 <main class="page-body">
   <div>
 
-    <!-- TOOLS GRID -->
+    <!-- BLOG FEED (auto-synced from Substack via posts.json) -->
+    <div class="section-label">Latest Posts</div>
+    <div id="blog-feed"><div class="blog-status">Loading latest posts…</div></div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside>
+
+    <!-- TOOLS & TRACKERS -->
     <div class="section-label">Tools & Trackers</div>
     <div class="tool-grid">
 
@@ -266,64 +257,6 @@ a{color:inherit;text-decoration:none;}
         <div class="tool-card-arrow">→</div>
       </a>
 
-    </div>
-
-    <!-- BLOG FEED (auto-synced from Substack via posts.json) -->
-    <div class="section-label">Latest Posts</div>
-    <div id="blog-feed"><div class="blog-status">Loading latest posts…</div></div>
-
-  </div>
-
-  <!-- SIDEBAR -->
-  <aside>
-
-    <div class="sidebar-widget">
-      <div class="widget-header">
-        <span>Cap Thresholds</span>
-        <span class="widget-badge">2025–26</span>
-      </div>
-      <div class="threshold-row"><span class="threshold-label">Salary Cap</span><span class="threshold-val accent">$154.6M</span></div>
-      <div class="threshold-row"><span class="threshold-label">Luxury Tax Line</span><span class="threshold-val">$187.9M</span></div>
-      <div class="threshold-row"><span class="threshold-label">First Apron</span><span class="threshold-val">$195.9M</span></div>
-      <div class="threshold-row"><span class="threshold-label">Second Apron</span><span class="threshold-val hot">$207.8M</span></div>
-      <div class="threshold-row"><span class="threshold-label">Taxpayer MLE</span><span class="threshold-val">$5.7M</span></div>
-      <div class="threshold-row"><span class="threshold-label">Non-Tax MLE</span><span class="threshold-val">$14.1M</span></div>
-      <div class="threshold-row"><span class="threshold-label">Bi-Annual Exception</span><span class="threshold-val">$5.1M</span></div>
-      <div class="threshold-row"><span class="threshold-label">Vet Min (10 yrs)</span><span class="threshold-val">$3.6M</span></div>
-    </div>
-
-    <div class="sidebar-widget">
-      <div class="widget-header"><span>Top Tax Payers</span></div>
-      <a href="https://nthore10.github.io/Luxury-Tax-Tracker/" target="_blank">
-        <div class="tax-row">
-          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612749/primary/L/logo.svg" alt="MIL">
-          <span class="tax-team-name">Milwaukee Bucks</span>
-          <span class="tax-overage" style="color:var(--bar-hot);">+$94.2M</span>
-        </div>
-        <div class="tax-row">
-          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612738/primary/L/logo.svg" alt="BOS">
-          <span class="tax-team-name">Boston Celtics</span>
-          <span class="tax-overage" style="color:var(--bar-hot);">+$67.8M</span>
-        </div>
-        <div class="tax-row">
-          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg" alt="GSW">
-          <span class="tax-team-name">Golden State Warriors</span>
-          <span class="tax-overage" style="color:var(--bar-warm);">+$52.1M</span>
-        </div>
-        <div class="tax-row">
-          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612752/primary/L/logo.svg" alt="NYK">
-          <span class="tax-team-name">New York Knicks</span>
-          <span class="tax-overage" style="color:var(--bar-warm);">+$38.4M</span>
-        </div>
-        <div class="tax-row">
-          <img class="team-logo-sm" src="https://cdn.nba.com/logos/nba/1610612747/primary/L/logo.svg" alt="LAL">
-          <span class="tax-team-name">Los Angeles Lakers</span>
-          <span class="tax-overage" style="color:var(--bar-cool);">+$12.0M</span>
-        </div>
-      </a>
-      <div style="padding:10px 18px;border-top:1px solid var(--border-soft);">
-        <a href="https://nthore10.github.io/Luxury-Tax-Tracker/" target="_blank" style="font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);">Full Tax Tracker →</a>
-      </div>
     </div>
 
     <div class="sidebar-widget">
