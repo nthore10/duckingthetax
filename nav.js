@@ -41,7 +41,7 @@
     var section = '';
     if (path === '/' || path === '') section = 'blog';
     else if (path.indexOf('/cap-sheet') === 0 || teams.test(path)) section = 'capsheets';
-    else if (/^\/(epv|etv|free-agent|rookie-extension|veteran-extension)/.test(path)) section = 'values';
+    else if (/^\/(epv|free-agent|rookie-extension|veteran-extension)/.test(path)) section = 'values';
     else if (/^\/(luxury-tax|ten-day|two-way|dead-cap)/.test(path)) section = 'trackers';
     else if (path.indexOf('/contract-calculator') === 0) section = 'tools';
     if (!section) return;
