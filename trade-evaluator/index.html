@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trade Evaluator · Ducking The Tax</title>
+    <meta name="description" content="Evaluate multi-team NBA trades on production and life-of-deal contract value — players, picks, and pick swaps." />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <style>body{margin:0;background:#1E2228;}</style>
+    <script type="module" crossorigin src="/trade-evaluator/assets/embed-Ns-ck9JD.js"></script>
+  </head>
+  <body>
+    <!-- Shared site nav (same mount the other tools use). Loaded via an inline
+         injector so Vite's base path doesn't rewrite the root-absolute /nav.js. -->
+    <div id="dtt-nav"></div>
+    <div id="root"></div>
+    <script>
+      (function () {
+        var s = document.createElement("script");
+        s.src = "/nav.js";
+        document.body.appendChild(s);
+      })();
+    </script>
+  </body>
+</html>
