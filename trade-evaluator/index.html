@@ -7,6 +7,106 @@
     <meta name="description" content="Evaluate multi-team NBA trades on production and life-of-deal contract value — players, picks, and pick swaps." />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <style>body{margin:0;background:#1E2228;}</style>
+    <!-- Roster override: the EPV/value feed supplies all numbers, but each player's
+         TEAM is re-sourced live from the cap-sheets roster tab so trades show up.
+         We wrap fetch (this classic script runs before the deferred module below),
+         intercept the EPV CSV, and rewrite only the Team column. Any player whose
+         name doesn't match the roster keeps their original EPV team (safe fallback),
+         and if the roster fetch fails the app falls back to the EPV feed unchanged. -->
+    <script>
+      (function () {
+        var EPV_KEYS = ["1vQ9jJ", "1741426200"]; // both must be in the URL to match
+        var ROSTER_URL =
+          "https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub?gid=1758217654&single=true&output=csv";
+        // Cap-sheet col A holds the city; map it to the full name the evaluator uses.
+        var CITY2FULL = {
+          "Atlanta": "Atlanta Hawks", "Boston": "Boston Celtics", "Brooklyn": "Brooklyn Nets",
+          "Charlotte": "Charlotte Hornets", "Chicago": "Chicago Bulls", "Cleveland": "Cleveland Cavaliers",
+          "Dallas": "Dallas Mavericks", "Denver": "Denver Nuggets", "Detroit": "Detroit Pistons",
+          "Golden State": "Golden State Warriors", "Houston": "Houston Rockets", "Indiana": "Indiana Pacers",
+          "Los Angeles Clippers": "Los Angeles Clippers", "Los Angeles Lakers": "Los Angeles Lakers",
+          "Memphis": "Memphis Grizzlies", "Miami": "Miami Heat", "Milwaukee": "Milwaukee Bucks",
+          "Minnesota": "Minnesota Timberwolves", "New Orleans": "New Orleans Pelicans", "New York": "New York Knicks",
+          "Oklahoma City": "Oklahoma City Thunder", "Orlando": "Orlando Magic", "Philadelphia": "Philadelphia 76ers",
+          "Phoenix": "Phoenix Suns", "Portland": "Portland Trail Blazers", "Sacramento": "Sacramento Kings",
+          "San Antonio": "San Antonio Spurs", "Toronto": "Toronto Raptors", "Utah": "Utah Jazz",
+          "Washington": "Washington Wizards"
+        };
+
+        var origFetch = window.fetch.bind(window);
+
+        function parseCSV(text) {
+          var rows = [], row = [], cur = "", q = false;
+          for (var i = 0; i < text.length; i++) {
+            var c = text[i];
+            if (q) {
+              if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+              else cur += c;
+            } else if (c === '"') q = true;
+            else if (c === ",") { row.push(cur); cur = ""; }
+            else if (c === "\n") { row.push(cur); rows.push(row); row = []; cur = ""; }
+            else if (c !== "\r") cur += c;
+          }
+          if (cur.length || row.length) { row.push(cur); rows.push(row); }
+          return rows;
+        }
+        // Same name normalization the app uses, so spellings line up across feeds.
+        function norm(s) {
+          return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "")
+            .replace(/\s+(jr|sr|ii|iii|iv)\.?$/i, "").replace(/[^a-z]/gi, "").toLowerCase();
+        }
+        function field(s) {
+          s = String(s == null ? "" : s);
+          return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }
+
+        var rosterPromise = null;
+        function rosterMap() {
+          if (rosterPromise) return rosterPromise;
+          rosterPromise = origFetch(ROSTER_URL).then(function (r) { return r.text(); }).then(function (t) {
+            var rows = parseCSV(t), map = {}, header = rows[0] || [], pCol = 3; // col D = "Roster"
+            for (var j = 0; j < header.length; j++) if ((header[j] || "").trim() === "Roster") { pCol = j; break; }
+            for (var i = 1; i < rows.length; i++) {
+              var r = rows[i]; if (!r) continue;
+              var name = (r[pCol] || "").trim(), full = CITY2FULL[(r[0] || "").trim()];
+              if (name && full) map[norm(name)] = full;
+            }
+            return map;
+          }).catch(function () { return {}; });
+          return rosterPromise;
+        }
+
+        function rewriteEPV(text, map) {
+          var rows = parseCSV(text); if (!rows.length) return text;
+          var header = rows[0], pCol = -1, tCol = -1;
+          for (var j = 0; j < header.length; j++) {
+            var h = (header[j] || "").trim();
+            if (h === "Player") pCol = j; else if (h === "Team" && tCol < 0) tCol = j;
+          }
+          if (pCol < 0 || tCol < 0) return text;
+          for (var i = 1; i < rows.length; i++) {
+            var r = rows[i]; if (!r || r.length <= tCol) continue;
+            var full = map[norm((r[pCol] || "").trim())];
+            if (full) r[tCol] = full; // override; otherwise keep the EPV team
+          }
+          return rows.map(function (r) { return r.map(field).join(","); }).join("\n");
+        }
+
+        window.fetch = function (input, init) {
+          var url = typeof input === "string" ? input : (input && input.url) || "";
+          var isEPV = EPV_KEYS.every(function (k) { return url.indexOf(k) !== -1; });
+          if (!isEPV) return origFetch(input, init);
+          return Promise.all([
+            origFetch(input, init).then(function (r) { return r.text(); }),
+            rosterMap()
+          ]).then(function (a) {
+            var body;
+            try { body = rewriteEPV(a[0], a[1]); } catch (e) { body = a[0]; } // never break the app
+            return new Response(body, { status: 200, headers: { "Content-Type": "text/csv" } });
+          });
+        };
+      })();
+    </script>
     <script type="module" crossorigin src="/trade-evaluator/assets/embed-CzjR3zXO.js"></script>
   </head>
   <body>
