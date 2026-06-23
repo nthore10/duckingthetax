@@ -197,11 +197,11 @@ table.calc tr.total td.pct{color:var(--text-muted);}
 <script>
 var MAX_YEARS = 5;
 var SEASONS = ['2026-27','2027-28','2028-29','2029-30','2030-31'];
-// The cap-sheet source lists the League Salary Cap starting at 2025-26 — one season
-// before this calculator's first year — so skip its first column when mapping caps.
-var CAP_SHEET_OFFSET = 1;
-// Fallback projected league caps (overridden live from the cap-sheet source).
-// 2030-31 is projected at +7% since the sheet only runs through 2029-30.
+// The cap-sheet source lists the League Salary Cap starting at 2026-27 — the same
+// season as this calculator's first year — so map its columns directly.
+var CAP_SHEET_OFFSET = 0;
+// Fallback projected league caps (used only if the live fetch fails; the sheet
+// itself now runs through 2030-31).
 var FALLBACK_CAPS = [165000000, 176550000, 188908500, 202132095, 216281342];
 // Same published Google Sheet the cap sheets read; League Salary Cap is league-wide.
 var CAP_SRC = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub?gid=1558757909&single=true&output=csv';
@@ -322,7 +322,7 @@ function loadCaps(){
       var rows = parseCSV(text);
       for (var i=0;i<rows.length;i++){
         if ((rows[i][2]||'').replace(/ /g,' ').trim() === 'League Salary Cap'){
-          // Sheet columns hold caps for consecutive seasons starting at 2025-26.
+          // Sheet columns hold caps for consecutive seasons starting at 2026-27.
           var sheet = [];
           for (var n=0;n<8;n++){ var v = parseNum(rows[i][3 + n*2]); if (v > 0) sheet.push(v); }
           var vals = [];
