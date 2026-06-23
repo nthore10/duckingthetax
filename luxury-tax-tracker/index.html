@@ -129,7 +129,7 @@ function parseLine(line){const v=[];let cur='',inQ=false;for(const ch of line){i
 
 function parseData(csv){
   // Real CSV structure:
-  //  col0 = "Team Name 'YY/YY" (team + year combined, e.g. "Atlanta Hawks '25/26")
+  //  col0 = "Team Name 'YY/YY" (team + year combined, e.g. "Atlanta Hawks '26/27")
   //  col1 = Tax Space, col2 = Repeater?, col3-13 = Bracket 1-11, col14 = Total
   //  First ~6 rows are bracket reference / league totals junk — skip them.
   const lines=csv.trim().split('\n');
@@ -140,7 +140,7 @@ function parseData(csv){
     if(!c0)continue;
     // Skip header/junk rows
     if(c0.includes('Brackets')||c0.includes('Totals')||c0==='Team/Year'||c0.includes('Bracket'))continue;
-    // Team rows look like "Atlanta Hawks '25/26" — must contain an apostrophe-year
+    // Team rows look like "Atlanta Hawks '26/27" — must contain an apostrophe-year
     const m=c0.match(/^(.*?)\s+'?(\d{2}\/\d{2})\s*$/);
     if(!m)continue;
     const team=m[1].trim();
@@ -168,7 +168,7 @@ function updateKPIs(){
 
 function renderMainTable(){
   if(!sortedTeams.length){document.getElementById('app').innerHTML='<div style="text-align:center;padding:60px;color:var(--text-dim)">No team data found</div>';return;}
-  const years=['25/26','26/27','27/28','28/29','29/30'];
+  const years=['26/27','27/28','28/29','29/30','30/31'];
   const arrow=k=>sortKey===k?(sortAsc?' ▲':' ▼'):'';
   const yearCols=years.map((y,i)=>`<th onclick="sortByYear(${i})" class="${sortKey==='yr'+i?'sort-active':''}">${y}<span style="opacity:.5;font-size:8px;margin-left:3px">${sortKey==='yr'+i?(sortAsc?'▲':'▼'):'⇅'}</span></th>`).join('');
   let html=`<div class="table-wrapper"><table><thead><tr>
@@ -213,7 +213,7 @@ function updateVisibility(){
   document.querySelectorAll('tr.team-row').forEach(tr=>tr.classList.toggle('expanded',expandedSet.has(tr.dataset.team)));
 }
 function teamGrand(t){return allTeamData[t].reduce((s,y)=>s+y.total,0);}
-function yrTotal(t,i){const years=['25/26','26/27','27/28','28/29','29/30'];const e=(allTeamData[t]||[]).find(y=>y.yr===years[i]);return e?e.total:0;}
+function yrTotal(t,i){const years=['26/27','27/28','28/29','29/30','30/31'];const e=(allTeamData[t]||[]).find(y=>y.yr===years[i]);return e?e.total:0;}
 function applySort(){
   if(sortKey==='name'){sortedTeams.sort((a,b)=>sortAsc?a.localeCompare(b):b.localeCompare(a));}
   else if(sortKey==='total'){sortedTeams.sort((a,b)=>{const d=Math.abs(teamGrand(b))-Math.abs(teamGrand(a));return sortAsc?-d:d;});}
