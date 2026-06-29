@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Season Tracker · Ducking The Tax</title>
+<meta name="description" content="NBA Season Tracker: 2026-27 cap, luxury-tax and apron status for all 30 teams. Cap spend, cap space, tax space, first/second apron space, and projected tax bills, live from the source cap sheets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* DTT tokens — inlined per the site's per-page convention (matches the other tracker pages). */
+  :root{
+    --dtt-bg-base:#1E2228; --dtt-bg-raised:#252A31; --dtt-bg-panel:#22272E; --dtt-bg-row-hover:#262C33; --dtt-bg-input:#2A3038;
+    --dtt-accent:#00D89A; --dtt-accent-dark:#00A878; --dtt-on-accent:#1E2228;
+    --dtt-text-bright:#F2F4F7; --dtt-text-primary:#C8D1DC; --dtt-text-muted:#9AA6B4; --dtt-text-dim:#7A8694; --dtt-text-faint:#5E6873;
+    --dtt-border:#2E343D; --dtt-border-soft:#282E35; --dtt-border-input:#353C46;
+    --dtt-positive:#00D89A; --dtt-negative:#FF6B85; --dtt-bar-warm:#FFB454;
+    --dtt-font-display:'Space Grotesk',system-ui,sans-serif; --dtt-font-mono:'Space Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--dtt-bg-base);color:var(--dtt-text-primary);font-family:var(--dtt-font-mono);}
+  a{text-decoration:none;color:inherit;}
+  table{border-collapse:collapse;width:100%;}
+
+  .st-hero{background:var(--dtt-bg-raised);border-bottom:1px solid var(--dtt-border);padding:30px 24px 26px;}
+  .st-hero-inner{max-width:1300px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+  .st-id{display:flex;align-items:center;gap:16px;}
+  .st-badge{display:flex;align-items:center;justify-content:center;background:var(--dtt-accent);color:var(--dtt-on-accent);font-weight:700;font-family:var(--dtt-font-mono);}
+  .st-title{font-family:var(--dtt-font-display);font-weight:700;font-size:26px;color:var(--dtt-text-bright);letter-spacing:-0.5px;}
+  .st-sub{font-size:10px;color:var(--dtt-text-dim);letter-spacing:1px;margin-top:4px;}
+  .st-kpis{display:flex;gap:30px;flex-wrap:wrap;}
+  .st-kpi{text-align:right;}
+  .st-kpi-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .st-kpi-val{font-family:var(--dtt-font-display);font-weight:700;font-size:20px;margin-top:2px;}
+
+  .st-bar{background:var(--dtt-bg-panel);border-bottom:1px solid var(--dtt-border);}
+  .st-bar-inner{max-width:1300px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .st-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .st-filters > .lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dtt-text-dim);margin-right:4px;}
+  .st-fbtn{display:inline-flex;align-items:center;gap:6px;font-family:var(--dtt-font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px 11px;border-radius:4px;cursor:pointer;transition:all .12s;background:var(--dtt-bg-input);color:var(--dtt-text-muted);border:1px solid var(--dtt-border-input);}
+  .st-fbtn .n{font-weight:700;opacity:.6;}
+  .st-fbtn:hover{color:var(--dtt-text-bright);border-color:var(--dtt-text-dim);}
+  .st-fbtn.active{background:var(--dtt-accent);color:var(--dtt-on-accent);border-color:var(--dtt-accent);font-weight:700;}
+  .st-fbtn.active .n{opacity:.85;}
+  .st-bar-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .st-legend{display:flex;align-items:center;gap:14px;font-size:8.5px;letter-spacing:1px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .st-legend span{display:flex;align-items:center;gap:5px;}
+  .st-dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  .st-toggle{display:flex;border:1px solid var(--dtt-border-input);border-radius:4px;overflow:hidden;}
+  .st-toggle button{font-family:var(--dtt-font-mono);font-size:8.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;cursor:pointer;background:var(--dtt-bg-input);color:var(--dtt-text-muted);border:0;}
+  .st-toggle button.active{background:var(--dtt-accent);color:var(--dtt-on-accent);font-weight:700;}
+
+  .st-main{max-width:1300px;margin:0 auto;padding:24px;}
+  .st-tablewrap{border:1px solid var(--dtt-border);border-radius:6px;overflow:hidden;background:var(--dtt-bg-raised);}
+  .st-scroll{overflow-x:auto;}
+  thead tr{background:var(--dtt-bg-panel);}
+  th{padding:11px 14px;font-family:var(--dtt-font-mono);font-size:8.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;user-select:none;white-space:nowrap;color:var(--dtt-text-dim);}
+  th.r{text-align:right;} th.l{text-align:left;}
+  th.sorted{color:var(--dtt-accent);}
+  tbody tr{border-top:1px solid var(--dtt-border-soft);cursor:pointer;transition:background .12s;}
+  tbody tr:hover{background:var(--dtt-bg-row-hover);}
+  td{padding:8px 14px;font-family:var(--dtt-font-mono);font-size:12px;white-space:nowrap;}
+  td.num{text-align:right;}
+  .pos{color:var(--dtt-positive);} .neg{color:var(--dtt-negative);} .dim{color:var(--dtt-text-dim);}
+  .faint{color:var(--dtt-text-faint);} .bright{color:var(--dtt-text-bright);} .muted{color:var(--dtt-text-muted);}
+  .st-team{display:flex;align-items:center;gap:11px;}
+  .st-team img{display:block;flex:none;}
+  .st-team-name{font-family:var(--dtt-font-display);font-weight:600;font-size:13px;color:var(--dtt-text-bright);white-space:nowrap;}
+  .st-team-arrow{color:var(--dtt-text-faint);font-family:var(--dtt-font-mono);font-size:10px;}
+  .st-teamcol{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .pill{display:inline-block;align-self:flex-start;font-size:8px;font-weight:700;letter-spacing:1.2px;padding:2px 7px;border-radius:3px;text-transform:uppercase;border:1px solid transparent;}
+  .pill.under{color:var(--dtt-positive);background:rgba(0,216,154,.12);}
+  .pill.tax{color:var(--dtt-bar-warm);background:rgba(255,180,84,.12);}
+  .pill.apron1{color:var(--dtt-negative);background:rgba(255,107,133,.12);}
+  .pill.apron2{color:var(--dtt-negative);background:rgba(255,107,133,.16);border-color:rgba(255,107,133,.5);}
+
+  .st-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
+  .st-card{display:block;background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:8px;padding:16px;transition:border-color .12s;}
+  .st-card:hover{border-color:var(--dtt-accent);}
+  .st-card-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;}
+  .st-card-name{font-family:var(--dtt-font-display);font-weight:600;font-size:15px;color:var(--dtt-text-bright);letter-spacing:-0.2px;}
+  .st-card-meta{font-size:9px;letter-spacing:1.5px;color:var(--dtt-text-dim);margin-top:2px;}
+  .st-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--dtt-border-soft);border:1px solid var(--dtt-border-soft);border-radius:5px;overflow:hidden;}
+  .st-stat{background:var(--dtt-bg-raised);padding:9px 11px;}
+  .st-stat.full{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;}
+  .st-stat-label{font-size:7.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .st-stat-val{font-family:var(--dtt-font-mono);font-size:13px;font-weight:700;margin-top:2px;}
+  .st-stat.full .st-stat-val{margin-top:0;}
+  .st-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--dtt-border);font-size:9px;letter-spacing:.5px;color:var(--dtt-text-dim);}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+  // ── Config ───────────────────────────────────────────────────────────────
+  var SHEET_ID = "1-NPv1FmtYHj7Cq3KbLYOc-X5eVVZ-iWy";
+  var GID = "951201069";
+
+  // ── Offline fallback (used until the live sheet loads, or if it's unreachable) ──
+  // Figures are a 2026-27 snapshot. Live values overwrite these on load.
+  var FALLBACK = [
+    {name:"Atlanta Hawks",abbr:"ATL",tid:"1610612737",ors:3,tw:3,spend:222203803,cs:-57203803,ts:7273891,fa:15273891,sa:28273891,pay:0},
+    {name:"Boston Celtics",abbr:"BOS",tid:"1610612738",ors:1,tw:3,spend:222982868,cs:-57982868,ts:10239355,fa:18239355,sa:31239355,pay:0},
+    {name:"Brooklyn Nets",abbr:"BKN",tid:"1610612751",ors:4,tw:3,spend:176535932,cs:43126369,ts:57420848,fa:65420848,sa:78420848,pay:0},
+    {name:"Charlotte Hornets",abbr:"CHA",tid:"1610612766",ors:1,tw:3,spend:159606419,cs:5393581,ts:44268009,fa:52268009,sa:65268009,pay:0},
+    {name:"Chicago Bulls",abbr:"CHI",tid:"1610612741",ors:5,tw:3,spend:247048870,cs:33243883,ts:67092968,fa:72604840,sa:85604840,pay:0},
+    {name:"Cleveland Cavaliers",abbr:"CLE",tid:"1610612739",ors:5,tw:3,spend:261201868,cs:-96201868,ts:21106620,fa:29106620,sa:42106620,pay:0},
+    {name:"Dallas Mavericks",abbr:"DAL",tid:"1610612742",ors:4,tw:3,spend:229404489,cs:-64404489,ts:38960652,fa:45616067,sa:58616067,pay:0},
+    {name:"Denver Nuggets",abbr:"DEN",tid:"1610612743",ors:6,tw:3,spend:239275011,cs:-74275011,ts:-12808470,fa:-10425970,sa:2574030,pay:41552578},
+    {name:"Detroit Pistons",abbr:"DET",tid:"1610612765",ors:6,tw:3,spend:218917088,cs:6869519,ts:64844850,fa:71844850,sa:84844850,pay:0},
+    {name:"Golden State Warriors",abbr:"GSW",tid:"1610612744",ors:7,tw:3,spend:263651906,cs:-98651906,ts:39878314,fa:47378314,sa:60378314,pay:0},
+    {name:"Houston Rockets",abbr:"HOU",tid:"1610612745",ors:5,tw:3,spend:217753724,cs:-52753724,ts:12785499,fa:20785499,sa:33785499,pay:0},
+    {name:"Indiana Pacers",abbr:"IND",tid:"1610612754",ors:4,tw:3,spend:203393912,cs:-38393912,ts:2398146,fa:9918146,sa:22918146,pay:0},
+    {name:"Los Angeles Clippers",abbr:"LAC",tid:"1610612746",ors:4,tw:3,spend:239274642,cs:-74274642,ts:29158077,fa:37158077,sa:50158077,pay:0},
+    {name:"Los Angeles Lakers",abbr:"LAL",tid:"1610612747",ors:6,tw:3,spend:263994461,cs:49359008,ts:63721727,fa:71721727,sa:84721727,pay:0},
+    {name:"Memphis Grizzlies",abbr:"MEM",tid:"1610612763",ors:3,tw:3,spend:164988661,cs:11339,ts:36011339,fa:43511339,sa:57011339,pay:0},
+    {name:"Miami Heat",abbr:"MIA",tid:"1610612748",ors:8,tw:3,spend:244202040,cs:-79202040,ts:11041956,fa:19041956,sa:32041956,pay:0},
+    {name:"Milwaukee Bucks",abbr:"MIL",tid:"1610612749",ors:1,tw:3,spend:189273300,cs:-24273300,ts:34265245,fa:37065245,sa:50065245,pay:0},
+    {name:"Minnesota Timberwolves",abbr:"MIN",tid:"1610612750",ors:4,tw:3,spend:221737957,cs:-56737957,ts:-13160263,fa:-6910263,sa:6089737,pay:17166912},
+    {name:"New Orleans Pelicans",abbr:"NOP",tid:"1610612740",ors:2,tw:3,spend:199367745,cs:-34367745,ts:14558153,fa:15522950,sa:28522950,pay:0},
+    {name:"New York Knicks",abbr:"NYK",tid:"1610612752",ors:5,tw:3,spend:242701115,cs:-77701115,ts:-6918816,fa:1081184,sa:14081184,pay:7127782},
+    {name:"Oklahoma City Thunder",abbr:"OKC",tid:"1610612760",ors:2,tw:3,spend:234255534,cs:-69255534,ts:-33255534,fa:-25255534,sa:-12255534,pay:112140987},
+    {name:"Orlando Magic",abbr:"ORL",tid:"1610612753",ors:4,tw:3,spend:224355738,cs:-59355738,ts:-2787735,fa:5212265,sa:18212265,pay:2787735},
+    {name:"Philadelphia 76ers",abbr:"PHI",tid:"1610612755",ors:8,tw:3,spend:225676611,cs:-60676611,ts:15859888,fa:23859888,sa:36859888,pay:0},
+    {name:"Phoenix Suns",abbr:"PHX",tid:"1610612756",ors:3,tw:3,spend:213256855,cs:-48256855,ts:-9730956,fa:-3230956,sa:9769044,pay:30104871},
+    {name:"Portland Trail Blazers",abbr:"POR",tid:"1610612757",ors:5,tw:3,spend:220436944,cs:-55436944,ts:30802706,fa:38802706,sa:51802706,pay:0},
+    {name:"Sacramento Kings",abbr:"SAC",tid:"1610612758",ors:5,tw:3,spend:223435291,cs:-58435291,ts:-14857587,fa:-11707587,sa:1292413,pay:23107546},
+    {name:"San Antonio Spurs",abbr:"SAS",tid:"1610612759",ors:6,tw:3,spend:224372920,cs:-59372920,ts:41276417,fa:49276417,sa:62276417,pay:0},
+    {name:"Toronto Raptors",abbr:"TOR",tid:"1610612761",ors:4,tw:3,spend:202243453,cs:-37243453,ts:6668327,fa:14668327,sa:27668327,pay:0},
+    {name:"Utah Jazz",abbr:"UTA",tid:"1610612762",ors:5,tw:3,spend:206972072,cs:-41972072,ts:45642770,fa:53642770,sa:66642770,pay:0},
+    {name:"Washington Wizards",abbr:"WAS",tid:"1610612764",ors:3,tw:3,spend:192442483,cs:-27442483,ts:11083419,fa:19083419,sa:32083419,pay:0}
+  ];
+  var META = {}; FALLBACK.forEach(function(t){ META[t.name] = t; });
+  // Team name → cap-sheet index. cap-sheet.html reads ?team=N as an index into its TEAMS
+  // array, which is alphabetical by full team name — the exact order of FALLBACK above —
+  // so a team's position here IS its cap-sheet index.
+  var CAP_IDX = {}; FALLBACK.forEach(function(t,i){ CAP_IDX[t.name] = i; });
+
+  var state = { filter:"all", sortKey:"team", sortDir:"asc", layout:"table", teams:null };
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function fmtM(n){
+    var a = Math.abs(n), s;
+    if (a >= 1e6) s = "$" + (a/1e6).toFixed(1) + "M";
+    else if (a >= 1e3) s = "$" + Math.round(a/1e3) + "K";
+    else s = "$" + a;
+    return (n < 0 ? "-" : "") + s;
+  }
+  function src(){ return (state.teams && state.teams.length) ? state.teams : FALLBACK; }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function statusOf(t){
+    if (t.sa < 0) return { cls:"apron2", label:"2nd Apron" };
+    if (t.fa < 0) return { cls:"apron1", label:"1st Apron" };
+    if (t.ts < 0) return { cls:"tax",    label:"Tax Payer" };
+    return { cls:"under", label:"Under Tax" };
+  }
+  function spaceCls(n){ return n >= 0 ? "pos" : "neg"; }
+  function csCls(n){ return n >= 0 ? "pos" : "dim"; }
+  function hardOf(t){ return (t.hardText != null && t.hardText !== "") ? t.hardText : "—"; }
+
+  // ── Live data: gviz JSON via <script> (no CORS issues for a public sheet) ──
+  function loadSheet(){
+    var cb = "__seasonTrackerCb";
+    window[cb] = function(resp){ try { applySheet(resp); } catch (e) {} };
+    var s = document.createElement("script");
+    s.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+            "/gviz/tq?gid=" + GID + "&headers=1&tqx=out:json;responseHandler:" + cb;
+    s.onerror = function(){ /* keep fallback */ };
+    document.head.appendChild(s);
+  }
+  function applySheet(resp){
+    var table = resp && resp.table;
+    if (!table || !table.cols || !table.rows) return;
+    var cols = table.cols.map(function(c){ return String(c.label||"").toLowerCase().trim(); });
+    function find(sub){ return cols.findIndex(function(c){ return c.indexOf(sub) >= 0; }); }
+    var iTeam = cols.findIndex(function(c){ return c === "team" || c.indexOf("team") === 0; });
+    var iHard = find("hard"), iRoster = find("roster"), iTwo = find("two"),
+        iSpend = find("cap spend"), iSpace = find("cap space"), iTax = find("tax space"),
+        iFa = find("first apron"), iSa = find("second apron"), iPay = find("payment");
+    function num(c, i){ return (i >= 0 && c[i] && c[i].v != null && c[i].v !== "") ? Number(c[i].v) : null; }
+    var out = [];
+    table.rows.forEach(function(r){
+      var c = r.c || [];
+      var nv = (iTeam >= 0 && c[iTeam]) ? c[iTeam].v : null;
+      var name = nv ? String(nv).trim() : "";
+      var m = META[name];
+      if (!m) return;
+      var hardText = "—", hardNum = NaN;
+      if (iHard >= 0 && c[iHard]) {
+        var hv = c[iHard].v, hf = c[iHard].f;
+        if (typeof hv === "number") { hardNum = hv; hardText = fmtM(hv); }
+        else if (hv != null && String(hv).trim() !== "") { hardText = hf || String(hv).trim(); }
+      }
+      var p = num(c, iPay);
+      out.push({
+        name:name, abbr:m.abbr, tid:m.tid,
+        ors:num(c,iRoster)||0, tw:num(c,iTwo)||0, spend:num(c,iSpend)||0,
+        cs:num(c,iSpace)||0, ts:num(c,iTax)||0, fa:num(c,iFa)||0, sa:num(c,iSa)||0,
+        pay:(p==null?0:Math.abs(p)), hardText:hardText, hardNum:hardNum
+      });
+    });
+    if (out.length >= 20) { state.teams = out; render(); }
+  }
+
+  // ── Derived ──────────────────────────────────────────────────────────────
+  function rows(){
+    var list = src().slice();
+    var f = state.filter;
+    if (f === "under") list = list.filter(function(t){ return t.ts >= 0; });
+    else if (f === "tax") list = list.filter(function(t){ return t.ts < 0; });
+    else if (f === "apron1") list = list.filter(function(t){ return t.fa < 0; });
+    else if (f === "apron2") list = list.filter(function(t){ return t.sa < 0; });
+    var k = state.sortKey, dir = state.sortDir === "asc" ? 1 : -1;
+    function sval(t){
+      if (k === "team") return t.name;
+      if (k === "hard") return isFinite(t.hardNum) ? t.hardNum : (t.hardText || "");
+      return t[k];
+    }
+    list.sort(function(a,b){
+      var av = sval(a), bv = sval(b);
+      var cmp = (typeof av === "number" && typeof bv === "number") ? av - bv : String(av).localeCompare(String(bv));
+      return cmp * dir;
+    });
+    return list;
+  }
+
+  var HEADERS = [
+    {key:"hard",  label:"Hard Cap"},
+    {key:"ors",   label:"Open Roster"},
+    {key:"tw",    label:"Open 2-Way"},
+    {key:"spend", label:"Cap Spend"},
+    {key:"cs",    label:"Cap Space"},
+    {key:"ts",    label:"Tax Space"},
+    {key:"fa",    label:"1st Apron"},
+    {key:"sa",    label:"2nd Apron"},
+    {key:"pay",   label:"Tax Bill"}
+  ];
+
+  function arrow(key){ return state.sortKey === key ? (state.sortDir === "asc" ? " ▴" : " ▾") : ""; }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  function render(){
+    var S = src();
+    var overTax = S.filter(function(t){ return t.ts < 0; }).length;
+    var overFirst = S.filter(function(t){ return t.fa < 0; }).length;
+    var overSecond = S.filter(function(t){ return t.sa < 0; }).length;
+    var bill = S.reduce(function(a,t){ return a + t.pay; }, 0);
+    var counts = {
+      all: S.length,
+      under: S.filter(function(t){ return t.ts >= 0; }).length,
+      tax: overTax, apron1: overFirst, apron2: overSecond
+    };
+    var filters = [
+      {key:"all",    label:"All Teams"},
+      {key:"under",  label:"Under Tax"},
+      {key:"tax",    label:"Over The Tax"},
+      {key:"apron1", label:"Over The First Apron"},
+      {key:"apron2", label:"Over The Second Apron"}
+    ];
+
+    var html = "";
+
+    // HERO + KPIs (shared site nav is mounted separately into #dtt-nav by /nav.js)
+    html += '<header class="st-hero"><div class="st-hero-inner">' +
+      '<div class="st-id"><div class="st-badge" style="width:52px;height:52px;border-radius:10px;font-size:15px;letter-spacing:1px;">ST</div>' +
+      '<div><div class="st-title">Season Tracker</div>' +
+      '<div class="st-sub">// 2026–27 cap, luxury-tax &amp; apron status · all 30 teams</div></div></div>' +
+      '<div class="st-kpis">' +
+        kpi("Teams Tracked", String(S.length), "var(--dtt-accent)") +
+        kpi("Over The Tax", String(overTax), "var(--dtt-bar-warm)") +
+        kpi("Over First Apron", String(overFirst), "var(--dtt-negative)") +
+        kpi("Over Second Apron", String(overSecond), "var(--dtt-negative)") +
+        kpi("Proj. Tax Bills", fmtM(bill), "var(--dtt-text-bright)") +
+      '</div></div></header>';
+
+    // CONTROL BAR
+    html += '<div class="st-bar"><div class="st-bar-inner"><div class="st-filters"><span class="lbl">Filter</span>';
+    filters.forEach(function(fl){
+      html += '<button class="st-fbtn' + (state.filter === fl.key ? " active" : "") + '" data-filter="' + fl.key + '">' +
+        esc(fl.label) + ' <span class="n">' + counts[fl.key] + '</span></button>';
+    });
+    html += '</div><div class="st-bar-right">' +
+      '<div class="st-legend">' +
+        '<span><span class="st-dot" style="background:var(--dtt-positive)"></span>Under Tax</span>' +
+        '<span><span class="st-dot" style="background:var(--dtt-bar-warm)"></span>Tax Payer</span>' +
+        '<span><span class="st-dot" style="background:var(--dtt-negative)"></span>Over Apron</span>' +
+      '</div>' +
+      '<div class="st-toggle"><button data-layout="table" class="' + (state.layout==="table"?"active":"") + '">Table</button>' +
+      '<button data-layout="cards" class="' + (state.layout==="cards"?"active":"") + '">Cards</button></div>' +
+      '</div></div></div>';
+
+    // BODY
+    html += '<main class="st-main">';
+    html += state.layout === "cards" ? renderCards() : renderTable();
+    html += '<div class="st-foot"><span>// Source: NBA Cap Sheets · live from Google Sheets · click a team for its cap sheet.</span>' +
+            '<span style="color:var(--dtt-text-faint)">Nick Thoreson · Ducking The Tax</span></div>';
+    html += '</main>';
+
+    var app = document.getElementById("app");
+    app.innerHTML = html;
+    bind(app);
+  }
+
+  function kpi(label, val, color){
+    return '<div class="st-kpi"><div class="st-kpi-label">' + label + '</div>' +
+           '<div class="st-kpi-val" style="color:' + color + '">' + val + '</div></div>';
+  }
+
+  function renderTable(){
+    var h = '<div class="st-tablewrap"><div class="st-scroll"><table><thead><tr>';
+    h += '<th class="l' + (state.sortKey==="team"?" sorted":"") + '" data-sort="team">Team' + arrow("team") + '</th>';
+    HEADERS.forEach(function(hd){
+      h += '<th class="r' + (state.sortKey===hd.key?" sorted":"") + '" data-sort="' + hd.key + '">' + hd.label + arrow(hd.key) + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    rows().forEach(function(t){
+      var st = statusOf(t);
+      var logo = t.tid ? '<img src="https://cdn.nba.com/logos/nba/' + t.tid + '/primary/L/logo.svg" alt="" width="26" height="26">' : '';
+      h += '<tr data-team="' + esc(t.name) + '">' +
+        '<td><div class="st-team">' + logo + '<div class="st-teamcol">' +
+          '<span class="st-team-name">' + esc(t.name) + ' <span class="st-team-arrow">→</span></span>' +
+          '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
+        '</div></div></td>' +
+        cell(hardOf(t), "bright") +
+        cell(String(t.ors), "muted") +
+        cell(String(t.tw), "muted") +
+        cell(fmtM(t.spend), "bright") +
+        cell(fmtM(t.cs), csCls(t.cs)) +
+        cell(fmtM(t.ts), spaceCls(t.ts)) +
+        cell(fmtM(t.fa), spaceCls(t.fa)) +
+        cell(fmtM(t.sa), spaceCls(t.sa)) +
+        cell(t.pay > 0 ? fmtM(-t.pay) : "—", t.pay > 0 ? "neg" : "faint") +
+      '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+    return h;
+  }
+  function cell(text, cls){ return '<td class="num ' + cls + '">' + esc(text) + '</td>'; }
+
+  function renderCards(){
+    var h = '<div class="st-cards">';
+    rows().forEach(function(t){
+      var st = statusOf(t);
+      var logo = t.tid ? '<img src="https://cdn.nba.com/logos/nba/' + t.tid + '/primary/L/logo.svg" alt="" width="34" height="34" style="display:block;flex:none">' : '';
+      h += '<a href="#" class="st-card" data-team="' + esc(t.name) + '">' +
+        '<div class="st-card-head">' + logo +
+          '<div style="flex:1;min-width:0"><div class="st-card-name">' + esc(t.name) + '</div>' +
+          '<div class="st-card-meta">' + t.ors + ' OPEN ROSTER · ' + t.tw + ' TWO-WAY</div></div>' +
+          '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
+        '</div>' +
+        '<div class="st-grid">' +
+          statFull("Hard Cap", hardOf(t), "bright") +
+          stat("Cap Spend", fmtM(t.spend), "bright") +
+          stat("Cap Space", fmtM(t.cs), csCls(t.cs)) +
+          stat("Tax Space", fmtM(t.ts), spaceCls(t.ts)) +
+          stat("1st Apron", fmtM(t.fa), spaceCls(t.fa)) +
+          stat("2nd Apron", fmtM(t.sa), spaceCls(t.sa)) +
+          stat("Tax Bill", t.pay > 0 ? fmtM(-t.pay) : "—", t.pay > 0 ? "neg" : "faint") +
+        '</div></a>';
+    });
+    h += '</div>';
+    return h;
+  }
+  function stat(label, val, cls){
+    return '<div class="st-stat"><div class="st-stat-label">' + label + '</div>' +
+           '<div class="st-stat-val ' + cls + '">' + esc(val) + '</div></div>';
+  }
+  function statFull(label, val, cls){
+    return '<div class="st-stat full"><div class="st-stat-label">' + label + '</div>' +
+           '<div class="st-stat-val ' + cls + '">' + esc(val) + '</div></div>';
+  }
+
+  // ── Events ───────────────────────────────────────────────────────────────
+  function bind(root){
+    root.querySelectorAll("[data-filter]").forEach(function(b){
+      b.addEventListener("click", function(){ state.filter = b.getAttribute("data-filter"); render(); });
+    });
+    root.querySelectorAll("[data-sort]").forEach(function(th){
+      th.addEventListener("click", function(){
+        var k = th.getAttribute("data-sort");
+        if (state.sortKey === k) state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        else { state.sortKey = k; state.sortDir = (k === "team") ? "asc" : "desc"; }
+        render();
+      });
+    });
+    root.querySelectorAll("[data-layout]").forEach(function(b){
+      b.addEventListener("click", function(){ state.layout = b.getAttribute("data-layout"); render(); });
+    });
+    // Row / card click → that team's cap sheet (/cap-sheet.html?team=<index>).
+    root.querySelectorAll("[data-team]").forEach(function(el){
+      el.addEventListener("click", function(e){
+        e.preventDefault();
+        var name = el.getAttribute("data-team");
+        var idx = CAP_IDX[name];
+        if (idx != null) location.href = "/cap-sheet.html?team=" + idx;
+      });
+    });
+  }
+
+  render();      // paint with fallback immediately
+  loadSheet();   // then overwrite with live sheet data
+})();
+</script>
+</body>
+</html>
