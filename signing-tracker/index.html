@@ -49,6 +49,8 @@
   .st-toggle{display:flex;border:1px solid var(--dtt-border-input);border-radius:4px;overflow:hidden;}
   .st-toggle button{font-family:var(--dtt-font-mono);font-size:8.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;cursor:pointer;background:var(--dtt-bg-input);color:var(--dtt-text-muted);border:0;}
   .st-toggle button.active{background:var(--dtt-accent);color:var(--dtt-on-accent);font-weight:700;}
+  .st-select{font-family:var(--dtt-font-mono);font-size:9px;letter-spacing:.5px;padding:6px 8px;border-radius:4px;background:var(--dtt-bg-input);color:var(--dtt-text-bright);border:1px solid var(--dtt-border-input);cursor:pointer;max-width:200px;}
+  .pctcap{color:var(--dtt-text-faint);font-size:9.5px;margin-left:6px;}
 
   .st-main{max-width:1300px;margin:0 auto;padding:24px;}
   .st-tablewrap{border:1px solid var(--dtt-border);border-radius:6px;overflow:hidden;background:var(--dtt-bg-raised);}
@@ -130,8 +132,11 @@
 
   var YEAR_COLS = ["2026/2027","2027/2028","2028/2029","2029/2030","2030/2031"];
   var YEAR_LABELS = ["'26-27","'27-28","'28-29","'29-30","'30-31"];
+  // Projected league salary cap per season (2026-27 → 2030-31) — same figures the
+  // Contract Calculator uses (its FALLBACK_CAPS), so % of cap is consistent site-wide.
+  var CAPS = [165000000, 176550000, 188908500, 202132095, 216281342];
 
-  var state = { filter:"all", sortKey:"total", sortDir:"desc", layout:"table", signings:null, failed:false };
+  var state = { filter:"all", team:"", sortKey:"total", sortDir:"desc", layout:"table", signings:null, failed:false };
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function fmtBig(n){
@@ -145,6 +150,10 @@
   }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
   function src(){ return state.signings || []; }
+  // Team filter applies to BOTH the KPIs and the table/cards (so the headline numbers
+  // reflect the selected team). The category filter further narrows the rows below.
+  function base(){ return src().filter(function(s){ return !state.team || s.team === state.team; }); }
+  function pctStr(salary, i){ var c = CAPS[i]; return (c && salary != null) ? (salary / c * 100).toFixed(1) + "%" : ""; }
   function years(s){ return s.seasons.filter(function(y){ return y.salary != null; }).length; }
   function aav(s){ var n = years(s); return n ? s.total / n : null; }
   function statusOf(s){
@@ -219,10 +228,10 @@
     if (f === "restricted") return /^restricted/i.test(s.fa);
     return true;
   }
-  function activeSeasons(){
+  function activeSeasons(list){
     var act = [];
     for (var i = 0; i < 5; i++) {
-      if (src().some(function(s){ return s.seasons[i] && s.seasons[i].salary != null; })) act.push(i);
+      if (list.some(function(s){ return s.seasons[i] && s.seasons[i].salary != null; })) act.push(i);
     }
     return act.length ? act : [0];
   }
@@ -237,7 +246,7 @@
     return s[k];
   }
   function rows(){
-    var list = src().filter(passesFilter);
+    var list = base().filter(passesFilter);
     var k = state.sortKey, dir = state.sortDir === "asc" ? 1 : -1;
     list.sort(function(a,b){
       var av = sval(a,k), bv = sval(b,k);
@@ -250,7 +259,7 @@
 
   // ── Render ───────────────────────────────────────────────────────────────
   function render(){
-    var S = src();
+    var S = base();   // team-filtered — KPIs + category counts reflect the selected team
     var faCount = S.filter(function(s){ return /free agent/i.test(s.type); }).length;
     var extCount = S.filter(function(s){ return /extension/i.test(s.type); }).length;
     var rstCount = S.filter(function(s){ return /^restricted/i.test(s.fa); }).length;
@@ -293,7 +302,13 @@
       '</div></div></header>';
 
     // CONTROL BAR
-    html += '<div class="st-bar"><div class="st-bar-inner"><div class="st-filters"><span class="lbl">Filter</span>';
+    var teamList = src().map(function(s){ return s.team; }).filter(function(t,i,a){ return a.indexOf(t) === i; }).sort();
+    var teamOpts = '<option value="">All Teams</option>' + teamList.map(function(t){
+      return '<option value="' + esc(t) + '"' + (state.team === t ? ' selected' : '') + '>' + esc(t) + '</option>';
+    }).join("");
+    html += '<div class="st-bar"><div class="st-bar-inner"><div class="st-filters">' +
+      '<span class="lbl">Team</span><select class="st-select" data-team-filter>' + teamOpts + '</select>' +
+      '<span class="lbl" style="margin-left:10px">Filter</span>';
     filters.forEach(function(fl){
       html += '<button class="st-fbtn' + (state.filter === fl.key ? " active" : "") + '" data-filter="' + fl.key + '">' +
         esc(fl.label) + ' <span class="n">' + counts[fl.key] + '</span></button>';
@@ -328,7 +343,8 @@
   }
 
   function renderTable(){
-    var act = activeSeasons();
+    var data = rows();
+    var act = activeSeasons(data);
     var h = '<div class="st-tablewrap"><div class="st-scroll"><table><thead><tr>';
     h += '<th class="l' + (state.sortKey==="player"?" sorted":"") + '" data-sort="player">Player' + arrow("player") + '</th>';
     h += '<th class="l' + (state.sortKey==="team"?" sorted":"") + '" data-sort="team">Team' + arrow("team") + '</th>';
@@ -340,7 +356,7 @@
       h += '<th class="r' + (state.sortKey===("y"+i)?" sorted":"") + '" data-sort="y' + i + '">' + YEAR_LABELS[i] + arrow("y"+i) + '</th>';
     });
     h += '</tr></thead><tbody>';
-    rows().forEach(function(s){
+    data.forEach(function(s){
       var st = statusOf(s);
       var logo = s.tid ? '<img src="https://cdn.nba.com/logos/nba/' + s.tid + '/primary/L/logo.svg" alt="" width="26" height="26">' : '';
       h += '<tr data-team="' + esc(s.team) + '">' +
@@ -355,7 +371,9 @@
         cell(fmtBig(aav(s)), "dim") +
         act.map(function(i){
           var y = s.seasons[i];
-          return (y && y.salary != null) ? cell(fmtBig(y.salary), guarCls(y.guar)) : cell("—", "faint");
+          if (!y || y.salary == null) return cell("—", "faint");
+          return '<td class="num"><span class="' + guarCls(y.guar) + '">' + fmtBig(y.salary) + '</span>' +
+                 '<span class="pctcap">' + pctStr(y.salary, i) + '</span></td>';
         }).join("") +
       '</tr>';
     });
@@ -374,6 +392,7 @@
         if (y.salary == null) return;
         yrRows += '<div class="st-yrrow"><span class="yr">' + YEAR_LABELS[i] + '</span>' +
           '<span><span class="' + guarCls(y.guar) + '">' + fmtBig(y.salary) + '</span>' +
+          '<span class="pctcap">' + pctStr(y.salary, i) + '</span>' +
           (y.guar ? '<span class="gl">' + esc(y.guar) + '</span>' : '') + '</span></div>';
       });
       h += '<a href="#" class="st-card" data-team="' + esc(s.team) + '">' +
@@ -407,6 +426,8 @@
     root.querySelectorAll("[data-filter]").forEach(function(b){
       b.addEventListener("click", function(){ state.filter = b.getAttribute("data-filter"); render(); });
     });
+    var teamSel = root.querySelector("[data-team-filter]");
+    if (teamSel) teamSel.addEventListener("change", function(){ state.team = teamSel.value; render(); });
     root.querySelectorAll("[data-sort]").forEach(function(th){
       th.addEventListener("click", function(){
         var k = th.getAttribute("data-sort");
