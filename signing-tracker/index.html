@@ -256,6 +256,8 @@
     var rstCount = S.filter(function(s){ return /^restricted/i.test(s.fa); }).length;
     var newCount = S.filter(function(s){ return /new team/i.test(s.inc); }).length;
     var incCount = S.filter(function(s){ return /incumbent/i.test(s.inc); }).length;
+    var poCount = S.filter(function(s){ return s.seasons.some(function(y){ return /player option/i.test(y.guar); }); }).length;
+    var toCount = S.filter(function(s){ return s.seasons.some(function(y){ return /team option/i.test(y.guar); }); }).length;
     var committed = S.reduce(function(a,s){ return a + (s.total || 0); }, 0);
     var y1 = S.reduce(function(a,s){ return a + ((s.seasons[0] && s.seasons[0].salary) || 0); }, 0);
     var counts = {
@@ -283,6 +285,8 @@
         kpi("Total Committed", fmtBig(committed), "var(--dtt-text-bright)") +
         kpi("Free Agents", String(faCount), "var(--dtt-positive)") +
         kpi("Extensions", String(extCount), "var(--dtt-bar-warm)") +
+        kpi("Player Options", String(poCount), "#00B050") +
+        kpi("Team Options", String(toCount), "#F79646") +
         kpi("New Team", String(newCount), "var(--dtt-accent)") +
         kpi("Incumbent", String(incCount), "var(--dtt-text-muted)") +
         kpi("'26-27 Salary", fmtBig(y1), "var(--dtt-text-bright)") +
