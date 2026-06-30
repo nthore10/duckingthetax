@@ -63,6 +63,9 @@
   td.num{text-align:right;}
   .pos{color:var(--dtt-positive);} .neg{color:var(--dtt-negative);} .dim{color:var(--dtt-text-dim);}
   .faint{color:var(--dtt-text-faint);} .bright{color:var(--dtt-text-bright);} .muted{color:var(--dtt-text-muted);} .warm{color:var(--dtt-bar-warm);}
+  /* Contract year-type colors — matched to the cap sheets (cap-sheet.html). */
+  .po{color:#00B050;font-weight:600;} .to{color:#F79646;font-weight:600;} .ng{color:#C00000;font-weight:600;}
+  .new{color:var(--dtt-accent);} .inc{color:var(--dtt-text-muted);}
   .st-team{display:flex;align-items:center;gap:11px;}
   .st-team img{display:block;flex:none;}
   .st-team-name{font-family:var(--dtt-font-display);font-weight:600;font-size:13px;color:var(--dtt-text-bright);white-space:nowrap;}
@@ -150,7 +153,19 @@
     if (/^restricted/i.test(s.fa)) return { cls:"restricted", label:"Restricted" };
     return { cls:"fa", label:"Free Agent" };
   }
-  function guarCls(g){ return /player option/i.test(g) ? "warm" : /team option/i.test(g) ? "dim" : "bright"; }
+  // Year-type color, matched to the cap sheets: Player Option green, Team Option orange,
+  // Non-Guaranteed red, Guaranteed default (bright).
+  function guarCls(g){
+    if (/player option/i.test(g)) return "po";
+    if (/team option/i.test(g)) return "to";
+    if (/non.?guarantee/i.test(g)) return "ng";
+    return "bright";
+  }
+  function incLabel(inc){
+    if (/new team/i.test(inc)) return '<span class="new">New</span>';
+    if (/incumbent/i.test(inc)) return '<span class="inc">Incumbent</span>';
+    return '<span class="faint">—</span>';
+  }
 
   // ── Live data: gviz JSON via <script> (no CORS issues for a public sheet) ──
   function loadSheet(){
@@ -214,6 +229,7 @@
   function sval(s, k){
     if (k === "player") return s.player;
     if (k === "team") return s.team;
+    if (k === "inc") return s.inc;
     if (k === "total") return s.total;
     if (k === "yrs") return years(s);
     if (k === "aav") return aav(s) || 0;
@@ -238,6 +254,8 @@
     var faCount = S.filter(function(s){ return /free agent/i.test(s.type); }).length;
     var extCount = S.filter(function(s){ return /extension/i.test(s.type); }).length;
     var rstCount = S.filter(function(s){ return /^restricted/i.test(s.fa); }).length;
+    var newCount = S.filter(function(s){ return /new team/i.test(s.inc); }).length;
+    var incCount = S.filter(function(s){ return /incumbent/i.test(s.inc); }).length;
     var committed = S.reduce(function(a,s){ return a + (s.total || 0); }, 0);
     var y1 = S.reduce(function(a,s){ return a + ((s.seasons[0] && s.seasons[0].salary) || 0); }, 0);
     var counts = {
@@ -265,6 +283,8 @@
         kpi("Total Committed", fmtBig(committed), "var(--dtt-text-bright)") +
         kpi("Free Agents", String(faCount), "var(--dtt-positive)") +
         kpi("Extensions", String(extCount), "var(--dtt-bar-warm)") +
+        kpi("New Team", String(newCount), "var(--dtt-accent)") +
+        kpi("Incumbent", String(incCount), "var(--dtt-text-muted)") +
         kpi("'26-27 Salary", fmtBig(y1), "var(--dtt-text-bright)") +
       '</div></div></header>';
 
@@ -276,9 +296,9 @@
     });
     html += '</div><div class="st-bar-right">' +
       '<div class="st-legend">' +
-        '<span><span class="st-dot" style="background:var(--dtt-text-bright)"></span>Guaranteed</span>' +
-        '<span><span class="st-dot" style="background:var(--dtt-bar-warm)"></span>Player Option</span>' +
-        '<span><span class="st-dot" style="background:var(--dtt-text-dim)"></span>Team Option</span>' +
+        '<span><span class="st-dot" style="background:#00B050"></span>Player Option</span>' +
+        '<span><span class="st-dot" style="background:#F79646"></span>Team Option</span>' +
+        '<span><span class="st-dot" style="background:#C00000"></span>Non-Guaranteed</span>' +
       '</div>' +
       '<div class="st-toggle"><button data-layout="table" class="' + (state.layout==="table"?"active":"") + '">Table</button>' +
       '<button data-layout="cards" class="' + (state.layout==="cards"?"active":"") + '">Cards</button></div>' +
@@ -308,6 +328,7 @@
     var h = '<div class="st-tablewrap"><div class="st-scroll"><table><thead><tr>';
     h += '<th class="l' + (state.sortKey==="player"?" sorted":"") + '" data-sort="player">Player' + arrow("player") + '</th>';
     h += '<th class="l' + (state.sortKey==="team"?" sorted":"") + '" data-sort="team">Team' + arrow("team") + '</th>';
+    h += '<th class="l' + (state.sortKey==="inc"?" sorted":"") + '" data-sort="inc">New/Inc.' + arrow("inc") + '</th>';
     h += '<th class="r' + (state.sortKey==="total"?" sorted":"") + '" data-sort="total">Total' + arrow("total") + '</th>';
     h += '<th class="r' + (state.sortKey==="yrs"?" sorted":"") + '" data-sort="yrs">Yrs' + arrow("yrs") + '</th>';
     h += '<th class="r' + (state.sortKey==="aav"?" sorted":"") + '" data-sort="aav">AAV' + arrow("aav") + '</th>';
@@ -324,6 +345,7 @@
           '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
         '</div></div></td>' +
         '<td class="muted">' + esc(s.team) + '</td>' +
+        '<td>' + incLabel(s.inc) + '</td>' +
         cell(fmtBig(s.total), "bright") +
         cell(String(years(s)), "muted") +
         cell(fmtBig(aav(s)), "bright") +
@@ -353,7 +375,10 @@
       h += '<a href="#" class="st-card" data-team="' + esc(s.team) + '">' +
         '<div class="st-card-head">' + logo +
           '<div style="flex:1;min-width:0"><div class="st-card-name">' + esc(s.player) + '</div>' +
-          '<div class="st-card-meta">' + esc(s.team) + (s.fa && !/n\/a/i.test(s.fa) ? ' · ' + esc(s.fa.toUpperCase()) : '') + '</div></div>' +
+          '<div class="st-card-meta">' + esc(s.team) +
+            (s.fa && !/n\/a/i.test(s.fa) ? ' · ' + esc(s.fa.toUpperCase()) : '') +
+            (/new team/i.test(s.inc) ? ' · NEW TEAM' : /incumbent/i.test(s.inc) ? ' · INCUMBENT' : '') +
+          '</div></div>' +
           '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
         '</div>' +
         '<div class="st-card-top">' +
