@@ -88,6 +88,9 @@
   .sp-bar{flex:1;height:5px;border-radius:3px;background:var(--dtt-bg-input);overflow:hidden;}
   .sp-bar-fill{height:100%;border-radius:3px;}
   .sp-line-val{font-family:var(--dtt-font-mono);font-size:10px;font-weight:700;width:60px;text-align:right;flex:none;}
+  .sp-roster{display:flex;gap:16px;border-top:1px solid var(--dtt-border-soft);padding-top:7px;margin-top:1px;}
+  .sp-roster-item{font-size:7.5px;letter-spacing:0.8px;text-transform:uppercase;color:var(--dtt-text-muted);display:inline-flex;align-items:baseline;}
+  .sp-roster-item b{font-family:var(--dtt-font-display);font-weight:700;font-size:12px;color:var(--dtt-text-bright);margin-left:5px;letter-spacing:0;}
 
   .sp-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--dtt-border);font-size:9px;letter-spacing:0.5px;color:var(--dtt-text-dim);}
   .sp-empty{padding:48px 16px;text-align:center;color:var(--dtt-text-dim);font-size:11px;letter-spacing:.5px;}
@@ -110,6 +113,7 @@
   var SHEET_ID = "1-NPv1FmtYHj7Cq3KbLYOc-X5eVVZ-iWy";
   var GID = "1346263912";
   var SIGN_GID = "1373103186";   // Signing Tracker tab — links actual signings into each box
+  var ROSTER_GID = "951201069";  // Season Tracker tab — open roster / two-way spots
 
   // League-year constants (update each year). Standard exception amounts and the four
   // CBA threshold values — the prototype uses these fixed figures.
@@ -147,7 +151,7 @@
   var ALIAS = { "laclippers":"1610612746", "lalakers":"1610612747" };
   function tidFor(name){ return TID[norm(name)] || ALIAS[norm(name)] || ""; }
 
-  var state = { sortKey:"power", filter:"all", teams:null, failed:false, signByTeam:null };
+  var state = { sortKey:"power", filter:"all", teams:null, failed:false, signByTeam:null, rosterByTeam:null };
 
   // ── Formatting ─────────────────────────────────────────────────────────────
   function fmt(n){
@@ -321,6 +325,34 @@
     render();
   }
 
+  // ── Open roster / two-way spots (Season Tracker tab) ───────────────────────
+  function loadRoster(){
+    var cb = "__spPowerRosterCb";
+    window[cb] = function(resp){ try { applyRoster(resp); } catch (e) {} };
+    var s = document.createElement("script");
+    s.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?gid=" + ROSTER_GID + "&headers=1&tqx=out:json;responseHandler:" + cb;
+    document.head.appendChild(s);
+  }
+  function applyRoster(resp){
+    var table = resp && resp.table;
+    if (!table || !table.cols || !table.rows) return;
+    var cols = table.cols.map(function(c){ return String(c.label||"").toLowerCase().trim(); });
+    function find(sub){ return cols.findIndex(function(c){ return c.indexOf(sub) >= 0; }); }
+    var iTeam = cols.findIndex(function(c){ return c === "team"; });
+    var iRoster = find("roster"), iTwo = find("two");
+    function num(c, i){ return (i >= 0 && c[i] && c[i].v != null && c[i].v !== "") ? Number(c[i].v) : null; }
+    function txt(c, i){ return (i >= 0 && c[i] && c[i].v != null) ? String(c[i].v).trim() : ""; }
+    var map = {};
+    table.rows.forEach(function(r){
+      var c = r.c || [];
+      var team = txt(c, iTeam);
+      if (!team) return;
+      map[norm(team)] = { open: num(c, iRoster), tw: num(c, iTwo) };
+    });
+    state.rosterByTeam = map;
+    render();
+  }
+
   // ── Filter / sort ──────────────────────────────────────────────────────────
   function passes(t){
     var f = state.filter;
@@ -366,7 +398,12 @@
     var pick = t.choice ? '<span class="sp-picktag">Pick 1</span>' : '';
     var or = t.showOr ? '<div class="sp-or-wrap"><div class="sp-or" style="border-color:' + t.orColor + ';color:' + t.orColor + '">OR</div></div>' : '';
     var right = t.hasRight ? squareHtml(t.right) : '';
-    var prox = '<div class="sp-prox"><span class="sp-prox-lbl">Room To The Lines</span>' + t.lines.map(lineHtml).join("") + '</div>';
+    var ros = state.rosterByTeam && state.rosterByTeam[norm(t.name)];
+    var rosHtml = (ros && (ros.open != null || ros.tw != null)) ? ('<div class="sp-roster">' +
+      '<span class="sp-roster-item">Open Roster<b' + (ros.open <= 0 ? ' style="color:var(--dtt-bar-hot)"' : '') + '>' + (ros.open != null ? ros.open : "—") + '</b></span>' +
+      '<span class="sp-roster-item">Two-Way<b>' + (ros.tw != null ? ros.tw : "—") + '</b></span>' +
+      '</div>') : '';
+    var prox = '<div class="sp-prox"><span class="sp-prox-lbl">Room To The Lines</span>' + t.lines.map(lineHtml).join("") + rosHtml + '</div>';
     var signs = (state.signByTeam && state.signByTeam[norm(t.name)]) || [];
     var strip = signs.length ? ('<div class="sp-signings"><span class="sp-signings-lbl">Signed</span>' +
       signs.map(function(s){ var m = mechStyle(s.mech);
@@ -476,6 +513,7 @@
   render();        // paint chrome + loading state
   loadSheet();     // then populate teams from the live sheet
   loadSignings();  // …and the actual signings, linked into each team's box
+  loadRoster();    // …and open roster / two-way spots, under Room To The Lines
 })();
 </script>
 </body>
