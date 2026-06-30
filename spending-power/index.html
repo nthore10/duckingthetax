@@ -49,8 +49,15 @@
   .sp-btn.active .n{opacity:.85;}
 
   .sp-rows{display:flex;flex-direction:column;gap:8px;}
-  .sp-row{background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:6px;padding:12px 14px;display:flex;align-items:stretch;gap:14px;transition:border-color .12s;}
+  .sp-row{background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;transition:border-color .12s;}
   .sp-row:hover{border-color:var(--dtt-accent);}
+  .sp-row-main{display:flex;align-items:stretch;gap:14px;}
+  .sp-signings{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-top:1px solid var(--dtt-border-soft);padding-top:9px;}
+  .sp-signings-lbl{font-size:7.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dtt-text-dim);margin-right:2px;}
+  .sp-sign{display:inline-flex;align-items:center;gap:7px;background:var(--dtt-bg-input);border:1px solid var(--dtt-border-input);border-radius:4px;padding:3px 8px;}
+  .sp-sign-name{font-family:var(--dtt-font-display);font-weight:600;font-size:11px;color:var(--dtt-text-bright);}
+  .sp-sign-cap{font-family:var(--dtt-font-mono);font-size:10px;font-weight:700;color:var(--dtt-text-primary);}
+  .sp-sign-mech{font-size:7px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:1px 5px;border-radius:3px;white-space:nowrap;}
   .sp-id{flex:0 0 206px;display:flex;align-items:flex-start;gap:11px;min-width:0;}
   .sp-rank{font-family:var(--dtt-font-mono);font-size:11px;font-weight:700;color:var(--dtt-rank-num);width:16px;flex:none;padding-top:9px;text-align:right;}
   .sp-id img{display:block;flex:none;}
@@ -102,6 +109,7 @@
   // ── Config ───────────────────────────────────────────────────────────────
   var SHEET_ID = "1-NPv1FmtYHj7Cq3KbLYOc-X5eVVZ-iWy";
   var GID = "1346263912";
+  var SIGN_GID = "1373103186";   // Signing Tracker tab — links actual signings into each box
 
   // League-year constants (update each year). Standard exception amounts and the four
   // CBA threshold values — the prototype uses these fixed figures.
@@ -139,7 +147,7 @@
   var ALIAS = { "laclippers":"1610612746", "lalakers":"1610612747" };
   function tidFor(name){ return TID[norm(name)] || ALIAS[norm(name)] || ""; }
 
-  var state = { sortKey:"power", filter:"all", teams:null, failed:false };
+  var state = { sortKey:"power", filter:"all", teams:null, failed:false, signByTeam:null };
 
   // ── Formatting ─────────────────────────────────────────────────────────────
   function fmt(n){
@@ -274,6 +282,45 @@
     if (out.length) { state.teams = out; state.failed = false; render(); }
   }
 
+  // ── Signings link (Signing Tracker tab) ────────────────────────────────────
+  // Mechanism → color, tied to the bucket palette: cap/room green, MLE/bi-annual
+  // amber (these consume a tracked bucket), Bird Rights / minimum stay neutral.
+  function mechStyle(m){
+    m = String(m || "");
+    if (/cap space|room mle/i.test(m)) return { c:"var(--dtt-accent)",     bg:"rgba(0,216,154,0.12)" };
+    if (/non.?tax|taxpayer|bi.?annual|\bmle\b/i.test(m)) return { c:"var(--dtt-bar-warm)", bg:"rgba(255,180,84,0.12)" };
+    if (/bird/i.test(m)) return { c:"var(--dtt-text-muted)", bg:"rgba(154,166,180,0.10)" };
+    if (/min/i.test(m))  return { c:"var(--dtt-text-dim)",   bg:"rgba(122,134,148,0.10)" };
+    return { c:"var(--dtt-text-muted)", bg:"var(--dtt-bg-input)" };
+  }
+  function loadSignings(){
+    var cb = "__spPowerSignCb";
+    window[cb] = function(resp){ try { applySignings(resp); } catch (e) {} };
+    var s = document.createElement("script");
+    s.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?gid=" + SIGN_GID + "&headers=1&tqx=out:json;responseHandler:" + cb;
+    document.head.appendChild(s);
+  }
+  function applySignings(resp){
+    var table = resp && resp.table;
+    if (!table || !table.cols || !table.rows) return;
+    var cols = table.cols.map(function(c){ return String(c.label||"").toLowerCase().trim(); });
+    function find(sub){ return cols.findIndex(function(c){ return c.indexOf(sub) >= 0; }); }
+    var iPlayer = find("roster"), iTeam = cols.findIndex(function(c){ return c === "team"; }),
+        iY1 = cols.indexOf("2026/2027"), iSigned = find("signed with");
+    function num(c, i){ return (i >= 0 && c[i] && c[i].v != null && c[i].v !== "") ? Number(c[i].v) : null; }
+    function txt(c, i){ return (i >= 0 && c[i] && c[i].v != null) ? String(c[i].v).trim() : ""; }
+    var map = {};
+    table.rows.forEach(function(r){
+      var c = r.c || [];
+      var player = txt(c, iPlayer), team = txt(c, iTeam);
+      if (!player || !team) return;
+      (map[norm(team)] = map[norm(team)] || []).push({ player:player, cap:num(c,iY1)||0, mech:txt(c,iSigned) });
+    });
+    Object.keys(map).forEach(function(k){ map[k].sort(function(a,b){ return b.cap - a.cap; }); });
+    state.signByTeam = map;
+    render();
+  }
+
   // ── Filter / sort ──────────────────────────────────────────────────────────
   function passes(t){
     var f = state.filter;
@@ -320,15 +367,26 @@
     var or = t.showOr ? '<div class="sp-or-wrap"><div class="sp-or" style="border-color:' + t.orColor + ';color:' + t.orColor + '">OR</div></div>' : '';
     var right = t.hasRight ? squareHtml(t.right) : '';
     var prox = '<div class="sp-prox"><span class="sp-prox-lbl">Room To The Lines</span>' + t.lines.map(lineHtml).join("") + '</div>';
+    var signs = (state.signByTeam && state.signByTeam[norm(t.name)]) || [];
+    var strip = signs.length ? ('<div class="sp-signings"><span class="sp-signings-lbl">Signed</span>' +
+      signs.map(function(s){ var m = mechStyle(s.mech);
+        return '<span class="sp-sign"><span class="sp-sign-name">' + esc(s.player) + '</span>' +
+          '<span class="sp-sign-cap">' + fmt(s.cap) + '</span>' +
+          (s.mech ? '<span class="sp-sign-mech" style="color:' + m.c + ';background:' + m.bg + '">' + esc(s.mech) + '</span>' : '') +
+          '</span>';
+      }).join("") + '</div>') : '';
     return '<div class="sp-row">' +
-      '<div class="sp-id"><span class="sp-rank">' + t.rank + '</span>' + logo +
-        '<div style="min-width:0">' +
-          '<div style="display:flex;align-items:center;gap:6px"><span class="sp-name">' + esc(t.name) + '</span>' + pick + '</div>' +
-          '<span class="sp-status" style="color:' + t.statusColor + ';background:' + t.statusBg + ';border:1px solid ' + t.statusBorder + '">' + t.statusLabel + '</span>' +
-          '<div class="sp-max">Max Spend <b style="color:' + t.maxColor + '">' + t.maxPowerFmt + '</b></div>' +
-        '</div></div>' +
-      '<div class="sp-squares">' + squareHtml(t.left) + or + right + '</div>' +
-      prox +
+      '<div class="sp-row-main">' +
+        '<div class="sp-id"><span class="sp-rank">' + t.rank + '</span>' + logo +
+          '<div style="min-width:0">' +
+            '<div style="display:flex;align-items:center;gap:6px"><span class="sp-name">' + esc(t.name) + '</span>' + pick + '</div>' +
+            '<span class="sp-status" style="color:' + t.statusColor + ';background:' + t.statusBg + ';border:1px solid ' + t.statusBorder + '">' + t.statusLabel + '</span>' +
+            '<div class="sp-max">Max Spend <b style="color:' + t.maxColor + '">' + t.maxPowerFmt + '</b></div>' +
+          '</div></div>' +
+        '<div class="sp-squares">' + squareHtml(t.left) + or + right + '</div>' +
+        prox +
+      '</div>' +
+      strip +
     '</div>';
   }
 
@@ -415,8 +473,9 @@
     });
   }
 
-  render();      // paint chrome + loading state
-  loadSheet();   // then populate from the live sheet
+  render();        // paint chrome + loading state
+  loadSheet();     // then populate teams from the live sheet
+  loadSignings();  // …and the actual signings, linked into each team's box
 })();
 </script>
 </body>
