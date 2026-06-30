@@ -190,6 +190,16 @@
     if (/incumbent/i.test(inc)) return '<span class="inc">Incumbent</span>';
     return '<span class="faint">—</span>';
   }
+  // "Signed With" mechanism — colored to match the Spending Power bucket palette:
+  // cap/room green, MLE/bi-annual amber (consume a tracked exception), bird/min neutral.
+  function signedLabel(m){
+    if (!m) return '<span class="faint">—</span>';
+    var c = /cap space|room mle/i.test(m) ? "var(--dtt-positive)"
+      : /non.?tax|taxpayer|bi.?annual|\bmle\b/i.test(m) ? "var(--dtt-bar-warm)"
+      : /bird/i.test(m) ? "var(--dtt-text-muted)"
+      : /min/i.test(m) ? "var(--dtt-text-dim)" : "var(--dtt-text-muted)";
+    return '<span style="color:' + c + ';font-size:10px">' + esc(m) + '</span>';
+  }
 
   // ── Live data: gviz JSON via <script> (no CORS issues for a public sheet) ──
   function loadSheet(){
@@ -208,7 +218,7 @@
     function find(sub){ return cols.findIndex(function(c){ return c.indexOf(sub) >= 0; }); }
     function exact(name){ return cols.findIndex(function(c){ return c === name; }); }
     var iPlayer = find("roster"), iTeam = exact("team"), iType = find("transaction type"),
-        iFa = find("fa type"), iInc = find("incumbent"), iNotes = find("transaction notes"),
+        iFa = find("fa type"), iInc = find("incumbent"), iSigned = find("signed with"),
         iTotal = exact("total");
     var iYears = YEAR_COLS.map(function(y){ return cols.indexOf(y.toLowerCase()); });
     function num(c, i){ return (i >= 0 && c[i] && c[i].v != null && c[i].v !== "") ? Number(c[i].v) : null; }
@@ -227,7 +237,7 @@
       });
       out.push({
         player: player, team: team, tid: TID[team] || "",
-        type: txt(c, iType), fa: txt(c, iFa), inc: txt(c, iInc), notes: txt(c, iNotes),
+        type: txt(c, iType), fa: txt(c, iFa), inc: txt(c, iInc), signedWith: txt(c, iSigned),
         total: num(c, iTotal) || 0, seasons: seasons
       });
     });
@@ -254,6 +264,7 @@
     if (k === "player") return s.player;
     if (k === "team") return s.team;
     if (k === "inc") return s.inc;
+    if (k === "signed") return s.signedWith;
     if (k === "total") return s.total;
     if (k === "yrs") return years(s);
     if (k === "aav") return aav(s) || 0;
@@ -364,6 +375,7 @@
     h += '<th class="l' + (state.sortKey==="player"?" sorted":"") + '" data-sort="player">Player' + arrow("player") + '</th>';
     h += '<th class="l' + (state.sortKey==="team"?" sorted":"") + '" data-sort="team">Team' + arrow("team") + '</th>';
     h += '<th class="l' + (state.sortKey==="inc"?" sorted":"") + '" data-sort="inc">New/Inc.' + arrow("inc") + '</th>';
+    h += '<th class="l' + (state.sortKey==="signed"?" sorted":"") + '" data-sort="signed">Signed With' + arrow("signed") + '</th>';
     h += '<th class="r' + (state.sortKey==="total"?" sorted":"") + '" data-sort="total">Total' + arrow("total") + '</th>';
     h += '<th class="r' + (state.sortKey==="yrs"?" sorted":"") + '" data-sort="yrs">Yrs' + arrow("yrs") + '</th>';
     h += '<th class="r' + (state.sortKey==="aav"?" sorted":"") + '" data-sort="aav">AAV' + arrow("aav") + '</th>';
@@ -380,6 +392,7 @@
         '</div></div></td>' +
         '<td class="muted">' + esc(s.team) + '</td>' +
         '<td>' + incLabel(s.inc) + '</td>' +
+        '<td>' + signedLabel(s.signedWith) + '</td>' +
         cell(fmtBig(s.total), "bright") +
         cell(String(years(s)), "muted") +
         cell(fmtBig(aav(s)), "dim") +
@@ -424,7 +437,7 @@
           stat("AAV", fmtBig(aav(s)), "dim") +
         '</div>' +
         '<div class="st-yrtbl">' + yrRows + '</div>' +
-        (s.notes ? '<div class="st-note">// ' + esc(s.notes) + '</div>' : '') +
+        (s.signedWith ? '<div class="st-note">// Signed With: ' + esc(s.signedWith) + '</div>' : '') +
         '</a>';
     });
     h += '</div>';
