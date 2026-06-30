@@ -352,7 +352,7 @@
         '<td>' + incLabel(s.inc) + '</td>' +
         cell(fmtBig(s.total), "bright") +
         cell(String(years(s)), "muted") +
-        cell(fmtBig(aav(s)), "bright") +
+        cell(fmtBig(aav(s)), "dim") +
         act.map(function(i){
           var y = s.seasons[i];
           return (y && y.salary != null) ? cell(fmtBig(y.salary), guarCls(y.guar)) : cell("—", "faint");
@@ -388,7 +388,7 @@
         '<div class="st-card-top">' +
           stat("Total", fmtBig(s.total), "bright") +
           stat("Years", String(years(s)), "muted") +
-          stat("AAV", fmtBig(aav(s)), "bright") +
+          stat("AAV", fmtBig(aav(s)), "dim") +
         '</div>' +
         '<div class="st-yrtbl">' + yrRows + '</div>' +
         (s.notes ? '<div class="st-note">// ' + esc(s.notes) + '</div>' : '') +
