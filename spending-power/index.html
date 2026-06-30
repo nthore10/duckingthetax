@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spending Power · Ducking The Tax</title>
+<meta name="description" content="NBA 2026-27 free-agency spending power for all 30 teams: cap space vs. mid-level exceptions, hard-capped to the apron lines. Mutually-exclusive buckets, room to the tax/apron lines, live from the cap sheets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --dtt-bg-base:#1E2228; --dtt-bg-raised:#252A31; --dtt-bg-panel:#22272E; --dtt-bg-input:#2A3038;
+    --dtt-accent:#00D89A; --dtt-accent-dark:#00A878; --dtt-on-accent:#1E2228;
+    --dtt-text-bright:#F2F4F7; --dtt-text-primary:#C8D1DC; --dtt-text-muted:#9AA6B4; --dtt-text-dim:#7A8694; --dtt-text-faint:#5E6873;
+    --dtt-border:#2E343D; --dtt-border-soft:#282E35; --dtt-border-input:#353C46;
+    --dtt-positive:#00D89A; --dtt-negative:#FF6B85; --dtt-bar-warm:#FFB454; --dtt-bar-hot:#FF6B85; --dtt-rank-num:#7A8694;
+    --dtt-font-display:'Space Grotesk',system-ui,sans-serif; --dtt-font-mono:'Space Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--dtt-bg-base);color:var(--dtt-text-primary);font-family:var(--dtt-font-mono);}
+  a{text-decoration:none;color:inherit;}
+
+  .sp-hero{background:var(--dtt-bg-raised);border-bottom:1px solid var(--dtt-border);padding:30px 24px 26px;}
+  .sp-hero-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;gap:16px;}
+  .sp-badge{width:52px;height:52px;border-radius:10px;background:var(--dtt-accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;letter-spacing:1px;color:var(--dtt-on-accent);font-family:var(--dtt-font-mono);flex:none;}
+  .sp-title{font-family:var(--dtt-font-display);font-weight:700;font-size:26px;color:var(--dtt-text-bright);letter-spacing:-0.5px;}
+  .sp-sub{font-size:10px;color:var(--dtt-text-dim);letter-spacing:1px;margin-top:4px;}
+  .sp-main{max-width:1300px;margin:0 auto;padding:24px;}
+
+  .sp-thresh{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+  .sp-tcard{background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:6px;padding:11px 14px;}
+  .sp-tlabel{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;}
+  .sp-tval{font-family:var(--dtt-font-display);font-weight:700;font-size:21px;color:var(--dtt-text-bright);margin-top:3px;line-height:1;}
+  .sp-tsub{font-size:9px;color:var(--dtt-text-dim);margin-top:4px;letter-spacing:0.5px;}
+
+  .sp-legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:16px;padding:10px 16px;background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:6px;}
+  .sp-legend .lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .sp-leg{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--dtt-text-primary);}
+  .sp-leg-sw{width:10px;height:10px;border-radius:2px;flex:none;}
+  .sp-leg .amt{color:var(--dtt-text-dim);}
+
+  .sp-controls{background:var(--dtt-bg-panel);border:1px solid var(--dtt-border);border-radius:6px;padding:12px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;}
+  .sp-ctrl-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .sp-ctrl-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dtt-text-dim);width:42px;flex:none;}
+  .sp-btn{font-family:var(--dtt-font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px 11px;border-radius:4px;cursor:pointer;transition:all .12s;background:var(--dtt-bg-input);color:var(--dtt-text-muted);border:1px solid var(--dtt-border-input);display:inline-flex;align-items:center;gap:6px;}
+  .sp-btn:hover{color:var(--dtt-text-bright);border-color:var(--dtt-text-dim);}
+  .sp-btn.active{background:var(--dtt-accent);color:var(--dtt-on-accent);border-color:var(--dtt-accent);font-weight:700;}
+  .sp-btn .n{font-weight:700;opacity:.6;}
+  .sp-btn.active .n{opacity:.85;}
+
+  .sp-rows{display:flex;flex-direction:column;gap:8px;}
+  .sp-row{background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:6px;padding:12px 14px;display:flex;align-items:stretch;gap:14px;transition:border-color .12s;}
+  .sp-row:hover{border-color:var(--dtt-accent);}
+  .sp-id{flex:0 0 206px;display:flex;align-items:flex-start;gap:11px;min-width:0;}
+  .sp-rank{font-family:var(--dtt-font-mono);font-size:11px;font-weight:700;color:var(--dtt-rank-num);width:16px;flex:none;padding-top:9px;text-align:right;}
+  .sp-id img{display:block;flex:none;}
+  .sp-name{font-family:var(--dtt-font-display);font-weight:600;font-size:13.5px;color:var(--dtt-text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:122px;}
+  .sp-picktag{flex:none;font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dtt-bar-hot);border:1px solid rgba(255,107,133,0.45);border-radius:3px;padding:1px 4px;}
+  .sp-status{display:inline-block;margin-top:5px;font-size:8px;font-weight:700;letter-spacing:1.2px;padding:2px 7px;border-radius:3px;text-transform:uppercase;}
+  .sp-max{margin-top:7px;font-size:7.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .sp-max b{font-family:var(--dtt-font-display);font-weight:700;font-size:13px;letter-spacing:0;margin-left:3px;}
+  .sp-squares{flex:1 1 auto;min-width:0;display:flex;align-items:stretch;gap:8px;}
+  .sp-square{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;border:1px solid var(--dtt-border-soft);border-radius:6px;padding:9px 10px;}
+  .sp-or-wrap{flex:0 0 auto;display:flex;align-items:center;justify-content:center;}
+  .sp-or{width:24px;height:24px;border-radius:50%;border:1px solid var(--dtt-text-faint);display:flex;align-items:center;justify-content:center;font-family:var(--dtt-font-mono);font-weight:700;font-size:8px;}
+  .sp-sq-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .sp-sq-title{font-size:8px;letter-spacing:1.3px;text-transform:uppercase;}
+  .sp-sq-total{font-family:var(--dtt-font-mono);font-size:12px;font-weight:700;}
+  .sp-chips{display:flex;flex-wrap:wrap;gap:5px;}
+  .sp-chip{display:flex;flex-direction:column;gap:1px;border:1px solid var(--dtt-border-input);border-radius:4px;padding:4px 8px;min-width:62px;}
+  .sp-chip-lbl{font-size:7px;letter-spacing:0.6px;text-transform:uppercase;color:var(--dtt-text-dim);white-space:nowrap;}
+  .sp-chip-amt{font-family:var(--dtt-font-mono);font-size:12px;font-weight:700;}
+  .sp-hardcap{display:flex;align-items:center;gap:6px;border-top:1px solid var(--dtt-border-soft);padding-top:6px;}
+  .sp-hc-lbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .sp-hc-note{font-family:var(--dtt-font-mono);font-size:9px;font-weight:700;}
+  .sp-none{display:flex;align-items:center;justify-content:center;height:100%;min-height:42px;padding:8px;border-radius:4px;border:1px dashed var(--dtt-border-input);color:var(--dtt-text-faint);font-size:8px;letter-spacing:1.2px;text-transform:uppercase;text-align:center;}
+  .sp-prox{flex:0 0 226px;display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--dtt-border-soft);padding-left:14px;justify-content:center;}
+  .sp-prox-lbl{font-size:7px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .sp-line{display:flex;align-items:center;gap:8px;}
+  .sp-line-lbl{font-size:7.5px;letter-spacing:0.5px;text-transform:uppercase;color:var(--dtt-text-muted);width:46px;flex:none;}
+  .sp-bar{flex:1;height:5px;border-radius:3px;background:var(--dtt-bg-input);overflow:hidden;}
+  .sp-bar-fill{height:100%;border-radius:3px;}
+  .sp-line-val{font-family:var(--dtt-font-mono);font-size:10px;font-weight:700;width:60px;text-align:right;flex:none;}
+
+  .sp-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--dtt-border);font-size:9px;letter-spacing:0.5px;color:var(--dtt-text-dim);}
+  .sp-empty{padding:48px 16px;text-align:center;color:var(--dtt-text-dim);font-size:11px;letter-spacing:.5px;}
+  .sp-spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--dtt-border-input);border-top-color:var(--dtt-accent);border-radius:50%;animation:sp-spin .7s linear infinite;vertical-align:middle;margin-right:8px;}
+  @keyframes sp-spin{to{transform:rotate(360deg);}}
+  @media(max-width:1100px){.sp-prox{display:none;}.sp-id{flex-basis:170px;}}
+  @media(max-width:760px){.sp-squares{flex-direction:column;}.sp-or-wrap{transform:rotate(0);}}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+  // ── Config ───────────────────────────────────────────────────────────────
+  var SHEET_ID = "1-NPv1FmtYHj7Cq3KbLYOc-X5eVVZ-iWy";
+  var GID = "1346263912";
+
+  // League-year constants (update each year). Standard exception amounts and the four
+  // CBA threshold values — the prototype uses these fixed figures.
+  var STD = { room: 9369000, nontax: 15048000, tax: 6065000, bi: 5478000 };
+  var THRESHOLDS = [
+    { label: "Salary Cap",   val: "$165.0M", color: "var(--dtt-text-muted)", k: "capLine", suffix: " teams under it" },
+    { label: "Luxury Tax",   val: "$201.0M", color: "var(--dtt-bar-warm)",   k: "tax",     suffix: " over the line" },
+    { label: "First Apron",  val: "$209.0M", color: "var(--dtt-bar-hot)",    k: "ap1",     suffix: " over the line" },
+    { label: "Second Apron", val: "$222.0M", color: "var(--dtt-bar-hot)",    k: "ap2",     suffix: " over the line" }
+  ];
+  var CHIP = {
+    cap:    { color:"var(--dtt-accent)",      bg:"rgba(0,216,154,0.1)",  bd:"rgba(0,216,154,0.32)" },
+    room:   { color:"var(--dtt-accent)",      bg:"rgba(0,216,154,0.06)", bd:"rgba(0,216,154,0.22)" },
+    nontax: { color:"var(--dtt-bar-warm)",    bg:"rgba(255,180,84,0.1)", bd:"rgba(255,180,84,0.32)" },
+    tax:    { color:"var(--dtt-bar-warm)",    bg:"rgba(255,180,84,0.1)", bd:"rgba(255,180,84,0.32)" },
+    bi:     { color:"var(--dtt-text-bright)", bg:"var(--dtt-bg-input)",  bd:"var(--dtt-border-input)" }
+  };
+
+  // Team name → NBA CDN logo id. Aliases cover the cap sheet's name variants.
+  var TEAMS = [
+    ["Atlanta Hawks","1610612737"],["Boston Celtics","1610612738"],["Brooklyn Nets","1610612751"],
+    ["Charlotte Hornets","1610612766"],["Chicago Bulls","1610612741"],["Cleveland Cavaliers","1610612739"],
+    ["Dallas Mavericks","1610612742"],["Denver Nuggets","1610612743"],["Detroit Pistons","1610612765"],
+    ["Golden State Warriors","1610612744"],["Houston Rockets","1610612745"],["Indiana Pacers","1610612754"],
+    ["Los Angeles Clippers","1610612746"],["Los Angeles Lakers","1610612747"],["Memphis Grizzlies","1610612763"],
+    ["Miami Heat","1610612748"],["Milwaukee Bucks","1610612749"],["Minnesota Timberwolves","1610612750"],
+    ["New Orleans Pelicans","1610612740"],["New York Knicks","1610612752"],["Oklahoma City Thunder","1610612760"],
+    ["Orlando Magic","1610612753"],["Philadelphia 76ers","1610612755"],["Phoenix Suns","1610612756"],
+    ["Portland Trail Blazers","1610612757"],["Sacramento Kings","1610612758"],["San Antonio Spurs","1610612759"],
+    ["Toronto Raptors","1610612761"],["Utah Jazz","1610612762"],["Washington Wizards","1610612764"]
+  ];
+  var norm = function(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,""); };
+  var TID = {};
+  TEAMS.forEach(function(t){ TID[norm(t[0])] = t[1]; });
+  var ALIAS = { "laclippers":"1610612746", "lalakers":"1610612747" };
+  function tidFor(name){ return TID[norm(name)] || ALIAS[norm(name)] || ""; }
+
+  var state = { sortKey:"power", filter:"all", teams:null, failed:false };
+
+  // ── Formatting ─────────────────────────────────────────────────────────────
+  function fmt(n){
+    var neg = n < 0, a = Math.abs(n), s;
+    if (a >= 1e6) s = "$" + (a/1e6).toFixed(1) + "M";
+    else if (a >= 1e3) s = "$" + Math.round(a/1e3) + "K";
+    else s = "$" + a;
+    return (neg ? "−" : "") + s;
+  }
+  function fmtSigned(n){
+    var a = Math.abs(n);
+    var v = a >= 1e6 ? "$" + (a/1e6).toFixed(1) + "M" : "$" + Math.round(a/1e3) + "K";
+    return (n >= 0 ? "+" : "−") + v;
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+
+  // ── Per-square + per-team compute (ported from the prototype) ──────────────
+  function mkChip(label, amount, kind){ var c = CHIP[kind]; return { label:label, amount:fmt(amount), color:c.color, bg:c.bg, bd:c.bd }; }
+  function capSquare(title, cap, room){
+    var total = cap + room;
+    return { kind:"cap", title:title, titleColor:"var(--dtt-accent)",
+      chips:[mkChip("Cap Space", cap, "cap"), mkChip("Room MLE", room, "room")],
+      usable:total, totalFmt:fmt(total), isNone:false, hasHardCap:false, hardLine:"", note:"", noteColor:"", constrained:false };
+  }
+  function mleSquare(title, exArr, hardLine, room){
+    var chips = exArr.map(function(e){ return mkChip(e[0], e[1], e[2]); });
+    var want = exArr.reduce(function(a,e){ return a + e[1]; }, 0);
+    var usable = Math.max(0, Math.min(want, room));
+    var constrained = usable < want - 50000;
+    var tight = !constrained && (room - want) < 1500000;
+    var note, noteColor;
+    if (constrained) { note = "✕ " + fmt(usable) + " of " + fmt(want) + " usable"; noteColor = "var(--dtt-bar-hot)"; }
+    else if (tight)  { note = fmt(want) + " · no margin"; noteColor = "var(--dtt-bar-warm)"; }
+    else             { note = "full " + fmt(want) + " usable"; noteColor = "var(--dtt-accent)"; }
+    return { kind:"mle", title:title, titleColor:"var(--dtt-bar-warm)", chips:chips, usable:usable, totalFmt:fmt(usable),
+      isNone:false, hasHardCap:true, hardLine:hardLine, note:note, noteColor:noteColor, constrained:constrained };
+  }
+  function noneSquare(){ return { kind:"none", isNone:true, usable:-1, chips:[], hasHardCap:false, constrained:false }; }
+  function styleFor(s){
+    if (s.isNone) return { bg:"transparent", bd:"var(--dtt-border-soft)", opacity:"0.4" };
+    var base = s.kind === "cap" ? { bg:"rgba(0,216,154,0.06)", bd:"rgba(0,216,154,0.4)" } : { bg:"rgba(255,180,84,0.06)", bd:"rgba(255,180,84,0.4)" };
+    return s.best ? { bg:base.bg, bd:base.bd, opacity:"1" } : { bg:"var(--dtt-bg-panel)", bd:"var(--dtt-border-soft)", opacity:"0.5" };
+  }
+  function mkLine(label, val){
+    var pos = val >= 0;
+    var pct = Math.max(pos ? 6 : 10, Math.min(100, Math.abs(val) / (pos ? 55e6 : 30e6) * 100));
+    var color = pos ? (val < 8e6 ? "var(--dtt-bar-warm)" : "var(--dtt-accent)") : "var(--dtt-bar-hot)";
+    return { label:label, fmt:fmtSigned(val), color:color, barColor:color, barPct:pct.toFixed(1) + "%" };
+  }
+
+  function processTeam(rt){
+    var hasBi = rt.bi > 0;
+    var statusLabel, statusColor, statusBg, statusBorder = "transparent", level;
+    if (rt.ap2Sp < 0)      { statusLabel = "2nd Apron"; statusColor = "var(--dtt-negative)"; statusBg = "rgba(255,107,133,0.16)"; statusBorder = "rgba(255,107,133,0.5)"; level = 3; }
+    else if (rt.ap1Sp < 0) { statusLabel = "1st Apron"; statusColor = "var(--dtt-negative)"; statusBg = "rgba(255,107,133,0.12)"; level = 2; }
+    else if (rt.taxSp < 0) { statusLabel = "Tax Payer"; statusColor = "var(--dtt-bar-warm)"; statusBg = "rgba(255,180,84,0.12)"; level = 1; }
+    else                   { statusLabel = "Under Tax"; statusColor = "var(--dtt-positive)"; statusBg = "rgba(0,216,154,0.12)"; level = 0; }
+
+    var g = rt.group, left, right, hasRight, showOr, ex;
+    if (g === "A") {
+      left = capSquare("Use Cap Space", rt.cap, STD.room);
+      ex = [["Non-Tax MLE", STD.nontax, "nontax"]]; if (hasBi) ex.push(["Bi-Annual", STD.bi, "bi"]);
+      right = mleSquare("Stay Over The Cap", ex, "1st Apron", rt.ap1Sp); hasRight = true; showOr = true;
+    } else if (g === "B") {
+      ex = [["Non-Tax MLE", STD.nontax, "nontax"]]; if (hasBi) ex.push(["Bi-Annual", STD.bi, "bi"]);
+      left = mleSquare("Use Non-Taxpayer MLE", ex, "1st Apron", rt.ap1Sp);
+      right = noneSquare(); hasRight = false; showOr = false;
+    } else if (g === "C") {
+      ex = [["Non-Tax MLE", STD.nontax, "nontax"]]; if (hasBi) ex.push(["Bi-Annual", STD.bi, "bi"]);
+      left = mleSquare("Use Non-Taxpayer MLE", ex, "1st Apron", rt.ap1Sp);
+      right = mleSquare("Use Taxpayer MLE", [["Tax MLE", STD.tax, "tax"]], "2nd Apron", rt.ap2Sp);
+      hasRight = true; showOr = true;
+    } else {
+      left = mleSquare("Use Taxpayer MLE", [["Tax MLE", STD.tax, "tax"]], "2nd Apron", rt.ap2Sp);
+      right = noneSquare(); hasRight = true; showOr = true;
+    }
+
+    var candidates = [left, right].filter(function(s){ return !s.isNone; });
+    var bestUsable = Math.max.apply(null, candidates.map(function(s){ return s.usable; }));
+    candidates.forEach(function(s){ s.best = (s.usable === bestUsable); });
+    if (left.isNone) left.best = false;
+    if (right.isNone) right.best = false;
+    var choice = candidates.filter(function(s){ return s.usable > 0; }).length >= 2;
+    var maxPower = Math.max(0, bestUsable);
+    var frozen = maxPower <= 0;
+    var anyConstrained = candidates.some(function(s){ return s.constrained; });
+    Object.assign(left, styleFor(left));
+    Object.assign(right, styleFor(right));
+    var lines = [mkLine("Tax", rt.taxSp), mkLine("1st Apr", rt.ap1Sp), mkLine("2nd Apr", rt.ap2Sp)];
+
+    return {
+      name:rt.name, logo:"https://cdn.nba.com/logos/nba/" + rt.tid + "/primary/L/logo.svg", level:level,
+      cap:rt.cap, taxSp:rt.taxSp, ap1Sp:rt.ap1Sp, ap2Sp:rt.ap2Sp, capPos:rt.cap > 0, isCapSpace:g === "A",
+      statusLabel:statusLabel, statusColor:statusColor, statusBg:statusBg, statusBorder:statusBorder,
+      left:left, right:right, hasRight:hasRight, showOr:showOr, orColor: choice ? "var(--dtt-bar-hot)" : "var(--dtt-text-faint)",
+      choice:choice, maxPower:maxPower, maxPowerFmt: frozen ? "$0" : fmt(maxPower), maxColor: frozen ? "var(--dtt-text-faint)" : "var(--dtt-accent)",
+      anyConstrained:anyConstrained, frozen:frozen, lines:lines, hasLogo: !!rt.tid
+    };
+  }
+
+  // ── Live data ──────────────────────────────────────────────────────────────
+  function loadSheet(){
+    var cb = "__spendingPowerCb";
+    window[cb] = function(resp){ try { applySheet(resp); } catch (e) { state.failed = true; state.teams = []; render(); } };
+    var s = document.createElement("script");
+    s.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?gid=" + GID + "&headers=1&tqx=out:json;responseHandler:" + cb;
+    s.onerror = function(){ state.failed = true; if (!state.teams) { state.teams = []; render(); } };
+    document.head.appendChild(s);
+  }
+  function applySheet(resp){
+    var table = resp && resp.table;
+    if (!table || !table.cols || !table.rows) return;
+    var cols = table.cols.map(function(c){ return String(c.label||"").toLowerCase().trim(); });
+    function find(sub){ return cols.findIndex(function(c){ return c.indexOf(sub) >= 0; }); }
+    var iTeam = cols.findIndex(function(c){ return c === "team"; });
+    var iCap = find("cap space"), iTax = find("luxury tax"), iAp1 = find("first apron"),
+        iAp2 = find("second apron"), iBi = find("bi-annual"), iGroup = find("spending bucket");
+    function num(c, i){ return (i >= 0 && c[i] && c[i].v != null && c[i].v !== "") ? Number(c[i].v) : null; }
+    function txt(c, i){ return (i >= 0 && c[i] && c[i].v != null) ? String(c[i].v).trim() : ""; }
+
+    var out = [];
+    table.rows.forEach(function(r){
+      var c = r.c || [];
+      var name = txt(c, iTeam);
+      var group = txt(c, iGroup).toUpperCase();
+      if (!name || !/^[ABCD]$/.test(group)) return;   // skip non-team / reference rows
+      out.push(processTeam({
+        name:name, tid:tidFor(name), group:group,
+        cap:num(c,iCap)||0, taxSp:num(c,iTax)||0, ap1Sp:num(c,iAp1)||0, ap2Sp:num(c,iAp2)||0, bi:num(c,iBi)||0
+      }));
+    });
+    if (out.length) { state.teams = out; state.failed = false; render(); }
+  }
+
+  // ── Filter / sort ──────────────────────────────────────────────────────────
+  function passes(t){
+    var f = state.filter;
+    if (f === "cap") return t.isCapSpace;
+    if (f === "over") return !t.isCapSpace && !t.frozen;
+    if (f === "constrained") return t.anyConstrained;
+    if (f === "frozen") return t.frozen;
+    return true;
+  }
+  function sortList(list){
+    var byName = function(a,b){ return a.name.localeCompare(b.name); };
+    var k = state.sortKey;
+    if (k === "power") list.sort(function(a,b){ return b.maxPower - a.maxPower || byName(a,b); });
+    else if (k === "cap") list.sort(function(a,b){ return b.cap - a.cap || byName(a,b); });
+    else if (k === "apron") list.sort(function(a,b){ return a.ap1Sp - b.ap1Sp || byName(a,b); });
+    else if (k === "tier") list.sort(function(a,b){ return a.level - b.level || b.maxPower - a.maxPower || byName(a,b); });
+    else list.sort(byName);
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  function chipHtml(c){
+    return '<div class="sp-chip" style="border-color:' + c.bd + ';background:' + c.bg + '">' +
+      '<span class="sp-chip-lbl">' + esc(c.label) + '</span>' +
+      '<span class="sp-chip-amt" style="color:' + c.color + '">' + c.amount + '</span></div>';
+  }
+  function squareHtml(sq){
+    if (sq.isNone) return '<div class="sp-square" style="border-color:' + sq.bd + ';background:' + sq.bg + ';opacity:' + sq.opacity + '">' +
+      '<div class="sp-none">No Exceptions Available</div></div>';
+    var inner = '<div class="sp-sq-head"><span class="sp-sq-title" style="color:' + sq.titleColor + '">' + esc(sq.title) + '</span>' +
+      '<span class="sp-sq-total" style="color:' + sq.titleColor + '">' + sq.totalFmt + '</span></div>' +
+      '<div class="sp-chips">' + sq.chips.map(chipHtml).join("") + '</div>' +
+      (sq.hasHardCap ? '<div class="sp-hardcap"><span class="sp-hc-lbl">Hard Cap · ' + esc(sq.hardLine) + '</span>' +
+        '<span class="sp-hc-note" style="color:' + sq.noteColor + '">' + esc(sq.note) + '</span></div>' : "");
+    return '<div class="sp-square" style="border-color:' + sq.bd + ';background:' + sq.bg + ';opacity:' + sq.opacity + '">' + inner + '</div>';
+  }
+  function lineHtml(ln){
+    return '<div class="sp-line"><span class="sp-line-lbl">' + esc(ln.label) + '</span>' +
+      '<div class="sp-bar"><div class="sp-bar-fill" style="width:' + ln.barPct + ';background:' + ln.barColor + '"></div></div>' +
+      '<span class="sp-line-val" style="color:' + ln.color + '">' + ln.fmt + '</span></div>';
+  }
+  function rowHtml(t){
+    var logo = t.hasLogo ? '<img src="' + t.logo + '" alt="" width="36" height="36">' : '';
+    var pick = t.choice ? '<span class="sp-picktag">Pick 1</span>' : '';
+    var or = t.showOr ? '<div class="sp-or-wrap"><div class="sp-or" style="border-color:' + t.orColor + ';color:' + t.orColor + '">OR</div></div>' : '';
+    var right = t.hasRight ? squareHtml(t.right) : '';
+    var prox = '<div class="sp-prox"><span class="sp-prox-lbl">Room To The Lines</span>' + t.lines.map(lineHtml).join("") + '</div>';
+    return '<div class="sp-row">' +
+      '<div class="sp-id"><span class="sp-rank">' + t.rank + '</span>' + logo +
+        '<div style="min-width:0">' +
+          '<div style="display:flex;align-items:center;gap:6px"><span class="sp-name">' + esc(t.name) + '</span>' + pick + '</div>' +
+          '<span class="sp-status" style="color:' + t.statusColor + ';background:' + t.statusBg + ';border:1px solid ' + t.statusBorder + '">' + t.statusLabel + '</span>' +
+          '<div class="sp-max">Max Spend <b style="color:' + t.maxColor + '">' + t.maxPowerFmt + '</b></div>' +
+        '</div></div>' +
+      '<div class="sp-squares">' + squareHtml(t.left) + or + right + '</div>' +
+      prox +
+    '</div>';
+  }
+
+  function render(){
+    var all = state.teams || [];
+    var counts = {
+      capLine: all.filter(function(t){ return t.capPos; }).length,
+      capUse:  all.filter(function(t){ return t.isCapSpace; }).length,
+      tax:     all.filter(function(t){ return t.taxSp < 0; }).length,
+      ap1:     all.filter(function(t){ return t.ap1Sp < 0; }).length,
+      ap2:     all.filter(function(t){ return t.ap2Sp < 0; }).length,
+      con:     all.filter(function(t){ return t.anyConstrained; }).length,
+      over:    all.filter(function(t){ return !t.isCapSpace && !t.frozen; }).length,
+      frozen:  all.filter(function(t){ return t.frozen; }).length
+    };
+    var list = all.filter(passes);
+    sortList(list);
+    list.forEach(function(t,i){ t.rank = i + 1; });
+
+    var html = "";
+    // HERO (shared nav mounts separately into #dtt-nav via /nav.js)
+    html += '<header class="sp-hero"><div class="sp-hero-inner">' +
+      '<div class="sp-badge">SP</div><div>' +
+      '<div class="sp-title">Spending Power</div>' +
+      '<div class="sp-sub">// 2026–27 free agency · who can actually spend, &amp; how the apron lines cap their exceptions</div>' +
+      '</div></div></header>';
+
+    html += '<main class="sp-main">';
+
+    // THRESHOLD CARDS
+    html += '<div class="sp-thresh">' + THRESHOLDS.map(function(th){
+      return '<div class="sp-tcard" style="border-left:3px solid ' + th.color + '">' +
+        '<div class="sp-tlabel" style="color:' + th.color + '">' + th.label + '</div>' +
+        '<div class="sp-tval">' + th.val + '</div>' +
+        '<div class="sp-tsub">' + counts[th.k] + th.suffix + '</div></div>';
+    }).join("") + '</div>';
+
+    // BUCKET LEGEND
+    html += '<div class="sp-legend"><span class="lbl">Buckets</span>' +
+      leg("rgba(0,216,154,0.2)","var(--dtt-accent)","Cap Space","") +
+      leg("rgba(0,216,154,0.12)","var(--dtt-accent)","Room MLE"," $9.4M") +
+      leg("rgba(255,180,84,0.2)","var(--dtt-bar-warm)","Non-Taxpayer MLE"," $15.0M") +
+      leg("rgba(255,180,84,0.12)","var(--dtt-bar-warm)","Taxpayer MLE"," $6.1M") +
+      leg("var(--dtt-bg-input)","var(--dtt-border-input)","Bi-Annual"," $5.5M") +
+      '</div>';
+
+    // CONTROLS
+    var sortBtns = [["power","Spending Power"],["cap","Cap Space"],["apron","Room To 1st Apron"],["tier","Apron Tier"],["az","A–Z"]];
+    var filterBtns = [["all","All Teams","all"],["cap","Cap-Space","capUse"],["over","Over-Cap Tools","over"],["constrained","Exception-Capped","con"],["frozen","No Room","frozen"]];
+    html += '<div class="sp-controls">' +
+      '<div class="sp-ctrl-row"><span class="sp-ctrl-lbl">Sort</span>' +
+      sortBtns.map(function(b){ return '<button class="sp-btn' + (state.sortKey===b[0]?" active":"") + '" data-sort="' + b[0] + '">' + b[1] + '</button>'; }).join("") +
+      '</div><div class="sp-ctrl-row"><span class="sp-ctrl-lbl">Filter</span>' +
+      filterBtns.map(function(b){
+        var n = b[2] === "all" ? all.length : counts[b[2]];
+        return '<button class="sp-btn' + (state.filter===b[0]?" active":"") + '" data-filter="' + b[0] + '">' + b[1] + ' <span class="n">' + n + '</span></button>';
+      }).join("") +
+      '</div></div>';
+
+    // BODY
+    if (state.teams === null) html += '<div class="sp-empty"><span class="sp-spinner"></span>Loading spending power…</div>';
+    else if (!all.length) html += '<div class="sp-empty">' + (state.failed ? "Couldn’t load the data — check back shortly." : "No teams loaded.") + '</div>';
+    else html += '<div class="sp-rows">' + list.map(rowHtml).join("") + '</div>';
+
+    html += '<div class="sp-foot"><span>// Source: NBA Cap Sheets · 2026–27 projections. “Max spend” is the best of a team’s options; over-the-cap exceptions are capped to the room below the relevant apron. Non-Taxpayer MLE $15.0M · Taxpayer MLE $6.1M · Room MLE $9.4M · Bi-Annual $5.5M.</span>' +
+      '<span style="color:var(--dtt-text-faint)">Nick Thoreson · Ducking The Tax</span></div>';
+    html += '</main>';
+
+    var app = document.getElementById("app");
+    app.innerHTML = html;
+    bind(app);
+  }
+  function leg(bg, bd, label, amt){
+    return '<span class="sp-leg"><span class="sp-leg-sw" style="background:' + bg + ';border:1px solid ' + bd + '"></span>' +
+      '<span>' + label + (amt ? '<span class="amt">' + amt + '</span>' : '') + '</span></span>';
+  }
+
+  function bind(root){
+    root.querySelectorAll("[data-sort]").forEach(function(b){
+      b.addEventListener("click", function(){ state.sortKey = b.getAttribute("data-sort"); render(); });
+    });
+    root.querySelectorAll("[data-filter]").forEach(function(b){
+      b.addEventListener("click", function(){ state.filter = b.getAttribute("data-filter"); render(); });
+    });
+  }
+
+  render();      // paint chrome + loading state
+  loadSheet();   // then populate from the live sheet
+})();
+</script>
+</body>
+</html>
