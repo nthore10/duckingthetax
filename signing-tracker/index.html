@@ -74,11 +74,14 @@
   .st-team-arrow{color:var(--dtt-text-faint);font-family:var(--dtt-font-mono);font-size:10px;}
   .st-teamcol{display:flex;flex-direction:column;gap:2px;min-width:0;}
   .st-teamline{font-size:9px;color:var(--dtt-text-dim);letter-spacing:.5px;}
-  .pill{display:inline-block;align-self:flex-start;font-size:8px;font-weight:700;letter-spacing:1.2px;padding:2px 7px;border-radius:3px;text-transform:uppercase;border:1px solid transparent;}
-  .pill.ext{color:var(--dtt-accent);background:rgba(0,216,154,.12);}
+  .pill{display:inline-block;font-size:8px;font-weight:700;letter-spacing:1.2px;padding:2px 7px;border-radius:3px;text-transform:uppercase;border:1px solid transparent;white-space:nowrap;}
+  .st-pills{display:flex;gap:4px;flex-wrap:wrap;}
+  /* Transaction type — Free Agent vs Extension (Extension gets a distinct purple). */
+  .pill.fa{color:var(--dtt-text-muted);background:rgba(154,166,180,.12);}
+  .pill.ext{color:#B98BE6;background:rgba(112,48,160,.20);}
+  /* FA type. */
   .pill.unrestricted{color:var(--dtt-positive);background:rgba(0,216,154,.12);}
   .pill.restricted{color:var(--dtt-bar-warm);background:rgba(255,180,84,.12);}
-  .pill.fa{color:var(--dtt-text-muted);background:rgba(154,166,180,.12);}
 
   .st-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
   .st-card{display:block;background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:8px;padding:16px;transition:border-color .12s;}
@@ -156,11 +159,23 @@
   function pctStr(salary, i){ var c = CAPS[i]; return (c && salary != null) ? (salary / c * 100).toFixed(1) + "%" : ""; }
   function years(s){ return s.seasons.filter(function(y){ return y.salary != null; }).length; }
   function aav(s){ var n = years(s); return n ? s.total / n : null; }
-  function statusOf(s){
-    if (/extension/i.test(s.type)) return { cls:"ext", label:"Extension" };
+  // Transaction-type pill: Extension vs Free Agent (the headline identifier).
+  function txnPill(s){
+    return /extension/i.test(s.type) ? { cls:"ext", label:"Extension" } : { cls:"fa", label:"Free Agent" };
+  }
+  // FA-type pill: Unrestricted/Restricted (only for free-agent signings).
+  function faPill(s){
+    if (/extension/i.test(s.type)) return null;
     if (/^unrestricted/i.test(s.fa)) return { cls:"unrestricted", label:"Unrestricted" };
     if (/^restricted/i.test(s.fa)) return { cls:"restricted", label:"Restricted" };
-    return { cls:"fa", label:"Free Agent" };
+    return null;
+  }
+  // Table shows both: transaction type + (for FAs) the FA type.
+  function pillsHtml(s){
+    var t = txnPill(s), f = faPill(s);
+    var h = '<span class="pill ' + t.cls + '">' + t.label + '</span>';
+    if (f) h += '<span class="pill ' + f.cls + '">' + f.label + '</span>';
+    return h;
   }
   // Year-type color, matched to the cap sheets: Player Option green, Team Option orange,
   // Non-Guaranteed red, Guaranteed default (bright).
@@ -357,12 +372,11 @@
     });
     h += '</tr></thead><tbody>';
     data.forEach(function(s){
-      var st = statusOf(s);
       var logo = s.tid ? '<img src="https://cdn.nba.com/logos/nba/' + s.tid + '/primary/L/logo.svg" alt="" width="26" height="26">' : '';
       h += '<tr data-team="' + esc(s.team) + '">' +
         '<td><div class="st-team">' + logo + '<div class="st-teamcol">' +
           '<span class="st-team-name">' + esc(s.player) + ' <span class="st-team-arrow">→</span></span>' +
-          '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
+          '<div class="st-pills">' + pillsHtml(s) + '</div>' +
         '</div></div></td>' +
         '<td class="muted">' + esc(s.team) + '</td>' +
         '<td>' + incLabel(s.inc) + '</td>' +
@@ -385,7 +399,7 @@
   function renderCards(){
     var h = '<div class="st-cards">';
     rows().forEach(function(s){
-      var st = statusOf(s);
+      var tp = txnPill(s);
       var logo = s.tid ? '<img src="https://cdn.nba.com/logos/nba/' + s.tid + '/primary/L/logo.svg" alt="" width="34" height="34" style="display:block;flex:none">' : '';
       var yrRows = "";
       s.seasons.forEach(function(y,i){
@@ -402,7 +416,7 @@
             (s.fa && !/n\/a/i.test(s.fa) ? ' · ' + esc(s.fa.toUpperCase()) : '') +
             (/new team/i.test(s.inc) ? ' · NEW TEAM' : /incumbent/i.test(s.inc) ? ' · INCUMBENT' : '') +
           '</div></div>' +
-          '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
+          '<span class="pill ' + tp.cls + '">' + tp.label + '</span>' +
         '</div>' +
         '<div class="st-card-top">' +
           stat("Total", fmtBig(s.total), "bright") +
