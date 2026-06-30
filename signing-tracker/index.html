@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signing Tracker · Ducking The Tax</title>
+<meta name="description" content="2026 NBA free agency signing tracker: every free-agent signing and extension with total value, years, AAV, and year-by-year salary and guarantee structure, live from the source sheet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* DTT tokens — inlined per the site's per-page convention (matches the tracker pages). */
+  :root{
+    --dtt-bg-base:#1E2228; --dtt-bg-raised:#252A31; --dtt-bg-panel:#22272E; --dtt-bg-row-hover:#262C33; --dtt-bg-input:#2A3038;
+    --dtt-accent:#00D89A; --dtt-accent-dark:#00A878; --dtt-on-accent:#1E2228;
+    --dtt-text-bright:#F2F4F7; --dtt-text-primary:#C8D1DC; --dtt-text-muted:#9AA6B4; --dtt-text-dim:#7A8694; --dtt-text-faint:#5E6873;
+    --dtt-border:#2E343D; --dtt-border-soft:#282E35; --dtt-border-input:#353C46;
+    --dtt-positive:#00D89A; --dtt-negative:#FF6B85; --dtt-bar-warm:#FFB454;
+    --dtt-font-display:'Space Grotesk',system-ui,sans-serif; --dtt-font-mono:'Space Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--dtt-bg-base);color:var(--dtt-text-primary);font-family:var(--dtt-font-mono);}
+  a{text-decoration:none;color:inherit;}
+  table{border-collapse:collapse;width:100%;}
+
+  .st-hero{background:var(--dtt-bg-raised);border-bottom:1px solid var(--dtt-border);padding:30px 24px 26px;}
+  .st-hero-inner{max-width:1300px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+  .st-id{display:flex;align-items:center;gap:16px;}
+  .st-badge{display:flex;align-items:center;justify-content:center;background:var(--dtt-accent);color:var(--dtt-on-accent);font-weight:700;font-family:var(--dtt-font-mono);}
+  .st-title{font-family:var(--dtt-font-display);font-weight:700;font-size:26px;color:var(--dtt-text-bright);letter-spacing:-0.5px;}
+  .st-sub{font-size:10px;color:var(--dtt-text-dim);letter-spacing:1px;margin-top:4px;}
+  .st-kpis{display:flex;gap:30px;flex-wrap:wrap;}
+  .st-kpi{text-align:right;}
+  .st-kpi-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .st-kpi-val{font-family:var(--dtt-font-display);font-weight:700;font-size:20px;margin-top:2px;}
+
+  .st-bar{background:var(--dtt-bg-panel);border-bottom:1px solid var(--dtt-border);}
+  .st-bar-inner{max-width:1300px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .st-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .st-filters > .lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dtt-text-dim);margin-right:4px;}
+  .st-fbtn{display:inline-flex;align-items:center;gap:6px;font-family:var(--dtt-font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:6px 11px;border-radius:4px;cursor:pointer;transition:all .12s;background:var(--dtt-bg-input);color:var(--dtt-text-muted);border:1px solid var(--dtt-border-input);}
+  .st-fbtn .n{font-weight:700;opacity:.6;}
+  .st-fbtn:hover{color:var(--dtt-text-bright);border-color:var(--dtt-text-dim);}
+  .st-fbtn.active{background:var(--dtt-accent);color:var(--dtt-on-accent);border-color:var(--dtt-accent);font-weight:700;}
+  .st-fbtn.active .n{opacity:.85;}
+  .st-bar-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .st-legend{display:flex;align-items:center;gap:14px;font-size:8.5px;letter-spacing:1px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .st-legend span{display:flex;align-items:center;gap:5px;}
+  .st-dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  .st-toggle{display:flex;border:1px solid var(--dtt-border-input);border-radius:4px;overflow:hidden;}
+  .st-toggle button{font-family:var(--dtt-font-mono);font-size:8.5px;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;cursor:pointer;background:var(--dtt-bg-input);color:var(--dtt-text-muted);border:0;}
+  .st-toggle button.active{background:var(--dtt-accent);color:var(--dtt-on-accent);font-weight:700;}
+
+  .st-main{max-width:1300px;margin:0 auto;padding:24px;}
+  .st-tablewrap{border:1px solid var(--dtt-border);border-radius:6px;overflow:hidden;background:var(--dtt-bg-raised);}
+  .st-scroll{overflow-x:auto;}
+  thead tr{background:var(--dtt-bg-panel);}
+  th{padding:11px 14px;font-family:var(--dtt-font-mono);font-size:8.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;user-select:none;white-space:nowrap;color:var(--dtt-text-dim);}
+  th.r{text-align:right;} th.l{text-align:left;}
+  th.sorted{color:var(--dtt-accent);}
+  tbody tr{border-top:1px solid var(--dtt-border-soft);cursor:pointer;transition:background .12s;}
+  tbody tr:hover{background:var(--dtt-bg-row-hover);}
+  td{padding:8px 14px;font-family:var(--dtt-font-mono);font-size:12px;white-space:nowrap;}
+  td.num{text-align:right;}
+  .pos{color:var(--dtt-positive);} .neg{color:var(--dtt-negative);} .dim{color:var(--dtt-text-dim);}
+  .faint{color:var(--dtt-text-faint);} .bright{color:var(--dtt-text-bright);} .muted{color:var(--dtt-text-muted);} .warm{color:var(--dtt-bar-warm);}
+  .st-team{display:flex;align-items:center;gap:11px;}
+  .st-team img{display:block;flex:none;}
+  .st-team-name{font-family:var(--dtt-font-display);font-weight:600;font-size:13px;color:var(--dtt-text-bright);white-space:nowrap;}
+  .st-team-arrow{color:var(--dtt-text-faint);font-family:var(--dtt-font-mono);font-size:10px;}
+  .st-teamcol{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .st-teamline{font-size:9px;color:var(--dtt-text-dim);letter-spacing:.5px;}
+  .pill{display:inline-block;align-self:flex-start;font-size:8px;font-weight:700;letter-spacing:1.2px;padding:2px 7px;border-radius:3px;text-transform:uppercase;border:1px solid transparent;}
+  .pill.ext{color:var(--dtt-accent);background:rgba(0,216,154,.12);}
+  .pill.unrestricted{color:var(--dtt-positive);background:rgba(0,216,154,.12);}
+  .pill.restricted{color:var(--dtt-bar-warm);background:rgba(255,180,84,.12);}
+  .pill.fa{color:var(--dtt-text-muted);background:rgba(154,166,180,.12);}
+
+  .st-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  .st-card{display:block;background:var(--dtt-bg-raised);border:1px solid var(--dtt-border);border-radius:8px;padding:16px;transition:border-color .12s;}
+  .st-card:hover{border-color:var(--dtt-accent);}
+  .st-card-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;}
+  .st-card-name{font-family:var(--dtt-font-display);font-weight:600;font-size:15px;color:var(--dtt-text-bright);letter-spacing:-0.2px;}
+  .st-card-meta{font-size:9px;letter-spacing:1.5px;color:var(--dtt-text-dim);margin-top:2px;}
+  .st-card-top{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--dtt-border-soft);border:1px solid var(--dtt-border-soft);border-radius:5px;overflow:hidden;margin-bottom:10px;}
+  .st-stat{background:var(--dtt-bg-raised);padding:9px 11px;}
+  .st-stat-label{font-size:7.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dtt-text-dim);}
+  .st-stat-val{font-family:var(--dtt-font-mono);font-size:13px;font-weight:700;margin-top:2px;}
+  .st-yrtbl{width:100%;border:1px solid var(--dtt-border-soft);border-radius:5px;overflow:hidden;}
+  .st-yrrow{display:flex;align-items:center;justify-content:space-between;padding:6px 11px;font-size:11px;border-top:1px solid var(--dtt-border-soft);}
+  .st-yrrow:first-child{border-top:0;}
+  .st-yrrow .yr{color:var(--dtt-text-dim);font-size:9px;letter-spacing:1px;}
+  .st-yrrow .gl{font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:var(--dtt-text-faint);margin-left:8px;}
+  .st-note{margin-top:10px;font-size:9px;letter-spacing:.5px;color:var(--dtt-text-muted);}
+  .st-empty{padding:48px 16px;text-align:center;color:var(--dtt-text-dim);font-size:11px;letter-spacing:.5px;}
+  .st-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--dtt-border);font-size:9px;letter-spacing:.5px;color:var(--dtt-text-dim);}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+  // ── Config ───────────────────────────────────────────────────────────────
+  var SHEET_ID = "1-NPv1FmtYHj7Cq3KbLYOc-X5eVVZ-iWy";
+  var GID = "1373103186";
+
+  // Team meta — alphabetical by full name, so each team's index here IS its cap-sheet
+  // index (cap-sheet.html reads ?team=N as an index into the same alphabetical list).
+  var TEAMS = [
+    ["Atlanta Hawks","1610612737"],["Boston Celtics","1610612738"],["Brooklyn Nets","1610612751"],
+    ["Charlotte Hornets","1610612766"],["Chicago Bulls","1610612741"],["Cleveland Cavaliers","1610612739"],
+    ["Dallas Mavericks","1610612742"],["Denver Nuggets","1610612743"],["Detroit Pistons","1610612765"],
+    ["Golden State Warriors","1610612744"],["Houston Rockets","1610612745"],["Indiana Pacers","1610612754"],
+    ["Los Angeles Clippers","1610612746"],["Los Angeles Lakers","1610612747"],["Memphis Grizzlies","1610612763"],
+    ["Miami Heat","1610612748"],["Milwaukee Bucks","1610612749"],["Minnesota Timberwolves","1610612750"],
+    ["New Orleans Pelicans","1610612740"],["New York Knicks","1610612752"],["Oklahoma City Thunder","1610612760"],
+    ["Orlando Magic","1610612753"],["Philadelphia 76ers","1610612755"],["Phoenix Suns","1610612756"],
+    ["Portland Trail Blazers","1610612757"],["Sacramento Kings","1610612758"],["San Antonio Spurs","1610612759"],
+    ["Toronto Raptors","1610612761"],["Utah Jazz","1610612762"],["Washington Wizards","1610612764"]
+  ];
+  var TID = {}, CAP_IDX = {};
+  TEAMS.forEach(function(t,i){ TID[t[0]] = t[1]; CAP_IDX[t[0]] = i; });
+
+  var YEAR_COLS = ["2026/2027","2027/2028","2028/2029","2029/2030","2030/2031"];
+  var YEAR_LABELS = ["'26-27","'27-28","'28-29","'29-30","'30-31"];
+
+  var state = { filter:"all", sortKey:"total", sortDir:"desc", layout:"table", signings:null, failed:false };
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function fmtBig(n){
+    if (n == null) return "—";
+    var a = Math.abs(n), s;
+    if (a >= 1e9) s = "$" + (a/1e9).toFixed(2) + "B";
+    else if (a >= 1e6) s = "$" + (a/1e6).toFixed(1) + "M";
+    else if (a >= 1e3) s = "$" + Math.round(a/1e3) + "K";
+    else s = "$" + Math.round(a);
+    return (n < 0 ? "-" : "") + s;
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function src(){ return state.signings || []; }
+  function years(s){ return s.seasons.filter(function(y){ return y.salary != null; }).length; }
+  function aav(s){ var n = years(s); return n ? s.total / n : null; }
+  function statusOf(s){
+    if (/extension/i.test(s.type)) return { cls:"ext", label:"Extension" };
+    if (/^unrestricted/i.test(s.fa)) return { cls:"unrestricted", label:"Unrestricted" };
+    if (/^restricted/i.test(s.fa)) return { cls:"restricted", label:"Restricted" };
+    return { cls:"fa", label:"Free Agent" };
+  }
+  function guarCls(g){ return /player option/i.test(g) ? "warm" : /team option/i.test(g) ? "dim" : "bright"; }
+
+  // ── Live data: gviz JSON via <script> (no CORS issues for a public sheet) ──
+  function loadSheet(){
+    var cb = "__signingTrackerCb";
+    window[cb] = function(resp){ try { applySheet(resp); } catch (e) {} };
+    var s = document.createElement("script");
+    s.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+            "/gviz/tq?gid=" + GID + "&headers=1&tqx=out:json;responseHandler:" + cb;
+    s.onerror = function(){ state.failed = true; if (!state.signings) { state.signings = []; render(); } };
+    document.head.appendChild(s);
+  }
+  function applySheet(resp){
+    var table = resp && resp.table;
+    if (!table || !table.cols || !table.rows) return;
+    var cols = table.cols.map(function(c){ return String(c.label||"").toLowerCase().trim(); });
+    function find(sub){ return cols.findIndex(function(c){ return c.indexOf(sub) >= 0; }); }
+    function exact(name){ return cols.findIndex(function(c){ return c === name; }); }
+    var iPlayer = find("roster"), iTeam = exact("team"), iType = find("transaction type"),
+        iFa = find("fa type"), iInc = find("incumbent"), iNotes = find("transaction notes"),
+        iTotal = exact("total");
+    var iYears = YEAR_COLS.map(function(y){ return cols.indexOf(y.toLowerCase()); });
+    function num(c, i){ return (i >= 0 && c[i] && c[i].v != null && c[i].v !== "") ? Number(c[i].v) : null; }
+    function txt(c, i){ return (i >= 0 && c[i] && c[i].v != null) ? String(c[i].v).trim() : ""; }
+
+    var out = [];
+    table.rows.forEach(function(r){
+      var c = r.c || [];
+      var player = txt(c, iPlayer);
+      var team = txt(c, iTeam);
+      if (!player || !team) return;   // skip blank/spacer rows
+      var seasons = iYears.map(function(yi){
+        var sal = yi >= 0 ? num(c, yi) : null;
+        var gl = (yi >= 0 && c[yi+1] && c[yi+1].v != null) ? String(c[yi+1].v).trim() : "";
+        return { salary: sal, guar: gl };
+      });
+      out.push({
+        player: player, team: team, tid: TID[team] || "",
+        type: txt(c, iType), fa: txt(c, iFa), inc: txt(c, iInc), notes: txt(c, iNotes),
+        total: num(c, iTotal) || 0, seasons: seasons
+      });
+    });
+    if (out.length) { state.signings = out; render(); }
+  }
+
+  // ── Derived ──────────────────────────────────────────────────────────────
+  function passesFilter(s){
+    var f = state.filter;
+    if (f === "fa") return /free agent/i.test(s.type);
+    if (f === "ext") return /extension/i.test(s.type);
+    if (f === "unrestricted") return /^unrestricted/i.test(s.fa);
+    if (f === "restricted") return /^restricted/i.test(s.fa);
+    return true;
+  }
+  function activeSeasons(){
+    var act = [];
+    for (var i = 0; i < 5; i++) {
+      if (src().some(function(s){ return s.seasons[i] && s.seasons[i].salary != null; })) act.push(i);
+    }
+    return act.length ? act : [0];
+  }
+  function sval(s, k){
+    if (k === "player") return s.player;
+    if (k === "team") return s.team;
+    if (k === "total") return s.total;
+    if (k === "yrs") return years(s);
+    if (k === "aav") return aav(s) || 0;
+    if (k.charAt(0) === "y") { var i = +k.slice(1); return (s.seasons[i] && s.seasons[i].salary) || 0; }
+    return s[k];
+  }
+  function rows(){
+    var list = src().filter(passesFilter);
+    var k = state.sortKey, dir = state.sortDir === "asc" ? 1 : -1;
+    list.sort(function(a,b){
+      var av = sval(a,k), bv = sval(b,k);
+      var cmp = (typeof av === "number" && typeof bv === "number") ? av - bv : String(av).localeCompare(String(bv));
+      return cmp * dir;
+    });
+    return list;
+  }
+  function arrow(key){ return state.sortKey === key ? (state.sortDir === "asc" ? " ▴" : " ▾") : ""; }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  function render(){
+    var S = src();
+    var faCount = S.filter(function(s){ return /free agent/i.test(s.type); }).length;
+    var extCount = S.filter(function(s){ return /extension/i.test(s.type); }).length;
+    var rstCount = S.filter(function(s){ return /^restricted/i.test(s.fa); }).length;
+    var committed = S.reduce(function(a,s){ return a + (s.total || 0); }, 0);
+    var y1 = S.reduce(function(a,s){ return a + ((s.seasons[0] && s.seasons[0].salary) || 0); }, 0);
+    var counts = {
+      all: S.length, fa: faCount, ext: extCount,
+      unrestricted: S.filter(function(s){ return /^unrestricted/i.test(s.fa); }).length,
+      restricted: rstCount
+    };
+    var filters = [
+      {key:"all",          label:"All Signings"},
+      {key:"fa",           label:"Free Agent Signings"},
+      {key:"ext",          label:"Extensions"},
+      {key:"unrestricted", label:"Unrestricted"},
+      {key:"restricted",   label:"Restricted"}
+    ];
+
+    var html = "";
+
+    // HERO + KPIs (shared site nav mounts separately into #dtt-nav via /nav.js)
+    html += '<header class="st-hero"><div class="st-hero-inner">' +
+      '<div class="st-id"><div class="st-badge" style="width:52px;height:52px;border-radius:10px;font-size:15px;letter-spacing:1px;">SG</div>' +
+      '<div><div class="st-title">Signing Tracker</div>' +
+      '<div class="st-sub">// 2026 free agency · signings, extensions &amp; option structure</div></div></div>' +
+      '<div class="st-kpis">' +
+        kpi("Signings", String(S.length), "var(--dtt-accent)") +
+        kpi("Total Committed", fmtBig(committed), "var(--dtt-text-bright)") +
+        kpi("Free Agents", String(faCount), "var(--dtt-positive)") +
+        kpi("Extensions", String(extCount), "var(--dtt-bar-warm)") +
+        kpi("'26-27 Salary", fmtBig(y1), "var(--dtt-text-bright)") +
+      '</div></div></header>';
+
+    // CONTROL BAR
+    html += '<div class="st-bar"><div class="st-bar-inner"><div class="st-filters"><span class="lbl">Filter</span>';
+    filters.forEach(function(fl){
+      html += '<button class="st-fbtn' + (state.filter === fl.key ? " active" : "") + '" data-filter="' + fl.key + '">' +
+        esc(fl.label) + ' <span class="n">' + counts[fl.key] + '</span></button>';
+    });
+    html += '</div><div class="st-bar-right">' +
+      '<div class="st-legend">' +
+        '<span><span class="st-dot" style="background:var(--dtt-text-bright)"></span>Guaranteed</span>' +
+        '<span><span class="st-dot" style="background:var(--dtt-bar-warm)"></span>Player Option</span>' +
+        '<span><span class="st-dot" style="background:var(--dtt-text-dim)"></span>Team Option</span>' +
+      '</div>' +
+      '<div class="st-toggle"><button data-layout="table" class="' + (state.layout==="table"?"active":"") + '">Table</button>' +
+      '<button data-layout="cards" class="' + (state.layout==="cards"?"active":"") + '">Cards</button></div>' +
+      '</div></div></div>';
+
+    // BODY
+    html += '<main class="st-main">';
+    if (state.signings === null) html += '<div class="st-empty">Loading signings…</div>';
+    else if (!S.length) html += '<div class="st-empty">' + (state.failed ? "Couldn’t load signings — check back shortly." : "No signings logged yet.") + '</div>';
+    else html += state.layout === "cards" ? renderCards() : renderTable();
+    html += '<div class="st-foot"><span>// Source: NBA Cap Sheets · live from Google Sheets · click a row for the team’s cap sheet.</span>' +
+            '<span style="color:var(--dtt-text-faint)">Nick Thoreson · Ducking The Tax</span></div>';
+    html += '</main>';
+
+    var app = document.getElementById("app");
+    app.innerHTML = html;
+    bind(app);
+  }
+
+  function kpi(label, val, color){
+    return '<div class="st-kpi"><div class="st-kpi-label">' + label + '</div>' +
+           '<div class="st-kpi-val" style="color:' + color + '">' + val + '</div></div>';
+  }
+
+  function renderTable(){
+    var act = activeSeasons();
+    var h = '<div class="st-tablewrap"><div class="st-scroll"><table><thead><tr>';
+    h += '<th class="l' + (state.sortKey==="player"?" sorted":"") + '" data-sort="player">Player' + arrow("player") + '</th>';
+    h += '<th class="l' + (state.sortKey==="team"?" sorted":"") + '" data-sort="team">Team' + arrow("team") + '</th>';
+    h += '<th class="r' + (state.sortKey==="total"?" sorted":"") + '" data-sort="total">Total' + arrow("total") + '</th>';
+    h += '<th class="r' + (state.sortKey==="yrs"?" sorted":"") + '" data-sort="yrs">Yrs' + arrow("yrs") + '</th>';
+    h += '<th class="r' + (state.sortKey==="aav"?" sorted":"") + '" data-sort="aav">AAV' + arrow("aav") + '</th>';
+    act.forEach(function(i){
+      h += '<th class="r' + (state.sortKey===("y"+i)?" sorted":"") + '" data-sort="y' + i + '">' + YEAR_LABELS[i] + arrow("y"+i) + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    rows().forEach(function(s){
+      var st = statusOf(s);
+      var logo = s.tid ? '<img src="https://cdn.nba.com/logos/nba/' + s.tid + '/primary/L/logo.svg" alt="" width="26" height="26">' : '';
+      h += '<tr data-team="' + esc(s.team) + '">' +
+        '<td><div class="st-team">' + logo + '<div class="st-teamcol">' +
+          '<span class="st-team-name">' + esc(s.player) + ' <span class="st-team-arrow">→</span></span>' +
+          '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
+        '</div></div></td>' +
+        '<td class="muted">' + esc(s.team) + '</td>' +
+        cell(fmtBig(s.total), "bright") +
+        cell(String(years(s)), "muted") +
+        cell(fmtBig(aav(s)), "bright") +
+        act.map(function(i){
+          var y = s.seasons[i];
+          return (y && y.salary != null) ? cell(fmtBig(y.salary), guarCls(y.guar)) : cell("—", "faint");
+        }).join("") +
+      '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+    return h;
+  }
+  function cell(text, cls){ return '<td class="num ' + cls + '">' + esc(text) + '</td>'; }
+
+  function renderCards(){
+    var h = '<div class="st-cards">';
+    rows().forEach(function(s){
+      var st = statusOf(s);
+      var logo = s.tid ? '<img src="https://cdn.nba.com/logos/nba/' + s.tid + '/primary/L/logo.svg" alt="" width="34" height="34" style="display:block;flex:none">' : '';
+      var yrRows = "";
+      s.seasons.forEach(function(y,i){
+        if (y.salary == null) return;
+        yrRows += '<div class="st-yrrow"><span class="yr">' + YEAR_LABELS[i] + '</span>' +
+          '<span><span class="' + guarCls(y.guar) + '">' + fmtBig(y.salary) + '</span>' +
+          (y.guar ? '<span class="gl">' + esc(y.guar) + '</span>' : '') + '</span></div>';
+      });
+      h += '<a href="#" class="st-card" data-team="' + esc(s.team) + '">' +
+        '<div class="st-card-head">' + logo +
+          '<div style="flex:1;min-width:0"><div class="st-card-name">' + esc(s.player) + '</div>' +
+          '<div class="st-card-meta">' + esc(s.team) + (s.fa && !/n\/a/i.test(s.fa) ? ' · ' + esc(s.fa.toUpperCase()) : '') + '</div></div>' +
+          '<span class="pill ' + st.cls + '">' + st.label + '</span>' +
+        '</div>' +
+        '<div class="st-card-top">' +
+          stat("Total", fmtBig(s.total), "bright") +
+          stat("Years", String(years(s)), "muted") +
+          stat("AAV", fmtBig(aav(s)), "bright") +
+        '</div>' +
+        '<div class="st-yrtbl">' + yrRows + '</div>' +
+        (s.notes ? '<div class="st-note">// ' + esc(s.notes) + '</div>' : '') +
+        '</a>';
+    });
+    h += '</div>';
+    return h;
+  }
+  function stat(label, val, cls){
+    return '<div class="st-stat"><div class="st-stat-label">' + label + '</div>' +
+           '<div class="st-stat-val ' + cls + '">' + esc(val) + '</div></div>';
+  }
+
+  // ── Events ───────────────────────────────────────────────────────────────
+  function bind(root){
+    root.querySelectorAll("[data-filter]").forEach(function(b){
+      b.addEventListener("click", function(){ state.filter = b.getAttribute("data-filter"); render(); });
+    });
+    root.querySelectorAll("[data-sort]").forEach(function(th){
+      th.addEventListener("click", function(){
+        var k = th.getAttribute("data-sort");
+        if (state.sortKey === k) state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        else { state.sortKey = k; state.sortDir = (k === "player" || k === "team") ? "asc" : "desc"; }
+        render();
+      });
+    });
+    root.querySelectorAll("[data-layout]").forEach(function(b){
+      b.addEventListener("click", function(){ state.layout = b.getAttribute("data-layout"); render(); });
+    });
+    // Row / card click → the signing team's cap sheet (/cap-sheet.html?team=<index>).
+    root.querySelectorAll("[data-team]").forEach(function(el){
+      el.addEventListener("click", function(e){
+        e.preventDefault();
+        var idx = CAP_IDX[el.getAttribute("data-team")];
+        if (idx != null) location.href = "/cap-sheet.html?team=" + idx;
+      });
+    });
+  }
+
+  render();      // paint loading state immediately
+  loadSheet();   // then populate from the live sheet
+})();
+</script>
+</body>
+</html>
