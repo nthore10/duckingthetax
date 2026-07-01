@@ -212,21 +212,23 @@
     return { label:label, fmt:fmtSigned(val), color:color, barColor:color, barPct:pct.toFixed(1) + "%" };
   }
 
-  // Which bucket a signing's "Signed With" mechanism draws down (null = none / ambiguous).
-  function usedBucketOf(mech){
-    var m = String(mech || "");
-    if (/\bor\b/i.test(m)) return null;          // "Bird Rights OR Room MLE" → ambiguous, don't deduct
-    if (/non.?tax/i.test(m)) return "nontax";
-    if (/room mle/i.test(m)) return "room";
-    if (/bi.?annual/i.test(m)) return "bi";
-    if (/tax/i.test(m)) return "tax";            // taxpayer / tax MLE (non-tax handled above)
-    return null;                                  // bird rights, vet minimum, cap space → not a tracked exception
+  // Which exception bucket(s) a signing's "Signed With" mechanism draws down. Returns
+  // EVERY tracked exception named — so "Tax MLE OR Non-Tax MLE" draws down both sides
+  // (the two MLEs are mutually exclusive, so using one commits that MLE money either way).
+  // Bird Rights / Vet Minimum / Cap Space name no exception → [] (no draw-down).
+  function usedBucketsOf(mech){
+    var m = String(mech || ""), b = [];
+    if (/non.?tax/i.test(m)) b.push("nontax");
+    if (/tax/i.test(m.replace(/non.?tax/ig, ""))) b.push("tax");   // bare taxpayer MLE (strip non-tax first)
+    if (/room mle/i.test(m)) b.push("room");
+    if (/bi.?annual/i.test(m)) b.push("bi");
+    return b;
   }
-  // Total first-year salary a team has already spent out of each exception bucket.
+  // Total first-year salary a team has spent out of each exception bucket.
   function usedFor(name){
     var u = {};
     var signs = (state.signByTeam && state.signByTeam[norm(name)]) || [];
-    signs.forEach(function(s){ var b = usedBucketOf(s.mech); if (b) u[b] = (u[b] || 0) + (s.cap || 0); });
+    signs.forEach(function(s){ usedBucketsOf(s.mech).forEach(function(b){ u[b] = (u[b] || 0) + (s.cap || 0); }); });
     return u;
   }
 
