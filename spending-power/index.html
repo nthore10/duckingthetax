@@ -181,9 +181,10 @@
     return { label:label, amount:fmt(amount), of:(original != null && original > amount + 1) ? fmt(original) : "", color:c.color, bg:c.bg, bd:c.bd };
   }
   function capSquare(title, cap, room, roomOrig){
-    var total = cap + room;
+    var capShown = Math.max(0, cap);   // used-up cap space isn't negative spending power
+    var total = capShown + room;
     return { kind:"cap", title:title, titleColor:"var(--dtt-accent)",
-      chips:[mkChip("Cap Space", cap, "cap"), mkChip("Room MLE", room, "room", roomOrig)],
+      chips:[mkChip("Cap Space", capShown, "cap"), mkChip("Room MLE", room, "room", roomOrig)],
       usable:total, totalFmt:fmt(total), isNone:false, hasHardCap:false, hardLine:"", note:"", noteColor:"", constrained:false };
   }
   function mleSquare(title, exArr, hardLine, room){
@@ -231,8 +232,14 @@
     signs.forEach(function(s){ usedBucketsOf(s.mech).forEach(function(b){ u[b] = (u[b] || 0) + (s.cap || 0); }); });
     return u;
   }
+  // A team that has signed anyone with cap space is locked in as a cap-space team — it
+  // can no longer operate over the cap, so the over-the-cap MLE option comes off the board.
+  function usedCapSpace(name){
+    var signs = (state.signByTeam && state.signByTeam[norm(name)]) || [];
+    return signs.some(function(s){ return /cap space/i.test(s.mech); });
+  }
 
-  function processTeam(rt, used){
+  function processTeam(rt, used, usedCap){
     used = used || {};
     var nontaxAmt = Math.max(0, STD.nontax - (used.nontax || 0));
     var taxAmt    = Math.max(0, STD.tax    - (used.tax || 0));
@@ -248,8 +255,12 @@
     var g = rt.group, left, right, hasRight, showOr, ex;
     if (g === "A") {
       left = capSquare("Use Cap Space", rt.cap, roomAmt, STD.room);
-      ex = [["Non-Tax MLE", nontaxAmt, "nontax", STD.nontax]]; if (hasBi) ex.push(["Bi-Annual", biAmt, "bi", STD.bi]);
-      right = mleSquare("Stay Over The Cap", ex, "1st Apron", rt.ap1Sp); hasRight = true; showOr = true;
+      if (usedCap) {                       // already dipped into cap space → locked in
+        right = noneSquare(); hasRight = false; showOr = false;
+      } else {
+        ex = [["Non-Tax MLE", nontaxAmt, "nontax", STD.nontax]]; if (hasBi) ex.push(["Bi-Annual", biAmt, "bi", STD.bi]);
+        right = mleSquare("Stay Over The Cap", ex, "1st Apron", rt.ap1Sp); hasRight = true; showOr = true;
+      }
     } else if (g === "B") {
       ex = [["Non-Tax MLE", nontaxAmt, "nontax", STD.nontax]]; if (hasBi) ex.push(["Bi-Annual", biAmt, "bi", STD.bi]);
       left = mleSquare("Use Non-Taxpayer MLE", ex, "1st Apron", rt.ap1Sp);
@@ -474,7 +485,7 @@
 
   function render(){
     // Compute squares here (not at load) so signings can draw down each exception.
-    var all = (state.rawTeams || []).map(function(rt){ return processTeam(rt, usedFor(rt.name)); });
+    var all = (state.rawTeams || []).map(function(rt){ return processTeam(rt, usedFor(rt.name), usedCapSpace(rt.name)); });
     var counts = {
       capLine: all.filter(function(t){ return t.capPos; }).length,
       capUse:  all.filter(function(t){ return t.isCapSpace; }).length,
