@@ -305,6 +305,15 @@
     function num(c, i){ return (i >= 0 && c[i] && c[i].v != null && c[i].v !== "") ? Number(c[i].v) : null; }
     function txt(c, i){ return (i >= 0 && c[i] && c[i].v != null) ? String(c[i].v).trim() : ""; }
 
+    // Standard exception amounts are read live from the sheet (largest value in each
+    // per-team column = the full, un-drawn-down amount), falling back to the constants.
+    var iRoomAmt = cols.indexOf("room mle"), iNonAmt = cols.indexOf("non-tax mle"), iTaxAmt = cols.indexOf("tax mle");
+    function maxCol(i){ var m = 0; table.rows.forEach(function(r){ var v = num(r.c || [], i); if (v && v > m) m = v; }); return m; }
+    STD.nontax = maxCol(iNonAmt) || STD.nontax;
+    STD.tax    = maxCol(iTaxAmt) || STD.tax;
+    STD.room   = maxCol(iRoomAmt) || STD.room;
+    STD.bi     = maxCol(iBi) || STD.bi;
+
     var out = [];
     table.rows.forEach(function(r){
       var c = r.c || [];
