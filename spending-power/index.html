@@ -119,6 +119,10 @@
   // League-year constants (update each year). Standard exception amounts and the four
   // CBA threshold values — the prototype uses these fixed figures.
   var STD = { room: 9369000, nontax: 15048000, tax: 6065000, bi: 5478000 };
+  // Manual group reclassification (keyed by normalized team name). Overrides the sheet's
+  // "Spending Bucket" column — the canonical home; clear an entry once the sheet matches.
+  // Phoenix is over the 1st apron, so the Non-Tax MLE is unusable → treat as Taxpayer MLE (D).
+  var GROUP_OVERRIDE = { "phoenixsuns": "D" };
   var THRESHOLDS = [
     { label: "Salary Cap",   val: "$165.0M", color: "var(--dtt-text-muted)", k: "capLine", suffix: " teams under it" },
     { label: "Luxury Tax",   val: "$201.0M", color: "var(--dtt-bar-warm)",   k: "tax",     suffix: " over the line" },
@@ -305,7 +309,7 @@
     table.rows.forEach(function(r){
       var c = r.c || [];
       var name = txt(c, iTeam);
-      var group = txt(c, iGroup).toUpperCase();
+      var group = GROUP_OVERRIDE[norm(name)] || txt(c, iGroup).toUpperCase();
       if (!name || !/^[ABCD]$/.test(group)) return;   // skip non-team / reference rows
       out.push({   // raw — squares are computed at render time (so signings can draw them down)
         name:name, tid:tidFor(name), group:group,
