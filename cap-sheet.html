@@ -60,7 +60,7 @@ body{min-height:100vh;}
 .legend-item{display:flex;align-items:center;gap:6px;}
 .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .dot-po{background:#00B050}.dot-to{background:#F79646}.dot-ng{background:#C00000}
-.dot-rfa{background:#7030A0}.dot-ufa{background:#0070C0}
+.dot-rfa{background:#7030A0}.dot-ufa{background:#0070C0}.dot-pong{background:#92D050}.dot-tong{background:#E24BE2}.dot-poto{background:#00B0F0}
 .ln-full{color:#00B050}.ln-early{color:#F79646}.ln-non{color:#C00000}
 
 /* TABLE */
@@ -83,7 +83,7 @@ tr.sum td{font-family:var(--font-display);font-weight:600;font-size:12px;color:v
 tr.sum td.sl{font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
 .po{color:#00B050 !important;font-weight:600}.to{color:#F79646 !important;font-weight:600}
 .ng{color:#C00000 !important;font-weight:600}.rfa{color:#7030A0 !important;font-weight:600}
-.ufa{color:#0070C0 !important;font-weight:600}.nv{color:var(--negative) !important;}.pv{color:var(--positive) !important;font-weight:600}
+.ufa{color:#0070C0 !important;font-weight:600}.pong{color:#92D050 !important;font-weight:600}.tong{color:#E24BE2 !important;font-weight:600}.poto{color:#00B0F0 !important;font-weight:600}.nv{color:var(--negative) !important;}.pv{color:var(--positive) !important;font-weight:600}
 
 /* SECTION HEADER */
 .sec-hdr{background:var(--team-primary);color:var(--team-text);padding:9px 16px;font-family:var(--font-display);font-weight:700;font-size:13px;margin-top:20px;border-radius:6px 6px 0 0;letter-spacing:0.3px;}
@@ -201,7 +201,7 @@ function clean(val){return(val||'').replace(/\u00a0/g,' ').trim();}
 function col(row,idx){return clean(row&&row.length>idx?row[idx]:'');}
 function fmtMoney(val){const v=clean(val);if(!v||v==='0'||v==='$0')return'';return v;}
 function isNegative(val){const v=clean(val);return v.includes('(')||(v.startsWith('-')&&v.includes('$'));}
-function getStatusClass(s){s=clean(s).toLowerCase();if(!s||s.startsWith('$')||s.includes('%')||s==='0'||s==='-'||s==='guaranteed')return'';if(s==='team option')return'to';if(s==='player option')return'po';if(s==='non-guaranteed'||s==='non-guarantee')return'ng';if(s==='unrestricted')return'ufa';if(s==='restricted')return'rfa';return'';}
+function getStatusClass(s){s=clean(s).toLowerCase();if(!s||s.startsWith('$')||s.includes('%')||s==='0'||s==='-'||s==='guaranteed')return'';if(s==='player option/team option')return'poto';if(s.indexOf('player option/non-guarant')===0)return'pong';if(s.indexOf('team option/non-guarant')===0)return'tong';if(s==='team option')return'to';if(s==='player option')return'po';if(s==='non-guaranteed'||s==='non-guarantee')return'ng';if(s==='unrestricted')return'ufa';if(s==='restricted')return'rfa';return'';}
 function getNameClass(f){f=clean(f).toLowerCase();if(f.includes('full bird')||f.includes('full-bird'))return'po';if(f.includes('non bird')||f.includes('non-bird'))return'ng';if(f.includes('early bird')||f.includes('early-bird'))return'to';return'';}
 
 async function loadTeam(idx) {
@@ -257,7 +257,7 @@ function buildPage(rows, team) {
   for(let i=0;i<rows.length;i++){if(col(rows[i],1)==='Tax & Apron Only'){inSection=true;continue;}if(inSection){if(col(rows[i],2)==='Player')continue;const r=rows[i],player=col(r,2);const vals=[fmtMoney(r[3]),fmtMoney(r[5]),fmtMoney(r[7]),fmtMoney(r[9]),fmtMoney(r[11])];if(player)taxApronRows.push({player,values:vals});else if(vals.some(v=>v&&v!=='$0'))taxApronRows.push({player:'Total',values:vals});}}
 
   let html='';
-  html+=`<div class="legend"><div class="legend-item"><div class="legend-dot dot-po"></div>Player Option</div><div class="legend-item"><div class="legend-dot dot-to"></div>Team Option</div><div class="legend-item"><div class="legend-dot dot-ng"></div>Non-Guarantee</div><div class="legend-item"><div class="legend-dot dot-rfa"></div>RFA Cap Hold</div><div class="legend-item"><div class="legend-dot dot-ufa"></div>UFA Cap Hold</div></div><div class="legend" style="margin-top:0"><span style="color:var(--text-faint);margin-right:4px">FA Bird Rights:</span><div class="legend-item"><span class="ln-non" style="font-weight:700">&#9632;</span>&nbsp;Non-Bird</div><div class="legend-item"><span class="ln-early" style="font-weight:700">&#9632;</span>&nbsp;Early Bird</div><div class="legend-item"><span class="ln-full" style="font-weight:700">&#9632;</span>&nbsp;Full Bird</div></div>`;
+  html+=`<div class="legend"><div class="legend-item"><div class="legend-dot dot-po"></div>Player Option</div><div class="legend-item"><div class="legend-dot dot-to"></div>Team Option</div><div class="legend-item"><div class="legend-dot dot-ng"></div>Non-Guarantee</div><div class="legend-item"><div class="legend-dot dot-pong"></div>Player Opt/Non-Gtd</div><div class="legend-item"><div class="legend-dot dot-tong"></div>Team Opt/Non-Gtd</div><div class="legend-item"><div class="legend-dot dot-poto"></div>Player/Team Opt</div><div class="legend-item"><div class="legend-dot dot-rfa"></div>RFA Cap Hold</div><div class="legend-item"><div class="legend-dot dot-ufa"></div>UFA Cap Hold</div></div><div class="legend" style="margin-top:0"><span style="color:var(--text-faint);margin-right:4px">FA Bird Rights:</span><div class="legend-item"><span class="ln-non" style="font-weight:700">&#9632;</span>&nbsp;Non-Bird</div><div class="legend-item"><span class="ln-early" style="font-weight:700">&#9632;</span>&nbsp;Early Bird</div><div class="legend-item"><span class="ln-full" style="font-weight:700">&#9632;</span>&nbsp;Full Bird</div></div>`;
   html+=`<div class="cap-wrap"><table class="cap"><thead><tr><th style="width:36px">Pos</th><th class="l">Player</th><th class="yr" colspan="2">2026/27</th><th class="yr" colspan="2">2027/28</th><th class="yr" colspan="2">2028/29</th><th class="yr" colspan="2">2029/30</th><th class="yr" colspan="2">2030/31</th></tr></thead><tbody>`;
   playerRows.forEach(p=>{const nc=getNameClass(p.faType);html+=`<tr><td class="pos">${p.pos}</td><td class="nm${nc?' '+nc:''}">${p.name}</td>`;p.years.forEach(y=>{const sc=getStatusClass(y.status);html+=`<td${sc?' class="'+sc+'"':''}>${y.sal}</td><td class="pct">${y.pct}</td>`;});html+='</tr>';});
   html+='<tr class="sep"><td colspan="12"></td></tr>';
