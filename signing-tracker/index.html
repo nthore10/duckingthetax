@@ -67,6 +67,7 @@
   .faint{color:var(--dtt-text-faint);} .bright{color:var(--dtt-text-bright);} .muted{color:var(--dtt-text-muted);} .warm{color:var(--dtt-bar-warm);}
   /* Contract year-type colors — matched to the cap sheets (cap-sheet.html). */
   .po{color:#00B050;font-weight:600;} .to{color:#F79646;font-weight:600;} .ng{color:#C00000;font-weight:600;}
+  .poto{color:#00B0F0;font-weight:600;} .pong{color:#92D050;font-weight:600;} .tong{color:#E24BE2;font-weight:600;}
   .new{color:var(--dtt-accent);} .inc{color:var(--dtt-text-muted);}
   .st-team{display:flex;align-items:center;gap:11px;}
   .st-team img{display:block;flex:none;}
@@ -133,11 +134,11 @@
   var TID = {}, CAP_IDX = {};
   TEAMS.forEach(function(t,i){ TID[t[0]] = t[1]; CAP_IDX[t[0]] = i; });
 
-  var YEAR_COLS = ["2026/2027","2027/2028","2028/2029","2029/2030","2030/2031"];
-  var YEAR_LABELS = ["'26-27","'27-28","'28-29","'29-30","'30-31"];
+  var YEAR_COLS = ["2026/2027","2027/2028","2028/2029","2029/2030","2030/2031","2031/2032"];
+  var YEAR_LABELS = ["'26-27","'27-28","'28-29","'29-30","'30-31","'31-32"];
   // Projected league salary cap per season (2026-27 → 2030-31) — same figures the
   // Contract Calculator uses (its FALLBACK_CAPS), so % of cap is consistent site-wide.
-  var CAPS = [165000000, 176550000, 188908500, 202132095, 216281342];
+  var CAPS = [165000000, 176550000, 188908500, 202132095, 216281342, 231421036];
 
   var state = { filter:"all", team:"", sortKey:"total", sortDir:"desc", layout:"table", signings:null, failed:false };
 
@@ -180,6 +181,10 @@
   // Year-type color, matched to the cap sheets: Player Option green, Team Option orange,
   // Non-Guaranteed red, Guaranteed default (bright).
   function guarCls(g){
+    g = String(g || "");
+    if (/player option\/team option/i.test(g)) return "poto";      // combined types first
+    if (/player option\/non.?guarant/i.test(g)) return "pong";
+    if (/team option\/non.?guarant/i.test(g)) return "tong";
     if (/player option/i.test(g)) return "po";
     if (/team option/i.test(g)) return "to";
     if (/non.?guarantee/i.test(g)) return "ng";
@@ -255,7 +260,7 @@
   }
   function activeSeasons(list){
     var act = [];
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < YEAR_COLS.length; i++) {
       if (list.some(function(s){ return s.seasons[i] && s.seasons[i].salary != null; })) act.push(i);
     }
     return act.length ? act : [0];
@@ -344,6 +349,9 @@
         '<span><span class="st-dot" style="background:#00B050"></span>Player Option</span>' +
         '<span><span class="st-dot" style="background:#F79646"></span>Team Option</span>' +
         '<span><span class="st-dot" style="background:#C00000"></span>Non-Guaranteed</span>' +
+        '<span><span class="st-dot" style="background:#00B0F0"></span>PO/TO</span>' +
+        '<span><span class="st-dot" style="background:#92D050"></span>PO/Non-Gtd</span>' +
+        '<span><span class="st-dot" style="background:#E24BE2"></span>TO/Non-Gtd</span>' +
       '</div>' +
       '<div class="st-toggle"><button data-layout="table" class="' + (state.layout==="table"?"active":"") + '">Table</button>' +
       '<button data-layout="cards" class="' + (state.layout==="cards"?"active":"") + '">Cards</button></div>' +
