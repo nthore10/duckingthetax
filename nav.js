@@ -43,7 +43,7 @@
     else if (path.indexOf('/cap-sheet') === 0 || teams.test(path)) section = 'capsheets';
     else if (/^\/(epv|free-agent|rookie-extension|veteran-extension)/.test(path)) section = 'values';
     else if (/^\/(season-tracker|luxury-tax|ten-day|two-way|dead-cap)/.test(path)) section = 'trackers';
-    else if (/^\/(signing-tracker|spending-power)/.test(path)) section = 'freeagency';
+    else if (/^\/(signing-tracker|spending-power|free-agency-spend|team-spend|signed-with)/.test(path)) section = 'freeagency';
     else if (path.indexOf('/trade-evaluator') === 0) section = 'evaluator';
     else if (path.indexOf('/contract-calculator') === 0) section = 'tools';
     if (!section) return;

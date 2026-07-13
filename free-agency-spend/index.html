@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Agency Spend by Season · Ducking The Tax</title>
+<meta name="description" content="2026 NBA free agent spend by season and contract type — guaranteed vs. option vs. non-guaranteed money across 2026/27–2030/31.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#e9e4d9; }
+  a { color:#a9534a; } a:hover { color:#8c4038; }
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+<div id="root"></div>
+<script>
+const YEARS = ['2026/27','2027/28','2028/29','2029/30','2030/31'];
+
+// bottom-to-top stack order
+const ROWS = [
+  { key: 'guaranteed',   label: 'Guaranteed',                          color: '#191c21', values: [623819443, 401049883, 282228247, 72368966, 0] },
+  { key: 'playerOption', label: 'Player Option',                       color: '#1e9e46', values: [0, 34516957, 23350869, 175239618, 44037931] },
+  { key: 'poToOption',   label: 'Player Option / Team Option',         color: '#3fb6e8', values: [0, 18731707, 26851852, 0, 0] },
+  { key: 'poNonGuar',    label: 'Player Option / Non-Guaranteed',      color: '#5fd97a', values: [0, 0, 0, 0, 0] },
+  { key: 'teamOption',   label: 'Team Option',                         color: '#f5820a', values: [0, 72762857, 14496479, 3015557, 0] },
+  { key: 'toNonGuar',    label: 'Team Option / Non-Guaranteed',        color: '#e838d8', values: [0, 2756913, 0, 3015460, 0] },
+  { key: 'ngPartial',    label: 'Non-Guaranteed',                      color: '#e02020', values: [4986948, 38992573, 57361780, 16937500, 0] },
+];
+
+const TOTALS = [628806391, 568810891, 404289227, 270577101, 44037931];
+const TOTAL_GUARANTEED = [623819443, 463707425, 336777725, 250948876, 44037931];
+const CONTRACT_COUNTS = [74, 51, 27, 13, 2];
+
+function fmtShort(v) {
+  if (v >= 1000000) return '$' + Math.round(v / 1000000) + 'M';
+  return '$0';
+}
+
+function renderVals() {
+  const chartHeight = 380;
+  const axisMax = 700000000;
+  const scale = chartHeight / axisMax;
+
+  // Lakers portion of the 2029/30 Player Option segment
+  const LAKERS_YEAR = 3; // 2029/30
+  const LAKERS_AMOUNT = 113874126;
+  const TRAE_AMOUNT = ROWS[1].values[LAKERS_YEAR] - LAKERS_AMOUNT; // remainder of Player Option
+  const guaranteed2930 = ROWS[0].values[LAKERS_YEAR];
+
+  const years = YEARS.map((label, i) => {
+    const hasBracket = i === LAKERS_YEAR;
+    const bracketBottomPx = guaranteed2930 * scale;
+    const bracketHeightPx = LAKERS_AMOUNT * scale;
+    return {
+      label,
+      totalLabel: fmtShort(TOTALS[i]) + ' / ' + CONTRACT_COUNTS[i] + (CONTRACT_COUNTS[i] === 1 ? ' Player' : ' Players'),
+      totalHeightPx: Math.max(4, TOTALS[i] * scale),
+      // column-reverse: array order = bottom-to-top
+      segments: ROWS.map(row => ({
+        heightPx: Math.max(0, row.values[i] * scale),
+        color: row.color,
+        title: row.label + ': $' + row.values[i].toLocaleString(),
+      })).filter(s => s.heightPx > 0),
+      hasBracket,
+      bracketBottomPx,
+      bracketHeightPx,
+      bracketLabelBottomPx: bracketBottomPx + bracketHeightPx / 2,
+      bracketAmount: '$' + LAKERS_AMOUNT.toLocaleString(),
+      bracket2BottomPx: bracketBottomPx + bracketHeightPx,
+      bracket2HeightPx: TRAE_AMOUNT * scale,
+      bracket2LabelBottomPx: bracketBottomPx + bracketHeightPx + (TRAE_AMOUNT * scale) / 2,
+      bracket2Amount: '$' + TRAE_AMOUNT.toLocaleString(),
+    };
+  });
+
+  const yTicks = [];
+  for (let v = 0; v <= axisMax; v += 100000000) {
+    yTicks.push({ label: fmtShort(v), topPct: (1 - v / axisMax) * 100 });
+  }
+
+  const legend = ROWS.map(row => ({
+    label: row.label,
+    color: row.color,
+    textColor: row.key === 'guaranteed' ? '#191c21' : row.color,
+    border: 'none',
+    swatchHeight: '11px',
+  }));
+  legend.push({ label: 'Total (outline)', color: 'transparent', textColor: '#191c21', border: '2px solid #191c21', swatchHeight: '11px' });
+  legend.push({ label: 'Total Guaranteed (line)', color: '#e11d2e', textColor: '#e11d2e', border: 'none', swatchHeight: '2px' });
+
+  // polyline points for Total Guaranteed line: step line, flat across each bar's slot
+  const pts = [];
+  TOTAL_GUARANTEED.forEach((v, i) => {
+    const y = ((1 - v / axisMax) * 100).toFixed(2);
+    const n = YEARS.length;
+    pts.push(`${((i / n) * 100).toFixed(2)},${y}`);
+    pts.push(`${(((i + 1) / n) * 100).toFixed(2)},${y}`);
+  });
+  const guaranteePoints = pts.join(' ');
+
+  return { years, yTicks, legend, guaranteePoints };
+}
+
+const V = renderVals();
+
+const legendHtml = V.legend.map(item =>
+  `<div style="display:flex; align-items:center; gap:8px;">
+     <div style="width:16px; height:${item.swatchHeight}; background:${item.color}; border:${item.border}; box-sizing:border-box; flex-shrink:0;"></div>
+     <span style="font:700 12px 'Archivo', sans-serif; color:${item.textColor};">${item.label}</span>
+   </div>`).join('');
+
+const yAxisHtml = V.yTicks.map(t =>
+  `<div style="position:absolute; right:0; top:${t.topPct}%; transform:translateY(-50%); font:500 10px 'IBM Plex Mono', monospace; color:#b0aa9c; white-space:nowrap;">${t.label}</div>`).join('');
+
+const gridHtml = V.yTicks.map(t =>
+  `<div style="position:absolute; left:0; right:0; top:${t.topPct}%; border-top:1px solid #e3ddd1;"></div>`).join('');
+
+function bracketHtml(y) {
+  if (!y.hasBracket) return '';
+  return `
+    <div style="position:absolute; right:100%; bottom:${y.bracketBottomPx}px; height:${y.bracketHeightPx}px; margin-right:6px; width:8px; border:2px solid #7c3aed; border-right:none; box-sizing:border-box;"></div>
+    <div style="position:absolute; right:100%; bottom:${y.bracketLabelBottomPx}px; margin-right:18px; text-align:right; transform:translateY(50%); white-space:nowrap; background:#f6f3ec; border:1px solid #7c3aed; border-radius:2px; padding:4px 7px; z-index:5;">
+      <div style="font:700 12px 'Archivo', sans-serif; color:#7c3aed;">Lakers portion of PO</div>
+      <div style="font:600 11px 'IBM Plex Mono', monospace; color:#7c3aed;">${y.bracketAmount}</div>
+    </div>
+    <div style="position:absolute; left:100%; bottom:${y.bracket2BottomPx}px; height:${y.bracket2HeightPx}px; margin-left:6px; width:8px; border:2px solid #1e3a8a; border-left:none; box-sizing:border-box;"></div>
+    <div style="position:absolute; left:100%; bottom:${y.bracket2LabelBottomPx}px; margin-left:18px; text-align:left; transform:translateY(50%); white-space:nowrap; background:#f6f3ec; border:1px solid #1e3a8a; border-radius:2px; padding:4px 7px; z-index:5;">
+      <div style="font:700 12px 'Archivo', sans-serif; color:#1e3a8a;">Trae Young</div>
+      <div style="font:600 11px 'IBM Plex Mono', monospace; color:#1e3a8a;">${y.bracket2Amount}</div>
+    </div>`;
+}
+
+const barsHtml = V.years.map(y => {
+  const segs = y.segments.map(seg =>
+    `<div style="height:${seg.heightPx}px; background:${seg.color}; flex-shrink:0;" title="${seg.title}"></div>`).join('');
+  return `<div style="display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;">
+    <div style="font:600 12px 'IBM Plex Mono', monospace; color:#191c21; margin-bottom:6px; font-variant-numeric:tabular-nums;">${y.totalLabel}</div>
+    <div style="position:relative;">
+      <div style="width:88px; height:${y.totalHeightPx}px; border:2px solid #191c21; box-sizing:border-box; border-radius:2px; overflow:hidden; display:flex; flex-direction:column-reverse; background:#f6f3ec;">${segs}</div>
+      ${bracketHtml(y)}
+    </div>
+  </div>`;
+}).join('');
+
+const xLabels = V.years.map(y =>
+  `<div style="width:88px; text-align:center; font:700 12px 'Archivo', sans-serif; color:#191c21; font-variant-numeric:tabular-nums;">${y.label}</div>`).join('');
+
+const svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:3;"><polyline points="${V.guaranteePoints}" fill="none" stroke="#e11d2e" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+
+document.getElementById('root').innerHTML = `
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px; box-sizing:border-box;">
+  <div style="background:#f6f3ec; border-radius:3px; box-shadow:0 1px 4px rgba(0,0,0,.10); padding:50px 54px; width:1280px; box-sizing:border-box;">
+
+    <div style="font:600 13px 'IBM Plex Mono', monospace; letter-spacing:.1em; color:#c3bdb0;">01</div>
+    <div style="margin-top:6px; font:600 12px 'IBM Plex Mono', monospace; letter-spacing:.18em; text-transform:uppercase; color:#a9534a;">2026 FREE AGENCY · FREE AGENT SIGNINGS ONLY</div>
+    <h1 style="font:800 34px/1.06 'Archivo', sans-serif; color:#191c21; letter-spacing:-.015em; margin:8px 0 0;">Free Agent Spend by Season And Contract Type</h1>
+
+    <div style="display:flex; flex-wrap:wrap; gap:8px 26px; margin:22px 0 32px;">${legendHtml}</div>
+
+    <div style="display:flex; gap:12px;">
+      <div style="width:44px; height:380px; position:relative; flex:none;">${yAxisHtml}</div>
+      <div style="flex:1; position:relative;">
+        <div style="position:relative; height:380px;">
+          ${gridHtml}
+          <div style="position:absolute; inset:0; display:flex; justify-content:space-around; align-items:flex-end; padding:0 24px;">${barsHtml}</div>
+          <div style="position:absolute; top:0; bottom:0; left:24px; right:24px; pointer-events:none; z-index:3;">${svg}</div>
+        </div>
+        <div style="display:flex; justify-content:space-around; padding:0 24px; margin-top:9px;">${xLabels}</div>
+        <div style="text-align:center; margin-top:14px; font:600 10px 'IBM Plex Mono', monospace; letter-spacing:.14em; text-transform:uppercase; color:#b0aa9c;">Season</div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid #e3ddd1; margin-top:22px; padding-top:14px;">
+      <div style="font:500 11px/1.5 'IBM Plex Mono', monospace; letter-spacing:.02em; color:#a39d90; text-transform:uppercase;">Bar outline = total committed · segments stack from guaranteed (bottom) to non-guaranteed (top)</div>
+    </div>
+
+  </div>
+</div>`;
+</script>
+</body>
+</html>

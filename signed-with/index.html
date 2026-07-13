@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signed With Breakdown · Ducking The Tax</title>
+<meta name="description" content="2026 NBA free agency total money by signing mechanism — Bird Rights, Cap Space, exceptions, and minimums — segmented by contract-year status.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#e9e4d9; }
+  a { color:#a9534a; } a:hover { color:#8c4038; }
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+<div id="root"></div>
+<script>
+// per-mechanism totals broken down by contract status (from spreadsheet)
+const DATA = [
+  { label: 'Bird Rights', count: 36, statuses: { guaranteed: 1460065235, playerOption: 311720227, poToOption: 26851852, poNonGuar: 20000000, teamOption: 30512036, toNonGuar: 3015460, nonGuaranteed: 112769958 } },
+  { label: 'Cap Space',   count: 6,  statuses: { guaranteed: 217646274, playerOption: 64321656, poToOption: 9000000, teamOption: 32575000 } },
+  { label: 'Non-Tax MLE', count: 12, statuses: { guaranteed: 170788937, playerOption: 22848400, teamOption: 29341464, nonGuaranteed: 27450000 } },
+  { label: 'Vet Minimum', count: 22, statuses: { guaranteed: 53966918, teamOption: 6346394, toNonGuar: 2756913, nonGuaranteed: 7558844 } },
+  { label: 'Room MLE',    count: 2,  statuses: { guaranteed: 18536586, playerOption: 9731707, poToOption: 9731707 } },
+  { label: 'Bi-Annual',   count: 3,  statuses: { guaranteed: 20106900, playerOption: 5750850 } },
+  { label: 'Tax MLE',     count: 2,  statuses: { guaranteed: 12128000, playerOption: 12734400 } },
+];
+
+// same stack order + colors as the other charts
+const STATUS_ORDER = [
+  { key: 'guaranteed',    label: 'Guaranteed',                     color: '#191c21' },
+  { key: 'playerOption',  label: 'Player Option',                  color: '#1e9e46' },
+  { key: 'poToOption',    label: 'Player Option / Team Option',    color: '#3fb6e8' },
+  { key: 'poNonGuar',     label: 'Player Option / Non-Guaranteed', color: '#5fd97a' },
+  { key: 'teamOption',    label: 'Team Option',                    color: '#f5820a' },
+  { key: 'toNonGuar',     label: 'Team Option / Non-Guaranteed',   color: '#e838d8' },
+  { key: 'nonGuaranteed', label: 'Non-Guaranteed',                 color: '#e02020' },
+];
+
+function fmtM(v) {
+  if (v >= 1000000000) return '$' + (v / 1000000000).toFixed(2) + 'B';
+  if (v >= 1000000) return '$' + (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  return '$' + Math.round(v / 1000) + 'K';
+}
+
+function renderVals() {
+  const axisMax = 2000000000;
+
+  const bars = DATA.map(d => {
+    const total = Object.values(d.statuses).reduce((a, b) => a + b, 0);
+    const widthPct = (total / axisMax) * 100;
+    return {
+      label: d.label,
+      countLabel: d.count + (d.count === 1 ? ' contract' : ' contracts'),
+      widthPct,
+      amtInside: widthPct > 85,
+      amtOutside: widthPct <= 85,
+      amtLabel: fmtM(total),
+      title: d.label + ': $' + total.toLocaleString() + ' across ' + d.count + ' contracts',
+      segments: STATUS_ORDER
+        .filter(st => d.statuses[st.key] > 0)
+        .map(st => ({
+          widthPct: (d.statuses[st.key] / total) * 100,
+          color: st.color,
+          title: st.label + ': $' + d.statuses[st.key].toLocaleString(),
+        })),
+    };
+  });
+
+  const legend = STATUS_ORDER.map(st => ({
+    label: st.label,
+    color: st.color,
+    textColor: st.key === 'guaranteed' ? '#191c21' : st.color,
+    border: 'none',
+  }));
+  legend.push({ label: 'Total (outline)', color: 'transparent', textColor: '#191c21', border: '1.5px solid #191c21' });
+
+  const gridLines = [];
+  for (let v = 0; v <= axisMax; v += 500000000) {
+    gridLines.push({ leftPct: (v / axisMax) * 100, label: v === 0 ? '$0' : '$' + (v / 1000000000).toFixed(1) + 'B' });
+  }
+
+  const grand = DATA.reduce((s, d) => s + Object.values(d.statuses).reduce((a, b) => a + b, 0), 0);
+  const grandCount = DATA.reduce((s, d) => s + d.count, 0);
+
+  return { bars, gridLines, legend, grandLabel: fmtM(grand), grandCount };
+}
+
+const V = renderVals();
+
+const legendHtml = V.legend.map(item =>
+  `<div style="display:flex; align-items:center; gap:8px;">
+     <div style="width:16px; height:11px; background:${item.color}; border:${item.border}; box-sizing:border-box; flex-shrink:0;"></div>
+     <span style="font:700 12px 'Archivo', sans-serif; color:${item.textColor};">${item.label}</span>
+   </div>`).join('');
+
+const barsHtml = V.bars.map(b => {
+  const grid = V.gridLines.map(g => `<div style="position:absolute; top:0; bottom:0; left:${g.leftPct}%; border-left:1px solid #e3ddd1;"></div>`).join('');
+  const segs = b.segments.map(seg => `<div style="width:${seg.widthPct}%; height:100%; background:${seg.color}; flex-shrink:0;" title="${seg.title}"></div>`).join('');
+  const inside = b.amtInside ? `<div style="position:absolute; top:50%; transform:translateY(-50%); left:${b.widthPct}%; margin-left:-8px; transform:translate(-100%, -50%); font:600 11px 'IBM Plex Mono', monospace; color:#f6f3ec; white-space:nowrap;">${b.amtLabel}</div>` : '';
+  const outside = b.amtOutside ? `<div style="position:absolute; top:50%; transform:translateY(-50%); left:${b.widthPct}%; margin-left:8px; font:600 11px 'IBM Plex Mono', monospace; color:#191c21; white-space:nowrap;">${b.amtLabel}</div>` : '';
+  return `<div style="display:grid; grid-template-columns:190px 1fr; gap:14px; align-items:center;">
+    <div style="text-align:right;">
+      <div style="font:700 13px 'Archivo', sans-serif; color:#191c21; line-height:1.15;">${b.label}</div>
+      <div style="font:500 10px 'IBM Plex Mono', monospace; color:#a39d90; margin-top:1px;">${b.countLabel}</div>
+    </div>
+    <div style="position:relative; height:30px;">
+      ${grid}
+      <div style="position:absolute; top:0; bottom:0; left:0; width:${b.widthPct}%; min-width:2px; border:1.5px solid #191c21; box-sizing:border-box; border-radius:1px; overflow:hidden; display:flex;" title="${b.title}">${segs}</div>
+      ${inside}
+      ${outside}
+    </div>
+  </div>`;
+}).join('');
+
+const xAxisHtml = V.gridLines.map(g =>
+  `<div style="position:absolute; top:2px; left:${g.leftPct}%; transform:translateX(-50%); font:500 9px 'IBM Plex Mono', monospace; color:#b0aa9c;">${g.label}</div>`).join('');
+
+document.getElementById('root').innerHTML = `
+<div style="display:flex; justify-content:center; padding:8px; box-sizing:border-box;">
+  <div style="background:#f6f3ec; border-radius:3px; box-shadow:0 1px 4px rgba(0,0,0,.10); padding:28px 30px; width:100%; box-sizing:border-box;">
+
+    <div style="font:600 13px 'IBM Plex Mono', monospace; letter-spacing:.1em; color:#c3bdb0;">04</div>
+    <div style="margin-top:6px; font:600 12px 'IBM Plex Mono', monospace; letter-spacing:.18em; text-transform:uppercase; color:#a9534a;">2026 Free Agency · Signing Mechanism</div>
+    <h1 style="font:800 26px/1.06 'Archivo', sans-serif; color:#191c21; letter-spacing:-.015em; margin:8px 0 0;">Total Money Signed by Mechanism — Bird Rights, Cap Space, Exceptions</h1>
+
+    <div style="display:flex; flex-wrap:wrap; gap:6px 20px; margin:14px 0 8px;">${legendHtml}</div>
+
+    <div style="margin:12px 0 0; display:flex; flex-direction:column; gap:14px;">${barsHtml}</div>
+
+    <div style="display:grid; grid-template-columns:190px 1fr; gap:14px; margin-top:8px;">
+      <div></div>
+      <div style="position:relative; height:14px; border-top:1px solid #d8d2c4;">${xAxisHtml}</div>
+    </div>
+
+    <div style="border-top:1px solid #e3ddd1; margin-top:18px; padding-top:10px; display:flex; justify-content:space-between; gap:24px;">
+      <div style="font:500 11px/1.5 'IBM Plex Mono', monospace; letter-spacing:.02em; color:#a39d90; text-transform:uppercase;">Total contract value of 2026 free agent signings, grouped by signing mechanism</div>
+      <div style="font:500 11px/1.5 'IBM Plex Mono', monospace; letter-spacing:.02em; color:#a39d90; text-transform:uppercase;">${V.grandLabel} across ${V.grandCount} contracts</div>
+    </div>
+
+  </div>
+</div>`;
+</script>
+</body>
+</html>
