@@ -32,9 +32,46 @@ const ROWS = [
   { key: 'ngPartial',    label: 'Non-Guaranteed',                      color: '#e02020', values: [4986948, 38992573, 57361780, 16937500, 0] },
 ];
 
-const TOTALS = [628806391, 568810891, 404289227, 270577101, 44037931];
-const TOTAL_GUARANTEED = [623819443, 463707425, 336777725, 250948876, 44037931];
-const CONTRACT_COUNTS = [74, 51, 27, 13, 2];
+let TOTALS = [628806391, 568810891, 404289227, 270577101, 44037931];
+let TOTAL_GUARANTEED = [623819443, 463707425, 336777725, 250948876, 44037931];
+let CONTRACT_COUNTS = [74, 51, 27, 13, 2];
+let LAKERS_AMOUNT = 113874126;
+
+// ---- Live data from the cap-sheets workbook (falls back to the constants above) ----
+const PUB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub';
+const TX_URL  = PUB + '?gid=1373103186&single=true&output=csv'; // free-agency transactions
+const AGG_URL = PUB + '?gid=1575199019&single=true&output=csv'; // spend tables (Total Guaranteed row)
+const YEARCOL = [8, 10, 12, 14, 16, 18]; // amount cols in the transactions tab; status = col+1
+// status text -> ROWS index (same bottom-to-top stack order as ROWS above)
+const STATUS2IDX = { 'Guaranteed':0, 'Player Option':1, 'Player Option/Team Option':2, 'Player Option/Non-Guaranteed':3, 'Team Option':4, 'Team Option/Non-Guaranteed':5, 'Non-Guaranteed':6 };
+function parseCSV(t){const rows=[];let cur='';for(const line of t.split('\n')){cur+=(cur?'\n':'')+line;if((cur.match(/"/g)||[]).length%2===0){rows.push(parseRow(cur));cur='';}}if(cur)rows.push(parseRow(cur));return rows;}
+function parseRow(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(c);c='';}else if(ch!=='\r')c+=ch;}r.push(c);return r;}
+const clean=v=>(v||'').replace(/ /g,' ').trim();
+const money=v=>{v=clean(v).replace(/[$,\s]/g,'');if(!v)return 0;const n=parseFloat(v);return isNaN(n)?0:n;};
+function aggregate(txText, aggText){
+  const rows = parseCSV(txText).slice(1).filter(r => clean(r[7]));       // rows with a player name
+  const fas = rows.filter(r => clean(r[1]) === 'Free Agent Signing');   // chart = signings only
+  const seg = ROWS.map(() => [0,0,0,0,0]);
+  const totals = [0,0,0,0,0], counts = [0,0,0,0,0];
+  let lakers = 0;
+  fas.forEach(r => {
+    for (let s = 0; s < 5; s++) {
+      const amt = money(r[YEARCOL[s]]);
+      if (amt <= 0) continue;
+      const status = clean(r[YEARCOL[s] + 1]);
+      const idx = STATUS2IDX[status];
+      totals[s] += amt; counts[s]++;
+      if (idx != null) seg[idx][s] += amt;
+      if (s === 3 && clean(r[4]) === 'Los Angeles Lakers' && status === 'Player Option') lakers += amt;
+    }
+  });
+  if (!totals.some(v => v > 0)) throw new Error('no signings parsed');
+  ROWS.forEach((row, i) => { row.values = seg[i]; });
+  TOTALS = totals; CONTRACT_COUNTS = counts; LAKERS_AMOUNT = lakers;
+  // Total Guaranteed line comes straight from the spend-tables sheet (not derived)
+  const tg = parseCSV(aggText).find(r => clean(r[0]) === 'Total Guaranteed');
+  if (tg) TOTAL_GUARANTEED = [1,2,3,4,5].map(i => money(tg[i]));
+}
 
 function fmtShort(v) {
   if (v >= 1000000) return '$' + Math.round(v / 1000000) + 'M';
@@ -48,7 +85,6 @@ function renderVals() {
 
   // Lakers portion of the 2029/30 Player Option segment
   const LAKERS_YEAR = 3; // 2029/30
-  const LAKERS_AMOUNT = 113874126;
   const TRAE_AMOUNT = ROWS[1].values[LAKERS_YEAR] - LAKERS_AMOUNT; // remainder of Player Option
   const guaranteed2930 = ROWS[0].values[LAKERS_YEAR];
 
@@ -106,6 +142,7 @@ function renderVals() {
   return { years, yTicks, legend, guaranteePoints };
 }
 
+function draw() {
 const V = renderVals();
 
 const legendHtml = V.legend.map(item =>
@@ -181,6 +218,16 @@ document.getElementById('root').innerHTML = `
 
   </div>
 </div>`;
+}
+
+// Fetch live data, then draw — fall back to the embedded constants on any failure.
+Promise.all([
+  fetch(TX_URL).then(r => r.ok ? r.text() : Promise.reject(new Error('tx ' + r.status))),
+  fetch(AGG_URL).then(r => r.ok ? r.text() : Promise.reject(new Error('agg ' + r.status)))
+]).then(([txText, aggText]) => {
+  try { aggregate(txText, aggText); } catch (e) { console.error('FA spend: aggregation failed, using fallback', e); }
+  draw();
+}).catch(e => { console.error('FA spend: fetch failed, using fallback data', e); draw(); });
 </script>
 </body>
 </html>

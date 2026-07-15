@@ -19,7 +19,7 @@
 <script src="/nav.js"></script>
 <div id="root"></div>
 <script>
-const DATA = {"Atlanta Hawks":{"guaranteed":[35100000,0,0,0,0,0]},"Phoenix Suns":{"guaranteed":[34370879,30571429,26033510,13285715,0,0],"playerOption":[0,6367200,6802469,0,0,0]},"New York Knicks":{"guaranteed":[15002184,13285574,0,0,0,0],"nonGuaranteed":[0,0,14196853,6587500,0,0],"toNonGuar":[0,0,0,3015460,0,0]},"Washington Wizards":{"guaranteed":[55079422,53447364,57406428,0,0,0],"playerOption":[0,0,0,61365492,0,0],"nonGuaranteed":[0,5870678,6150234,0,0,0]},"Los Angeles Lakers":{"guaranteed":[110020274,101569455,107721790,0,0,0],"playerOption":[0,9731707,0,113874126,0,0]},"Charlotte Hornets":{"guaranteed":[26811594,24666667,22521739,0,0,0]},"Oklahoma City Thunder":{"guaranteed":[28148148,25000000,0,0,0,0],"poToOption":[0,0,26851852,0,0,0]},"Minnesota Timberwolves":{"guaranteed":[24846187,24188505,22400000,23944828,0,0],"nonGuaranteed":[2449422,0,3580247,0,0,0],"playerOption":[0,0,0,0,25489655,0]},"Boston Celtics":{"guaranteed":[20119670,31285085,16873351,14500000,15500000,0],"playerOption":[0,0,16548400,0,0,0]},"Miami Heat":{"guaranteed":[8949422,17000000,0,0,0,0],"playerOption":[0,0,17000000,0,0,0]},"Cleveland Cavaliers":{"guaranteed":[2449422,60911849,65784797,70657745,0,0],"playerOption":[0,0,0,0,75530693,0]},"San Antonio Spurs":{"guaranteed":[38044000,74304664,61989141,50469818,53950495,0],"playerOption":[0,0,0,0,0,57431172]},"Utah Jazz":{"guaranteed":[26286401,11000000,0,0,0,0],"teamOption":[0,15681993,0,0,0,0]},"Detroit Pistons":{"guaranteed":[30450723,8746479,0,0,0,0],"teamOption":[0,0,8746479,0,0,0],"nonGuaranteed":[0,17000000,17000000,0,0,0]},"Golden State Warriors":{"guaranteed":[32299000,7163100,0,0,0,0],"poNonGuar":[0,20000000,0,0,0,0],"playerOption":[0,5750850,0,0,0,0]},"Brooklyn Nets":{"guaranteed":[32768293,0,0,0,0,0],"teamOption":[0,14500000,0,0,0,0],"poToOption":[0,18731707,0,0,0,0]},"Portland Trail Blazers":{"guaranteed":[16449422,0,0,0,0,0],"nonGuaranteed":[0,14500000,15000000,0,0,0]},"Milwaukee Bucks":{"guaranteed":[20035714,21178571,16571429,17714286,0,0],"teamOption":[0,0,5750000,0,0,0],"nonGuaranteed":[2537527,0,0,0,0,0],"toNonGuar":[0,2756913,0,0,0,0]},"New Orleans Pelicans":{"guaranteed":[3876529,4070357,0,0,0,0]},"Los Angeles Clippers":{"guaranteed":[21580760,2753334,0,0,0,0],"nonGuaranteed":[0,5000000,7884446,0,0,0],"teamOption":[0,14341464,0,3015557,0,0]},"Sacramento Kings":{"guaranteed":[7927422,5751900,0,0,0,0],"teamOption":[0,2664401,0,0,0,0]},"Chicago Bulls":{"guaranteed":[30000000,0,0,0,0,0],"teamOption":[0,31075000,0,0,0,0]},"Philadelphia 76ers":{"guaranteed":[18400000,9450000,9900000,0,0,0],"nonGuaranteed":[0,0,0,10350000,0,0],"playerOption":[0,6300000,0,0,0,0]},"Houston Rockets":{"guaranteed":[22565146,15175862,16300000,17424138,0,0],"playerOption":[0,6367200,0,0,18548276,0]},"Orlando Magic":{"guaranteed":[7348266,0,0,0,0,0]},"Indiana Pacers":{"guaranteed":[10499422,8450000,0,0,0,0]},"Toronto Raptors":{"guaranteed":[4634538,0,0,0,0,0],"nonGuaranteed":[0,2571895,0,0,0,0]},"Denver Nuggets":{"guaranteed":[6256607,0,0,0,0,0]},"Memphis Grizzlies":{"guaranteed":[9000000,0,0,0,0,0],"nonGuaranteed":[0,8550000,8550000,0,0,0]},"Dallas Mavericks":{"guaranteed":[3000000,0,0,0,0,0],"teamOption":[0,3000000,0,0,0,0]}};
+let DATA = {"Atlanta Hawks":{"guaranteed":[35100000,0,0,0,0,0]},"Phoenix Suns":{"guaranteed":[34370879,30571429,26033510,13285715,0,0],"playerOption":[0,6367200,6802469,0,0,0]},"New York Knicks":{"guaranteed":[15002184,13285574,0,0,0,0],"nonGuaranteed":[0,0,14196853,6587500,0,0],"toNonGuar":[0,0,0,3015460,0,0]},"Washington Wizards":{"guaranteed":[55079422,53447364,57406428,0,0,0],"playerOption":[0,0,0,61365492,0,0],"nonGuaranteed":[0,5870678,6150234,0,0,0]},"Los Angeles Lakers":{"guaranteed":[110020274,101569455,107721790,0,0,0],"playerOption":[0,9731707,0,113874126,0,0]},"Charlotte Hornets":{"guaranteed":[26811594,24666667,22521739,0,0,0]},"Oklahoma City Thunder":{"guaranteed":[28148148,25000000,0,0,0,0],"poToOption":[0,0,26851852,0,0,0]},"Minnesota Timberwolves":{"guaranteed":[24846187,24188505,22400000,23944828,0,0],"nonGuaranteed":[2449422,0,3580247,0,0,0],"playerOption":[0,0,0,0,25489655,0]},"Boston Celtics":{"guaranteed":[20119670,31285085,16873351,14500000,15500000,0],"playerOption":[0,0,16548400,0,0,0]},"Miami Heat":{"guaranteed":[8949422,17000000,0,0,0,0],"playerOption":[0,0,17000000,0,0,0]},"Cleveland Cavaliers":{"guaranteed":[2449422,60911849,65784797,70657745,0,0],"playerOption":[0,0,0,0,75530693,0]},"San Antonio Spurs":{"guaranteed":[38044000,74304664,61989141,50469818,53950495,0],"playerOption":[0,0,0,0,0,57431172]},"Utah Jazz":{"guaranteed":[26286401,11000000,0,0,0,0],"teamOption":[0,15681993,0,0,0,0]},"Detroit Pistons":{"guaranteed":[30450723,8746479,0,0,0,0],"teamOption":[0,0,8746479,0,0,0],"nonGuaranteed":[0,17000000,17000000,0,0,0]},"Golden State Warriors":{"guaranteed":[32299000,7163100,0,0,0,0],"poNonGuar":[0,20000000,0,0,0,0],"playerOption":[0,5750850,0,0,0,0]},"Brooklyn Nets":{"guaranteed":[32768293,0,0,0,0,0],"teamOption":[0,14500000,0,0,0,0],"poToOption":[0,18731707,0,0,0,0]},"Portland Trail Blazers":{"guaranteed":[16449422,0,0,0,0,0],"nonGuaranteed":[0,14500000,15000000,0,0,0]},"Milwaukee Bucks":{"guaranteed":[20035714,21178571,16571429,17714286,0,0],"teamOption":[0,0,5750000,0,0,0],"nonGuaranteed":[2537527,0,0,0,0,0],"toNonGuar":[0,2756913,0,0,0,0]},"New Orleans Pelicans":{"guaranteed":[3876529,4070357,0,0,0,0]},"Los Angeles Clippers":{"guaranteed":[21580760,2753334,0,0,0,0],"nonGuaranteed":[0,5000000,7884446,0,0,0],"teamOption":[0,14341464,0,3015557,0,0]},"Sacramento Kings":{"guaranteed":[7927422,5751900,0,0,0,0],"teamOption":[0,2664401,0,0,0,0]},"Chicago Bulls":{"guaranteed":[30000000,0,0,0,0,0],"teamOption":[0,31075000,0,0,0,0]},"Philadelphia 76ers":{"guaranteed":[18400000,9450000,9900000,0,0,0],"nonGuaranteed":[0,0,0,10350000,0,0],"playerOption":[0,6300000,0,0,0,0]},"Houston Rockets":{"guaranteed":[22565146,15175862,16300000,17424138,0,0],"playerOption":[0,6367200,0,0,18548276,0]},"Orlando Magic":{"guaranteed":[7348266,0,0,0,0,0]},"Indiana Pacers":{"guaranteed":[10499422,8450000,0,0,0,0]},"Toronto Raptors":{"guaranteed":[4634538,0,0,0,0,0],"nonGuaranteed":[0,2571895,0,0,0,0]},"Denver Nuggets":{"guaranteed":[6256607,0,0,0,0,0]},"Memphis Grizzlies":{"guaranteed":[9000000,0,0,0,0,0],"nonGuaranteed":[0,8550000,8550000,0,0,0]},"Dallas Mavericks":{"guaranteed":[3000000,0,0,0,0,0],"teamOption":[0,3000000,0,0,0,0]}};
 
 const YEARS = ['2026/27','2027/28','2028/29','2029/30','2030/31','2031/32'];
 const YEAR_SHORT = ["'26","'27","'28","'29","'30","'31"];
@@ -38,6 +38,32 @@ const STATUS_ORDER = [
 function fmtM(v) {
   if (v >= 1000000) return '$' + (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
   return '$' + Math.round(v / 1000) + 'K';
+}
+
+// ---- Live data from the cap-sheets workbook (falls back to the DATA constant above) ----
+const PUB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub';
+const TX_URL = PUB + '?gid=1373103186&single=true&output=csv'; // free-agency transactions
+const YEARCOL = [8, 10, 12, 14, 16, 18]; // amount cols; status = col+1
+const STATUS2KEY = { 'Guaranteed':'guaranteed', 'Player Option':'playerOption', 'Player Option/Team Option':'poToOption', 'Player Option/Non-Guaranteed':'poNonGuar', 'Team Option':'teamOption', 'Team Option/Non-Guaranteed':'toNonGuar', 'Non-Guaranteed':'nonGuaranteed' };
+function parseCSV(t){const rows=[];let cur='';for(const line of t.split('\n')){cur+=(cur?'\n':'')+line;if((cur.match(/"/g)||[]).length%2===0){rows.push(parseRow(cur));cur='';}}if(cur)rows.push(parseRow(cur));return rows;}
+function parseRow(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(c);c='';}else if(ch!=='\r')c+=ch;}r.push(c);return r;}
+const clean=v=>(v||'').replace(/ /g,' ').trim();
+const money=v=>{v=clean(v).replace(/[$,\s]/g,'');if(!v)return 0;const n=parseFloat(v);return isNaN(n)?0:n;};
+function aggregate(txText){
+  const rows = parseCSV(txText).slice(1).filter(r => clean(r[7])); // ALL rows (signings + extensions)
+  const out = {};
+  rows.forEach(r => {
+    const team = clean(r[4]); if (!team) return;
+    for (let s = 0; s < 6; s++) {
+      const amt = money(r[YEARCOL[s]]); if (amt <= 0) continue;
+      const key = STATUS2KEY[clean(r[YEARCOL[s] + 1])]; if (!key) continue;
+      if (!out[team]) out[team] = {};
+      if (!out[team][key]) out[team][key] = [0,0,0,0,0,0];
+      out[team][key][s] += amt;
+    }
+  });
+  if (!Object.keys(out).length) throw new Error('no rows parsed');
+  DATA = out;
 }
 
 function renderVals() {
@@ -83,6 +109,7 @@ function renderVals() {
   return { teams, gridLines, legend, yearShort: YEAR_SHORT, maxLabel: '$120M' };
 }
 
+function draw() {
 const V = renderVals();
 
 const legendHtml = V.legend.map(item =>
@@ -128,6 +155,13 @@ document.getElementById('root').innerHTML = `
 
   </div>
 </div>`;
+}
+
+// Fetch live data, then draw — fall back to the embedded DATA on any failure.
+fetch(TX_URL)
+  .then(r => r.ok ? r.text() : Promise.reject(new Error('tx ' + r.status)))
+  .then(txText => { try { aggregate(txText); } catch (e) { console.error('Team spend: aggregation failed, using fallback', e); } draw(); })
+  .catch(e => { console.error('Team spend: fetch failed, using fallback data', e); draw(); });
 </script>
 </body>
 </html>

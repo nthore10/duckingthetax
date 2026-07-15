@@ -20,7 +20,7 @@
 <div id="root"></div>
 <script>
 // per-mechanism totals broken down by contract status (from spreadsheet)
-const DATA = [
+let DATA = [
   { label: 'Bird Rights', count: 36, statuses: { guaranteed: 1460065235, playerOption: 311720227, poToOption: 26851852, poNonGuar: 20000000, teamOption: 30512036, toNonGuar: 3015460, nonGuaranteed: 112769958 } },
   { label: 'Cap Space',   count: 6,  statuses: { guaranteed: 217646274, playerOption: 64321656, poToOption: 9000000, teamOption: 32575000 } },
   { label: 'Non-Tax MLE', count: 12, statuses: { guaranteed: 170788937, playerOption: 22848400, teamOption: 29341464, nonGuaranteed: 27450000 } },
@@ -45,6 +45,36 @@ function fmtM(v) {
   if (v >= 1000000000) return '$' + (v / 1000000000).toFixed(2) + 'B';
   if (v >= 1000000) return '$' + (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
   return '$' + Math.round(v / 1000) + 'K';
+}
+
+// ---- Live data from the cap-sheets workbook (falls back to the DATA constant above) ----
+const PUB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTwTOS_rNBYI8d8zDUivGFWXsXcxlOZgrqn5o-WCvFC5aNAR3vLsSqllE7aO0BRw/pub';
+const TX_URL = PUB + '?gid=1373103186&single=true&output=csv'; // free-agency transactions
+const YEARCOL = [8, 10, 12, 14, 16, 18]; // amount cols; status = col+1
+const STATUS2KEY = { 'Guaranteed':'guaranteed', 'Player Option':'playerOption', 'Player Option/Team Option':'poToOption', 'Player Option/Non-Guaranteed':'poNonGuar', 'Team Option':'teamOption', 'Team Option/Non-Guaranteed':'toNonGuar', 'Non-Guaranteed':'nonGuaranteed' };
+function parseCSV(t){const rows=[];let cur='';for(const line of t.split('\n')){cur+=(cur?'\n':'')+line;if((cur.match(/"/g)||[]).length%2===0){rows.push(parseRow(cur));cur='';}}if(cur)rows.push(parseRow(cur));return rows;}
+function parseRow(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(c);c='';}else if(ch!=='\r')c+=ch;}r.push(c);return r;}
+const clean=v=>(v||'').replace(/ /g,' ').trim();
+const money=v=>{v=clean(v).replace(/[$,\s]/g,'');if(!v)return 0;const n=parseFloat(v);return isNaN(n)?0:n;};
+function aggregate(txText){
+  const rows = parseCSV(txText).slice(1).filter(r => clean(r[7])); // ALL rows (signings + extensions)
+  const bd = {};
+  rows.forEach(r => {
+    let sw = clean(r[0]); if (!sw) return;
+    if (sw === 'Bird Rights S&T') sw = 'Bird Rights'; // merge S&T into Bird Rights
+    if (!bd[sw]) bd[sw] = { label: sw, count: 0, statuses: {} };
+    bd[sw].count++;
+    for (let s = 0; s < 6; s++) {
+      const amt = money(r[YEARCOL[s]]); if (amt <= 0) continue;
+      const key = STATUS2KEY[clean(r[YEARCOL[s] + 1])]; if (!key) continue;
+      bd[sw].statuses[key] = (bd[sw].statuses[key] || 0) + amt;
+    }
+  });
+  const arr = Object.values(bd);
+  if (!arr.length) throw new Error('no rows parsed');
+  const tot = d => Object.values(d.statuses).reduce((a, b) => a + b, 0);
+  arr.sort((a, b) => tot(b) - tot(a)); // sorted by total descending
+  DATA = arr;
 }
 
 function renderVals() {
@@ -90,6 +120,7 @@ function renderVals() {
   return { bars, gridLines, legend, grandLabel: fmtM(grand), grandCount };
 }
 
+function draw() {
 const V = renderVals();
 
 const legendHtml = V.legend.map(item =>
@@ -144,6 +175,13 @@ document.getElementById('root').innerHTML = `
 
   </div>
 </div>`;
+}
+
+// Fetch live data, then draw — fall back to the embedded DATA on any failure.
+fetch(TX_URL)
+  .then(r => r.ok ? r.text() : Promise.reject(new Error('tx ' + r.status)))
+  .then(txText => { try { aggregate(txText); } catch (e) { console.error('Signed With: aggregation failed, using fallback', e); } draw(); })
+  .catch(e => { console.error('Signed With: fetch failed, using fallback data', e); draw(); });
 </script>
 </body>
 </html>
