@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Salary Cap Spend Trend, 2011–2026 · Ducking The Tax</title>
+<meta name="description" content="League-wide NBA salary spend as a percent of the cap, mean vs. median, one point per season from 2011-12 through 2025-26, segmented by CBA era.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#e9e4d9;}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+<div style="background:#e9e4d9; padding:40px; display:flex; justify-content:center; font-family:'Archivo',sans-serif;">
+  <div id="card" style="background:#f6f3ec; border-radius:3px; box-shadow:0 1px 4px rgba(0,0,0,.10); padding:50px 54px; width:100%; max-width:1220px;"></div>
+</div>
+<div id="cap-tip" style="position:fixed; z-index:50; pointer-events:none; display:none; background:oklch(1 0 0); border:1px solid #dcd4c2; border-left:3px solid #b9ae98; border-radius:6px; padding:7px 11px; font:600 12px 'IBM Plex Mono',monospace; color:#3a352c; white-space:nowrap; box-shadow:0 8px 20px -8px rgba(0,0,0,.3);"></div>
+<script>
+(function () {
+  const YEARS = ["'11-12","'12-13","'13-14","'14-15","'15-16","'16-17","'17-18","'18-19","'19-20","'20-21","'21-22","'22-23","'23-24","'24-25","'25-26"];
+  const MEAN = [108.84082523602783,115.05942526359314,115.63060867885731,110.56616966621742,111.97442414285712,103.60442642221586,110.85489506490531,116.93389163206342,113.18873960051308,117.57258365402237,119.91658215761978,121.24417519172972,118.81013684161517,122.93704818334423,120.86894025441999];
+  const MEDIAN = [112.58553166563297,114.31665891392737,113.39453296750115,113.37404899706653,106.46237642857144,101.46963396110174,109.3745163634162,118.86700026504629,116.36565466373465,118.12399120395822,118.70560917679294,120.65223403825158,120.1728093456158,121.09511658178507,121.03296701164294];
+
+  const MEAN_C = "oklch(0.6 0.11 62)";
+  const MEDIAN_C = "oklch(0.5 0.10 165)";
+  const CAP_C = "oklch(0.6 0.035 250)";
+
+  const padding = { left: 58, right: 58, top: 20, bottom: 40 };
+  const CW = 1112, CH = 380;
+  const innerRight = CW - padding.right;   // 1054
+  const innerBottom = CH - padding.bottom; // 340
+  const innerTop = padding.top;            // 20
+  const yMin = 95, yMax = 126;
+  const n = YEARS.length;
+  const xStep = (innerRight - padding.left) / (n - 1);
+  const xAt = (i) => padding.left + i * xStep;
+  const yAt = (v) => innerBottom - ((v - yMin) / (yMax - yMin)) * (innerBottom - innerTop);
+
+  const buildPath = (arr) => arr.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i).toFixed(1)} ${yAt(v).toFixed(1)}`).join(' ');
+  const meanPath = buildPath(MEAN);
+  const medianPath = buildPath(MEDIAN);
+  const capPath = `M ${xAt(0).toFixed(1)} ${yAt(100).toFixed(1)} L ${xAt(n - 1).toFixed(1)} ${yAt(100).toFixed(1)}`;
+
+  const gridVals = [95, 100, 105, 110, 115, 120, 125];
+  const gridLines = gridVals.map((v) => ({ y: yAt(v), label: v + '%', topPct: (yAt(v) / CH) * 100 }));
+
+  const midpoint = (a, b) => (xAt(a) + xAt(b)) / 2;
+  const d1 = midpoint(5, 6), d2 = midpoint(11, 12);
+  const dividers = [
+    `M ${d1.toFixed(1)} ${innerTop} L ${d1.toFixed(1)} ${innerBottom}`,
+    `M ${d2.toFixed(1)} ${innerTop} L ${d2.toFixed(1)} ${innerBottom}`,
+  ];
+  const eraEdges = [0, d1, d2, CW];
+  const eras = [{ label: '2011 CBA' }, { label: '2017 CBA' }, { label: '2023 CBA' }].map((e, i) => ({
+    label: e.label,
+    leftPct: (eraEdges[i] / CW) * 100,
+    widthPct: ((eraEdges[i + 1] - eraEdges[i]) / CW) * 100,
+  }));
+
+  // ---- build markup ----
+  const erasHtml = eras.map((e) =>
+    `<div style="position:absolute; left:${e.leftPct}%; width:${e.widthPct}%; top:0; text-align:center; font:700 12px 'IBM Plex Mono',monospace; letter-spacing:0.08em; text-transform:uppercase; color:#6f665a;">${e.label}</div>`).join('');
+
+  const gridLabelsHtml = gridLines.map((g) =>
+    `<div style="position:absolute; left:0; top:${g.topPct}%; transform:translateY(-50%); font:600 13px 'IBM Plex Mono',monospace; color:#9a8f7a;">${g.label}</div>` +
+    `<div style="position:absolute; right:0; top:${g.topPct}%; transform:translateY(-50%); font:600 13px 'IBM Plex Mono',monospace; color:#9a8f7a; text-align:right;">${g.label}</div>`).join('');
+
+  const xLabelsHtml = YEARS.map((y, i) =>
+    `<div style="position:absolute; left:${(xAt(i) / CW) * 100}%; bottom:2px; transform:translateX(-50%) rotate(-42deg); transform-origin:top right; font:500 11px 'IBM Plex Mono',monospace; color:#7d7464; white-space:nowrap;">${y}</div>`).join('');
+
+  const gridLinesSvg = gridLines.map((g) =>
+    `<line x1="${padding.left}" x2="${innerRight}" y1="${g.y}" y2="${g.y}" stroke="#dcd4c2" stroke-width="1"></line>`).join('');
+  const dividersSvg = dividers.map((d) =>
+    `<path d="${d}" stroke="#b9ae98" stroke-width="1.5" stroke-dasharray="3 4"></path>`).join('');
+  const meanDots = MEAN.map((v, i) =>
+    `<circle id="dot-mean-${i}" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="4.5" fill="#f6f3ec" stroke="${MEAN_C}" stroke-width="2.5"></circle>`).join('');
+  const medianDots = MEDIAN.map((v, i) =>
+    `<circle id="dot-median-${i}" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="4.5" fill="#f6f3ec" stroke="${MEDIAN_C}" stroke-width="2.5"></circle>`).join('');
+  // transparent hover targets on top (larger radius so the small dots are easy to hit)
+  const hits = [];
+  MEAN.forEach((v, i) => hits.push(`<circle data-hit data-series="mean" data-i="${i}" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="9" fill="transparent" style="cursor:pointer;"></circle>`));
+  MEDIAN.forEach((v, i) => hits.push(`<circle data-hit data-series="median" data-i="${i}" cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="9" fill="transparent" style="cursor:pointer;"></circle>`));
+  const hitsSvg = hits.join('');
+
+  const svg = `<svg id="cap-svg" viewBox="0 0 ${CW} ${CH}" width="${CW}" height="${CH}" style="overflow:visible; display:block; width:100%; height:auto;">
+    ${gridLinesSvg}
+    <line x1="${padding.left}" x2="${innerRight}" y1="${innerBottom}" y2="${innerBottom}" stroke="#cfc7b6" stroke-width="1.5"></line>
+    ${dividersSvg}
+    <path d="${capPath}" fill="none" stroke="${CAP_C}" stroke-width="2" stroke-dasharray="6 6"></path>
+    <path d="${medianPath}" fill="none" stroke="${MEDIAN_C}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="${meanPath}" fill="none" stroke="${MEAN_C}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    ${meanDots}
+    ${medianDots}
+    ${hitsSvg}
+  </svg>`;
+
+  document.getElementById('card').innerHTML = `
+    <div style="font:600 13px 'IBM Plex Mono',monospace; letter-spacing:.1em; color:#c3bdb0;">03</div>
+    <div style="font:600 12px 'IBM Plex Mono',monospace; letter-spacing:.18em; text-transform:uppercase; color:#a9534a; margin-top:6px;">Salary Cap Analysis · 2011&ndash;12 to 2025&ndash;26</div>
+    <h1 style="font:800 34px/1.1 'Archivo',sans-serif; color:#191c21; letter-spacing:-.015em; margin:8px 0 0;">Yearly Salary Spend As a Percent Of The Salary Cap</h1>
+
+    <div style="display:flex; align-items:center; gap:22px; margin-top:22px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:18px; height:4px; border-radius:2px; background:${MEAN_C};"></span>
+        <span style="font:600 13px 'Archivo',sans-serif; color:#3a352c;">Mean Spend</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:18px; height:4px; border-radius:2px; background:${MEDIAN_C};"></span>
+        <span style="font:600 13px 'Archivo',sans-serif; color:#3a352c;">Median Spend</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:18px; height:0; border-top:2px dashed ${CAP_C};"></span>
+        <span style="font:600 13px 'Archivo',sans-serif; color:#3a352c;">Salary Cap (100%)</span>
+      </div>
+    </div>
+
+    <div style="margin-top:28px; position:relative; height:26px;">${erasHtml}</div>
+
+    <div style="margin-top:2px; margin-bottom:44px; position:relative;">
+      ${gridLabelsHtml}
+      ${xLabelsHtml}
+      <div style="position:absolute; right:0; bottom:-40px; font:600 11px 'IBM Plex Mono',monospace; letter-spacing:0.08em; color:#a89d8a;">SEASON</div>
+      ${svg}
+    </div>
+
+    <div style="border-top:1px solid #e3ddd1; margin-top:20px; padding-top:14px;">
+      <div style="font:400 12px/1.5 'Archivo',sans-serif; color:#a89d8a; letter-spacing:.01em;">Dashed line marks the salary cap baseline (100%). Values above it indicate league-wide spend exceeding the cap threshold.</div>
+    </div>`;
+
+  // ---- interactivity: hover tooltip + point emphasis ----
+  const tip = document.getElementById('cap-tip');
+  const svgEl = document.getElementById('cap-svg');
+  function activate(el) {
+    const series = el.getAttribute('data-series');
+    const i = +el.getAttribute('data-i');
+    const val = (series === 'mean' ? MEAN : MEDIAN)[i];
+    const c = series === 'mean' ? MEAN_C : MEDIAN_C;
+    const dot = document.getElementById(`dot-${series}-${i}`);
+    if (dot) { dot.setAttribute('r', '7'); dot.setAttribute('stroke-width', '3'); }
+    const r = el.getBoundingClientRect();
+    tip.innerHTML = `<span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${c}; margin-right:7px; vertical-align:middle;"></span><span style="vertical-align:middle;">${YEARS[i]} · ${series === 'mean' ? 'Mean' : 'Median'} · ${val.toFixed(1)}%</span>`;
+    tip.style.borderLeftColor = c;
+    tip.style.left = (r.left + r.width / 2) + 'px';
+    tip.style.top = (r.top - 10) + 'px';
+    tip.style.transform = 'translate(-50%, -100%)';
+    tip.style.display = 'block';
+  }
+  function deactivate(el) {
+    const series = el.getAttribute('data-series');
+    const i = +el.getAttribute('data-i');
+    const dot = document.getElementById(`dot-${series}-${i}`);
+    if (dot) { dot.setAttribute('r', '4.5'); dot.setAttribute('stroke-width', '2.5'); }
+    tip.style.display = 'none';
+  }
+  svgEl.addEventListener('mouseover', (e) => { const t = e.target.closest('[data-hit]'); if (t) activate(t); });
+  svgEl.addEventListener('mouseout', (e) => { const t = e.target.closest('[data-hit]'); if (t) deactivate(t); });
+})();
+</script>
+</body>
+</html>
