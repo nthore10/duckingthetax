@@ -45,6 +45,7 @@
     else if (/^\/(season-tracker|luxury-tax|ten-day|two-way|dead-cap)/.test(path)) section = 'trackers';
     else if (/^\/(signing-tracker|spending-power|free-agency-spend|team-spend|signed-with)/.test(path)) section = 'freeagency';
     else if (path.indexOf('/trade-evaluator') === 0) section = 'evaluator';
+    else if (path.indexOf('/ad-hoc-research') === 0) section = 'research';
     else if (path.indexOf('/contract-calculator') === 0) section = 'tools';
     if (!section) return;
     var el = root.querySelector('[data-nav="' + section + '"]');
