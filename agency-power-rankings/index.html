@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBA Draft Agency Power Rankings, 2021–2025 · Ducking The Tax</title>
+<meta name="description" content="Which player agency represented the most NBA first-round picks over the 2021–2025 drafts — an animated leaderboard that reshuffles from every first-rounder down to the lottery's elite.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="/agency-logos.js"></script>
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:oklch(0.972 0.008 85); font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+<div id="stage-wrap" style="overflow:hidden; padding:24px 16px; color:oklch(0.26 0.012 65);">
+  <div id="stage" style="width:1080px; margin:0 auto; padding:46px 40px; transform-origin:top left; will-change:transform;"></div>
+</div>
+<script>
+(function () {
+  const METRICS = ['total','topFive','topTen','lottery'];
+  const META = {
+    total:   { label:'Total Picks', noun:'first-round picks', universe:150,
+               line:'CAA has sent more players into the first round than any agency — 25 across five drafts, ahead of WME and Excel.' },
+    topFive: { label:'Top Five', noun:'top-five picks', universe:25,
+               line:'At the very top, the order flips: WME owns five top-five selections, edging CAA and The Team.' },
+    topTen:  { label:'Top Ten', noun:'top-ten picks', universe:50,
+               line:'Among top-ten picks, WME pulls clear with ten, almost doubling the next-closest agency.' },
+    lottery: { label:'Lottery', noun:'lottery picks', universe:70,
+               line:"In the lottery, WME's grip holds — 14 of the last 70 lottery picks ran through one agency." },
+  };
+  const NEUTRAL = 'oklch(0.85 0.012 80)';
+  const INK = 'oklch(0.24 0.012 65)';
+  const MUTED = 'oklch(0.54 0.012 65)';
+  const ACCENT = true; // accentLeaders
+
+  // total, topFive, topTen, lottery — logo:true means an agency logo chip (else initial fallback)
+  const AGENCIES = [
+    { id:'caa',  name:'CAA',        total:25, topFive:4, topTen:6,  lottery:8,  color:'oklch(0.57 0.2 27)',    logo:true },
+    { id:'wme',  name:'WME',        total:20, topFive:5, topTen:10, lottery:14, color:'oklch(0.24 0.005 250)', logo:true },
+    { id:'exc',  name:'Excel',      total:20, topFive:1, topTen:4,  lottery:7,  color:'oklch(0.47 0.006 250)', logo:true },
+    { id:'team', name:'The Team',   total:17, topFive:4, topTen:5,  lottery:7,  color:'oklch(0.31 0.022 60)',  logo:true },
+    { id:'klu',  name:'Klutch',     total:13, topFive:0, topTen:2,  lottery:4,  color:'oklch(0.73 0.09 85)',   logo:true },
+    { id:'pri',  name:'Priority',   total:10, topFive:2, topTen:3,  lottery:3,  color:'oklch(0.67 0.17 47)',   logo:true },
+    { id:'lift', name:'LIFT',       total:4,  topFive:1, topTen:2,  lottery:3,  color:'oklch(0.72 0.12 205)',  logo:true },
+    { id:'life', name:'Life',       total:4,  topFive:0, topTen:0,  lottery:2,  color:'oklch(0.42 0.06 180)',  logo:true },
+    { id:'oct',  name:'Octagon',    total:4,  topFive:0, topTen:2,  lottery:3,  color:'oklch(0.63 0.19 6)',    logo:true },
+    { id:'com',  name:'Comsport',   total:3,  topFive:1, topTen:3,  lottery:3,  color:'oklch(0.58 0.16 40)',   logo:true },
+    { id:'unl',  name:'UNLTD',      total:2,  topFive:0, topTen:0,  lottery:2,  color:null },
+    { id:'glu',  name:'Glushon',    total:2,  topFive:0, topTen:1,  lottery:1,  color:'oklch(0.6 0.08 82)',    logo:true },
+    { id:'amr',  name:'AMR',        total:2,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'ise',  name:'ISE',        total:2,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'par',  name:'Par-Lay',    total:2,  topFive:2, topTen:2,  lottery:2,  color:null },
+    { id:'gapp', name:'G.A.P.P.',   total:2,  topFive:2, topTen:2,  lottery:2,  color:null },
+    { id:'ver',  name:'Verus',      total:2,  topFive:0, topTen:1,  lottery:1,  color:null },
+    { id:'gse',  name:'GSE',        total:1,  topFive:1, topTen:1,  lottery:1,  color:null },
+    { id:'ptal', name:'ProTalent',  total:1,  topFive:1, topTen:1,  lottery:1,  color:null },
+    { id:'spe',  name:'Spencer',    total:1,  topFive:1, topTen:1,  lottery:1,  color:null },
+    { id:'iam',  name:'IAM',        total:1,  topFive:0, topTen:1,  lottery:1,  color:null },
+    { id:'inn',  name:'Innovate',   total:1,  topFive:0, topTen:1,  lottery:1,  color:null },
+    { id:'one',  name:'One Legacy', total:1,  topFive:0, topTen:1,  lottery:1,  color:null },
+    { id:'tan',  name:'Tandem',     total:1,  topFive:0, topTen:1,  lottery:1,  color:null },
+    { id:'icon', name:'Icon',       total:1,  topFive:0, topTen:0,  lottery:1,  color:null },
+    { id:'pmon', name:'ProMondo',   total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'tri',  name:'Trifecta',   total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'roc',  name:'Roc Nation', total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'gsl',  name:'GSL',        total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'fam',  name:'The Familie',total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'rep',  name:'Rep1',       total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'next', name:'NEXT',       total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+    { id:'a3',   name:'A3',         total:1,  topFive:0, topTen:0,  lottery:0,  color:null },
+  ];
+  const VIS = 10, ROW_H = 44;
+  const LOGOS = window.AGENCY_LOGOS || {};
+
+  const _mi = {};
+  function metricInfo(key) {
+    if (_mi[key]) return _mi[key];
+    const arr = AGENCIES.map((a) => ({ id:a.id, val:a[key], total:a.total, name:a.name }));
+    arr.sort((x, y) => y.val - x.val || y.total - x.total || x.name.localeCompare(y.name));
+    const map = {};
+    arr.forEach((a, i) => { map[a.id] = { val:a.val, rank:i, visible: i < VIS && a.val > 0 }; });
+    _mi[key] = { map, max: arr[0].val, leader: arr[0].name };
+    return _mi[key];
+  }
+  const ease = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+  const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // ---- build the static shell ----
+  const stage = document.getElementById('stage');
+  const rowsHtml = AGENCIES.map((a) => {
+    const hasLogo = !!a.logo;
+    const chip = hasLogo
+      ? `<img src="${LOGOS[a.id] || ''}" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">`
+      : `<span style="font-family:'Archivo',sans-serif; font-size:12px; font-weight:700; color:oklch(0.45 0.012 65);">${esc(a.name[0])}</span>`;
+    const barColor = ACCENT && a.color ? a.color : NEUTRAL;
+    return `<div data-row="${a.id}" style="position:absolute; left:0; right:0; height:44px; display:flex; align-items:center; will-change:transform,opacity;">
+      <div data-rank style="position:absolute; left:0; width:20px; display:flex; align-items:center; justify-content:flex-end; height:100%; font-size:12px; font-weight:600; color:oklch(0.66 0.012 65); font-variant-numeric:tabular-nums;"></div>
+      <div style="position:absolute; left:30px; width:174px; display:flex; align-items:center; gap:10px; height:100%;">
+        <div style="width:28px; height:28px; border-radius:7px; overflow:hidden; flex:none; background:${hasLogo ? 'oklch(0.97 0.008 85)' : 'oklch(0.9 0.012 80)'}; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1px oklch(0.26 0.012 65 / 0.12);">${chip}</div>
+        <span style="flex:1; min-width:0; font-size:13.5px; font-weight:600; letter-spacing:-0.005em; color:${hasLogo ? INK : MUTED}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(a.name)}</span>
+      </div>
+      <div style="position:absolute; left:212px; width:688px; height:100%; display:flex; align-items:center;">
+        <div data-bar style="height:24px; border-radius:3px; width:0%; background:${barColor}; min-width:2px;"></div>
+        <span data-val style="margin-left:10px; font-size:14.5px; font-weight:700; color:transparent; font-variant-numeric:tabular-nums; flex:none;"></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  stage.innerHTML = `
+    <div style="display:flex; align-items:baseline; justify-content:space-between; border-bottom:1.5px solid oklch(0.26 0.012 65 / 0.85); padding-bottom:13px;">
+      <div style="font-size:11.5px; font-weight:700; letter-spacing:0.22em; text-transform:uppercase; color:oklch(0.26 0.012 65); white-space:nowrap;">NBA Draft · First Round</div>
+      <div style="font-size:11.5px; font-weight:600; letter-spacing:0.22em; text-transform:uppercase; color:oklch(0.52 0.012 65); white-space:nowrap;">2021 — 2025</div>
+    </div>
+    <header style="margin-top:26px;">
+      <h1 style="font-family:'Newsreader',serif; font-weight:500; font-size:50px; line-height:1.02; letter-spacing:-0.015em; margin:0; color:oklch(0.21 0.012 65);">The Agencies Behind the Picks</h1>
+      <p style="font-family:'Newsreader',serif; font-size:19px; line-height:1.45; color:oklch(0.4 0.012 65); margin:14px 0 0; max-width:680px;">Five drafts, 150 first-round selections, and the agencies that placed them. Watch the leaderboard reshuffle as the picks get more exclusive — from every first-rounder down to the lottery's elite.</p>
+    </header>
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-top:30px; border-bottom:1px solid oklch(0.26 0.012 65 / 0.16);">
+      <div id="tabs" style="display:flex; gap:30px;"></div>
+    </div>
+    <div style="height:2px; background:oklch(0.26 0.012 65 / 0.08); position:relative; overflow:hidden;">
+      <div id="progress" style="position:absolute; left:0; top:0; bottom:0; width:0%; background:oklch(0.56 0.16 25 / 0.55);"></div>
+    </div>
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:40px; margin-top:24px;">
+      <p id="narrative" style="font-family:'Newsreader',serif; font-style:italic; font-size:21px; line-height:1.4; color:oklch(0.28 0.012 65); margin:0; max-width:640px;"></p>
+      <div style="text-align:right; flex:none;">
+        <div style="display:flex; align-items:baseline; justify-content:flex-end; gap:5px;">
+          <span id="leaderVal" style="font-family:'Newsreader',serif; font-weight:500; font-size:54px; line-height:0.9; letter-spacing:-0.02em; color:oklch(0.21 0.012 65); font-variant-numeric:tabular-nums;"></span>
+          <span id="universe" style="font-family:'Newsreader',serif; font-size:24px; color:oklch(0.6 0.012 65);"></span>
+        </div>
+        <div id="leaderName" style="font-size:11px; font-weight:600; letter-spacing:0.13em; text-transform:uppercase; color:oklch(0.5 0.012 65); margin-top:7px; white-space:nowrap;"></div>
+      </div>
+    </div>
+    <div style="position:relative; height:452px; margin-top:26px;">
+      <div style="position:relative; height:440px; overflow:hidden;">
+        <div style="position:absolute; left:212px; top:0; bottom:0; width:1px; background:oklch(0.26 0.012 65 / 0.18); z-index:1;"></div>
+        ${rowsHtml}
+      </div>
+      <div style="position:absolute; left:0; right:0; top:440px; height:1px; background:oklch(0.26 0.012 65 / 0.18);"></div>
+    </div>
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:30px; margin-top:18px;">
+      <p style="font-size:12px; line-height:1.5; color:oklch(0.55 0.012 65); margin:0; max-width:560px;">Bars rescale to each tier, so length shows an agency's count <em>within that tier</em>. Lottery = picks 1–14, Top Ten = 1–10, Top Five = 1–5. Agencies are credited with the player they represented on draft night.</p>
+      <p style="font-size:12px; font-weight:600; letter-spacing:0.04em; color:oklch(0.5 0.012 65); margin:0; text-align:right; white-space:nowrap;">Source: 2021–2025 NBA Drafts</p>
+    </div>`;
+
+  // refs
+  const rowEls = {};
+  AGENCIES.forEach((a) => {
+    const wrap = stage.querySelector(`[data-row="${a.id}"]`);
+    rowEls[a.id] = { wrap, rank: wrap.querySelector('[data-rank]'), bar: wrap.querySelector('[data-bar]'), val: wrap.querySelector('[data-val]') };
+  });
+  const narrativeEl = stage.querySelector('#narrative');
+  const leaderValEl = stage.querySelector('#leaderVal');
+  const universeEl = stage.querySelector('#universe');
+  const leaderNameEl = stage.querySelector('#leaderName');
+  const progressEl = stage.querySelector('#progress');
+  const tabsEl = stage.querySelector('#tabs');
+  const tabEls = METRICS.map((k, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = META[k].label;
+    b.style.cssText = "appearance:none; background:none; border:none; border-bottom:2.5px solid transparent; margin-bottom:-1px; padding:0 0 11px; cursor:pointer; white-space:nowrap; font-family:'Archivo',sans-serif; font-size:15px; font-weight:500; letter-spacing:0.01em; color:" + MUTED + "; transition:color .25s;";
+    b.addEventListener('click', () => go(i));
+    tabsEl.appendChild(b);
+    return b;
+  });
+
+  // ---- animation state ----
+  let fromIndex = 0, toIndex = 0, phase = 'hold', phaseStart = 0, p = 1, cycleP = 0;
+  const playing = true;
+  function advance(now) { fromIndex = toIndex; toIndex = (toIndex + 1) % METRICS.length; phase = 'transition'; phaseStart = now; p = 0; }
+  function go(i) {
+    const now = performance.now();
+    if (i === toIndex && phase !== 'transition') { phaseStart = now; return; }
+    fromIndex = toIndex; toIndex = i; phase = 'transition'; phaseStart = now; p = 0;
+  }
+
+  function render() {
+    const ep = ease(phase === 'transition' ? p : 1);
+    const infoF = metricInfo(METRICS[fromIndex]);
+    const infoT = metricInfo(METRICS[toIndex]);
+    const lerp = (a, b) => a + (b - a) * ep;
+    const maxNow = lerp(infoF.max, infoT.max);
+
+    AGENCIES.forEach((a) => {
+      const f = infoF.map[a.id], t = infoT.map[a.id];
+      const val = lerp(f.val, t.val);
+      const rankFrom = f.visible ? f.rank : VIS;
+      const rankTo = t.visible ? t.rank : VIS;
+      const y = lerp(rankFrom, rankTo) * ROW_H;
+      const opacity = lerp(f.visible ? 1 : 0, t.visible ? 1 : 0);
+      const el = rowEls[a.id];
+      el.wrap.style.transform = 'translateY(' + (Math.round(y * 10) / 10) + 'px)';
+      el.wrap.style.opacity = Math.round(opacity * 100) / 100;
+      el.wrap.style.zIndex = 200 - Math.round(Math.min(rankFrom, rankTo) * 4);
+      el.bar.style.width = (maxNow > 0 ? Math.round(val / maxNow * 1000) / 10 : 0) + '%';
+      el.val.textContent = Math.round(val);
+      el.val.style.color = opacity > 0.5 ? (a.logo ? INK : MUTED) : 'transparent';
+      el.rank.textContent = t.visible ? (t.rank + 1) : (f.visible ? (f.rank + 1) : '');
+    });
+
+    const meta = META[METRICS[toIndex]];
+    narrativeEl.textContent = meta.line;
+    leaderValEl.textContent = Math.round(maxNow);
+    universeEl.textContent = '/ ' + meta.universe;
+    leaderNameEl.textContent = infoT.leader + ' · most ' + meta.noun;
+    progressEl.style.width = Math.round(cycleP) + '%';
+    tabEls.forEach((b, i) => {
+      const active = i === toIndex;
+      b.style.color = active ? INK : MUTED;
+      b.style.borderBottomColor = active ? INK : 'transparent';
+      b.style.fontWeight = active ? 700 : 500;
+    });
+  }
+
+  function loop(now) {
+    const TRANS = 850, HOLD = Math.max(1000, 3.4 * 1000);
+    if (phase === 'transition') {
+      const e = now - phaseStart;
+      p = Math.min(1, e / TRANS);
+      cycleP = 100;
+      if (p >= 1) { phase = 'hold'; phaseStart = now; fromIndex = toIndex; }
+    } else {
+      const e = now - phaseStart;
+      p = 1;
+      cycleP = Math.min(100, e / HOLD * 100);
+      if (playing && e >= HOLD) advance(now);
+    }
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  // ---- fit the 1080px stage to the container width ----
+  const wrap = document.getElementById('stage-wrap');
+  function fit() {
+    const avail = stage.parentElement.clientWidth - 32; // minus wrap padding
+    const s = Math.min(1, avail / 1080);
+    stage.style.transform = 'scale(' + s + ')';
+    wrap.style.height = (stage.offsetHeight * s + 48) + 'px';
+  }
+  window.addEventListener('resize', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  setTimeout(fit, 350);
+
+  // start
+  phaseStart = performance.now();
+  render();
+  fit();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
