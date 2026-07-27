@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RFA Signing Calendar, 2022–2026 · Ducking The Tax</title>
+<meta name="description" content="Every NBA restricted-free-agent resolution from 2022–2026, plotted on a shared July 1–October 5 calendar. Dot size scales with total contract value; color marks how the deal was reached.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#e9e4d9;}
+  a{color:oklch(0.62 0.14 255);} a:hover{color:oklch(0.52 0.14 255);}
+  #viz a{color:inherit;}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+<div id="viz" style="background:#e9e4d9; color:oklch(0.24 0.012 260); font-family:Archivo, system-ui, sans-serif; padding:44px 40px 52px; min-width:1304px;">
+  <div id="root" style="max-width:1304px; margin:0 auto;"></div>
+</div>
+<script>
+(function () {
+  // [year, name, month, day, deal, type, valueM] — static dataset (verbatim from the design handoff)
+  const DATA = [
+    [2022, "DeAndre Ayton", 7, 18, "4 years, $132.93 million", "Offer Sheet Match", 132.93],
+    [2022, "Marvin Bagley III", 7, 6, "3 years, $37.5 million", "Incumbent Team", 37.5],
+    [2022, "Collin Sexton", 9, 3, "4 years, $70.95 million", "Sign And Trade", 70.95],
+    [2022, "Anfernee Simons", 7, 6, "4 years, $100 million", "Incumbent Team", 100],
+    [2023, "Miles Bridges", 7, 2, "1 year, $7.9 million QO", "Qualifying Offer", 7.9],
+    [2023, "Cameron Johnson", 7, 6, "4 years, $94.5 million", "Incumbent Team", 94.5],
+    [2023, "Rui Hachimura", 7, 6, "3 years, $51 million", "Incumbent Team", 51],
+    [2023, "Matisse Thybulle", 7, 10, "3 years, $33 million", "Offer Sheet Match", 33],
+    [2023, "P.J. Washington", 8, 29, "3 years, $46.5 million", "Incumbent Team", 46.5],
+    [2023, "Coby White", 7, 7, "3 years, $36 million", "Incumbent Team", 36],
+    [2023, "Grant Williams", 7, 12, "4 years, $53.3 million", "Sign And Trade", 53.3],
+    [2024, "Tyrese Maxey", 7, 7, "5 years, $203.9 million", "Incumbent Team", 203.9],
+    [2024, "Isaac Okoro", 9, 17, "3 years, $33 million", "Incumbent Team", 33],
+    [2024, "Immanuel Quickley", 7, 8, "5 years, $162.5 million", "Incumbent Team", 162.5],
+    [2024, "Obi Toppin", 7, 6, "4 years, $58 million", "Incumbent Team", 58],
+    [2024, "Patrick Williams", 7, 6, "4 years, $90 million", "Incumbent Team", 90],
+    [2025, "Santi Aldama", 7, 6, "3 years, $52.5 million", "Incumbent Team", 52.5],
+    [2025, "Josh Giddey", 9, 9, "4 years, $100 million", "Incumbent Team", 100],
+    [2025, "Quentin Grimes", 10, 1, "1 year, $8.7 million", "Qualifying Offer", 8.7],
+    [2025, "Isaiah Jackson", 7, 11, "3 years, $21 million", "Incumbent Team", 21],
+    [2025, "Jonathan Kuminga", 9, 30, "2 years, $46.8 million", "Incumbent Team", 46.8],
+    [2025, "Davion Mitchell", 7, 7, "2 years, $24 million", "Incumbent Team", 24],
+    [2025, "Cam Thomas", 9, 4, "1 year, $5.9 million", "Qualifying Offer", 5.9],
+    [2026, "Walker Kessler", 7, 8, "4 years, $129.5 million", "Sign And Trade", 129.5],
+    [2026, "Tari Eason", 7, 9, "5 years, $81.5 million", "Incumbent Team", 81.5],
+    [2026, "Mark Williams", 7, 6, "3 years, $38 million", "Incumbent Team", 38],
+  ];
+
+  const PLOT_W = 1120, SPAN = 96, ROW_H = 25, LH = 17, PAD = 8;
+  const x = (off) => (off / SPAN) * PLOT_W;
+  const COLOR = {
+    "Incumbent Team": "oklch(0.62 0.14 255)",
+    "Sign And Trade": "oklch(0.64 0.15 45)",
+    "Offer Sheet Match": "oklch(0.6 0.13 155)",
+    "Qualifying Offer": "oklch(0.58 0.15 310)",
+  };
+  const COLOR_SOFT = {
+    "Incumbent Team": "oklch(0.62 0.14 255 / 0.4)",
+    "Sign And Trade": "oklch(0.64 0.15 45 / 0.4)",
+    "Offer Sheet Match": "oklch(0.6 0.13 155 / 0.4)",
+    "Qualifying Offer": "oklch(0.58 0.15 310 / 0.4)",
+  };
+  const color = (t) => COLOR[t] || "oklch(0.5 0.01 260)";
+  const colorSoft = (t) => COLOR_SOFT[t] || "oklch(0.5 0.01 260 / 0.4)";
+  const typeLabel = (t) => t === "Sign And Trade" ? "Sign & Trade" : t;
+  const offset = (m, d) => ({ 7: 0, 8: 31, 9: 62, 10: 92 })[m] + (d - 1);
+  const dateLabel = (m, d) => ({ 7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct" })[m] + " " + d;
+  const radius = (v) => Math.max(6, Math.sqrt(v) * 1.75);
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // Today marker — dynamic: derive offset from the real current date; hide when outside Jul 1–Oct 5.
+  function todayOffset() {
+    const now = new Date();
+    const base = ({ 7: 0, 8: 31, 9: 62, 10: 92 })[now.getMonth() + 1];
+    if (base === undefined) return null;
+    const off = base + (now.getDate() - 1);
+    return (off >= 0 && off <= SPAN) ? off : null;
+  }
+  const TODAY = todayOffset();
+
+  let state = { hover: null };
+
+  // Layout is stable (independent of hover) — compute the lanes once.
+  const LANES = [2022, 2023, 2024, 2025, 2026].map((year) => {
+    let items = DATA.filter((r) => r[0] === year).map((r, i) => {
+      const off = offset(r[2], r[3]);
+      const v = r[6];
+      return {
+        key: year + "-" + i, name: r[1], type: r[5], deal: r[4], value: v,
+        date: dateLabel(r[2], r[3]), off, x: x(off), r: radius(v), w: r[1].length * 6.7 + 12,
+      };
+    });
+    items.sort((a, b) => a.off - b.off);
+
+    const rowRight = [];
+    items.forEach((it) => {
+      let placed = -1;
+      for (let ri = 0; ri < rowRight.length; ri++) {
+        if (it.x >= rowRight[ri] + PAD) { placed = ri; break; }
+      }
+      if (placed === -1) { placed = rowRight.length; rowRight.push(0); }
+      it.row = placed;
+      rowRight[placed] = it.x + it.w;
+    });
+    const maxRow = rowRight.length - 1;
+    const maxR = Math.max(...items.map((it) => it.r));
+    const GAP_BASE = maxR + 16;
+    const baselineTop = GAP_BASE + maxRow * ROW_H + LH + 8;
+    const laneH = baselineTop + maxR + 20;
+
+    const signings = items.map((it) => {
+      const c = color(it.type);
+      const labelBottom = baselineTop - GAP_BASE - it.row * ROW_H;
+      const labelTop = labelBottom - LH;
+      const labelLeft = Math.max(0, Math.min(it.x, PLOT_W - it.w));
+      const dotTop = baselineTop - it.r;
+      const tipW = 232;
+      const tleft = Math.max(0, Math.min(it.x - tipW / 2, PLOT_W - tipW));
+      return {
+        key: it.key, name: it.name,
+        dotStyle: `position:absolute; left:${it.x - it.r}px; top:${dotTop}px; width:${it.r * 2}px; height:${it.r * 2}px; border-radius:50%; background:${c}; border:1.5px solid #e9e4d9; box-sizing:border-box; cursor:pointer; z-index:${3 + Math.round(220 - it.value)};`,
+        leaderStyle: `position:absolute; left:${it.x}px; top:${labelBottom}px; width:1.5px; height:${baselineTop - it.r - labelBottom}px; background:${colorSoft(it.type)}; z-index:1;`,
+        labelStyle: `position:absolute; left:${labelLeft}px; top:${labelTop}px; height:${LH}px; line-height:${LH}px; font-size:12px; font-weight:600; color:oklch(0.24 0.012 260); white-space:nowrap; cursor:pointer; z-index:4;`,
+        tip: {
+          style: `position:absolute; left:${tleft}px; top:${baselineTop + it.r + 10}px; width:${tipW}px; background:oklch(1 0 0); border:1px solid oklch(0.86 0.008 260); border-left:3px solid ${c}; border-radius:8px; padding:12px 14px; box-shadow:0 12px 28px -10px oklch(0.24 0.03 260 / 0.35); z-index:20;`,
+          dotStyle: `width:12px; height:12px; border-radius:50%; background:${c}; flex:none;`,
+          name: it.name, date: it.date, deal: it.deal, type: typeLabel(it.type),
+        },
+      };
+    });
+
+    return {
+      year, countLabel: items.length + " signings",
+      plotStyle: `position:relative; width:${PLOT_W}px; height:${laneH}px;`,
+      gutterStyle: `position:absolute; left:0; top:${baselineTop - 20}px;`,
+      baselineStyle: `position:absolute; left:0; top:${baselineTop}px; width:${PLOT_W}px; height:2px; background:oklch(0.8 0.008 260); z-index:0;`,
+      deadlineStyle: `position:absolute; left:${x(92)}px; top:0; width:2px; height:${laneH}px; background:oklch(0.58 0.15 310); opacity:0.55; z-index:2;`,
+      todayStyle: TODAY == null ? "" : `position:absolute; left:${x(TODAY)}px; top:0; width:3px; height:${laneH}px; background:repeating-linear-gradient(oklch(0.24 0.012 260) 0 5px, transparent 5px 10px), repeating-linear-gradient(#e9e4d9 0 5px, transparent 5px 10px); z-index:2;`,
+      gridlines: [0, 31, 62, 92].map((o) => `position:absolute; left:${x(o)}px; top:0; width:1px; height:${laneH}px; background:oklch(0.93 0.005 260); z-index:0;`),
+      signings,
+    };
+  });
+
+  function laneHtml(lane) {
+    const grid = lane.gridlines.map((s) => `<div style="${s}"></div>`).join("");
+    const today = lane.todayStyle ? `<div style="${lane.todayStyle}"></div>` : "";
+    const marks = lane.signings.map((s) =>
+      `<div style="${s.leaderStyle}"></div>` +
+      `<div style="${s.dotStyle}" data-key="${s.key}"></div>` +
+      `<div style="${s.labelStyle}" data-key="${s.key}">${esc(s.name)}</div>`).join("");
+    let tip = "";
+    const hit = lane.signings.find((s) => s.key === state.hover);
+    if (hit) {
+      const t = hit.tip;
+      tip = `<div style="${t.style}">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:7px;">
+          <span style="${t.dotStyle}"></span>
+          <span style="font-size:14.5px; font-weight:700;">${esc(t.name)}</span>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:oklch(0.5 0.014 260); line-height:1.7;">
+          <div>Signed &nbsp;${esc(t.date)}</div>
+          <div style="color:oklch(0.24 0.012 260); font-weight:500;">${esc(t.deal)}</div>
+          <div>${esc(t.type)}</div>
+        </div>
+      </div>`;
+    }
+    return `<div style="display:flex; gap:0; border-top:1px solid oklch(0.9 0.006 260);">
+      <div style="width:104px; flex:none; position:relative;">
+        <div style="${lane.gutterStyle}">
+          <div style="font-size:30px; font-weight:800; letter-spacing:-0.01em; line-height:1;">${lane.year}</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:oklch(0.56 0.02 260); margin-top:5px;">${lane.countLabel}</div>
+        </div>
+      </div>
+      <div style="${lane.plotStyle}">
+        ${grid}
+        <div style="${lane.baselineStyle}"></div>
+        <div style="${lane.deadlineStyle}"></div>
+        ${today}
+        ${marks}
+        ${tip}
+      </div>
+    </div>`;
+  }
+
+  // Static shell (header, legend, month axis, footer) — built once.
+  const months = [{ label: "JUL", off: 0 }, { label: "AUG", off: 31 }, { label: "SEP", off: 62 }, { label: "OCT", off: 92 }];
+  const monthsHtml = months.map((m) =>
+    `<div style="position:absolute; left:${x(m.off)}px; top:0; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; letter-spacing:0.14em; color:oklch(0.5 0.014 260); padding-left:8px; border-left:1px solid oklch(0.82 0.008 260); height:20px;">${m.label}</div>`).join("");
+  const deadlineLabel = `<div style="position:absolute; left:${x(92)}px; top:0; transform:translateX(-100%); padding-right:8px; height:20px; line-height:20px; white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.04em; color:oklch(0.58 0.15 310);">Qualifying Offer Deadline · Oct 1</div>`;
+  const todayLabel = TODAY == null ? "" : `<div style="position:absolute; left:${x(TODAY)}px; top:2px; transform:translateX(-100%); padding-right:6px; height:20px; line-height:20px; white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.04em; color:oklch(0.24 0.012 260);">Today</div>`;
+
+  const shell = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:32px; border-bottom:2px solid oklch(0.24 0.012 260); padding-bottom:20px;">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.18em; text-transform:uppercase; color:oklch(0.55 0.02 260); margin-bottom:12px;">Restricted Free Agency · Five Offseasons</div>
+        <h1 style="margin:0; font-size:40px; font-weight:800; letter-spacing:-0.015em; line-height:1.02;">The RFA Signing Calendar, 2022–2026</h1>
+        <p style="margin:12px 0 0; font-size:15.5px; line-height:1.5; color:oklch(0.44 0.014 260); max-width:760px; text-wrap:pretty;">Every restricted-free-agent resolution, plotted on a shared July&nbsp;1–October&nbsp;5 axis so the years stack for comparison. Dot size scales with total contract value; color marks how the deal was reached.</p>
+      </div>
+      <div style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:oklch(0.55 0.02 260); line-height:1.7; white-space:nowrap;">
+        <div><span style="color:oklch(0.24 0.012 260); font-weight:600;">26</span> signings</div>
+        <div><span style="color:oklch(0.24 0.012 260); font-weight:600;">5</span> offseasons</div>
+        <div><span style="color:oklch(0.24 0.012 260); font-weight:600;">$1.79B</span> committed</div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:28px 34px; padding:22px 0 26px;">
+      <div style="display:flex; align-items:center; gap:20px;">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.55 0.02 260);">Deal type</span>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="width:13px; height:13px; border-radius:50%; background:oklch(0.62 0.14 255);"></span><span style="font-size:13.5px; font-weight:500;">Incumbent Team</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="width:13px; height:13px; border-radius:50%; background:oklch(0.64 0.15 45);"></span><span style="font-size:13.5px; font-weight:500;">Sign &amp; Trade</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="width:13px; height:13px; border-radius:50%; background:oklch(0.6 0.13 155);"></span><span style="font-size:13.5px; font-weight:500;">Offer Sheet Match</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="width:13px; height:13px; border-radius:50%; background:oklch(0.58 0.15 310);"></span><span style="font-size:13.5px; font-weight:500;">Qualifying Offer</span></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:16px; margin-left:auto;">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.55 0.02 260);">Total value</span>
+        <div style="display:flex; align-items:flex-end; gap:16px;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px;"><span style="width:15px; height:15px; border-radius:50%; border:1.5px solid oklch(0.55 0.02 260);"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:oklch(0.55 0.02 260);">$25M</span></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px;"><span style="width:27px; height:27px; border-radius:50%; border:1.5px solid oklch(0.55 0.02 260);"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:oklch(0.55 0.02 260);">$100M</span></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px;"><span style="width:38px; height:38px; border-radius:50%; border:1.5px solid oklch(0.55 0.02 260);"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:oklch(0.55 0.02 260);">$200M</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:0;">
+      <div style="width:104px; flex:none;"></div>
+      <div style="position:relative; width:1120px; height:26px;">
+        ${monthsHtml}
+        ${deadlineLabel}
+        ${todayLabel}
+      </div>
+    </div>
+
+    <div id="lanes"></div>
+
+    <div style="display:flex; gap:0; border-top:2px solid oklch(0.24 0.012 260); margin-top:2px;">
+      <div style="width:104px; flex:none;"></div>
+      <div style="width:1120px; padding-top:10px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:oklch(0.56 0.02 260);">Hover any marker for full deal terms · Vertical gridlines mark the first of each month</div>
+    </div>`;
+
+  const root = document.getElementById("root");
+  root.innerHTML = shell;
+  const lanesEl = document.getElementById("lanes");
+
+  function renderLanes() { lanesEl.innerHTML = LANES.map(laneHtml).join(""); }
+  renderLanes();
+
+  // Hover via delegation (survives re-render). mouseover/mouseout bubble; enter/leave don't.
+  lanesEl.addEventListener("mouseover", (e) => {
+    const el = e.target.closest("[data-key]");
+    const key = el ? el.getAttribute("data-key") : null;
+    if (key && key !== state.hover) { state.hover = key; renderLanes(); }
+  });
+  lanesEl.addEventListener("mouseout", (e) => {
+    const from = e.target.closest("[data-key]");
+    if (!from) return;
+    const to = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest("[data-key]") : null;
+    // keep the tip if we're moving between the dot and its own label (same key)
+    if (to && to.getAttribute("data-key") === from.getAttribute("data-key")) return;
+    if (state.hover !== null) { state.hover = null; renderLanes(); }
+  });
+})();
+</script>
+</body>
+</html>
