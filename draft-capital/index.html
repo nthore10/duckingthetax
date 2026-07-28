@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draft Capital Traded, 2027–2033 · Ducking The Tax</title>
+<meta name="description" content="Every future first-round NBA draft pick and swap that changed hands this offseason, on a 2027–2033 year axis, colored by protection status.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; background:#e9e4d9;}
+  @keyframes riseIn{0%{transform:translateY(12px) scale(.9); opacity:0} 100%{transform:translateY(0) scale(1); opacity:1}}
+  @media (prefers-reduced-motion: reduce){ .tile{ animation:none !important; } }
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+<div style="background:#e9e4d9; padding:40px; overflow-x:auto; display:flex; justify-content:center; font-family:'Archivo',sans-serif;">
+  <div id="card" style="background:#f6f3ec; border-radius:3px; box-shadow:0 1px 4px rgba(0,0,0,.10); padding:50px 54px; width:100%; min-width:720px; max-width:1220px; color:#191c21;"></div>
+</div>
+<script>
+(function () {
+  const T = {
+    'Golden State Warriors':  { abbr:'GSW', color:'#1D428A' },
+    'Philadelphia 76ers':     { abbr:'PHI', color:'#006BB6' },
+    'Los Angeles Lakers':     { abbr:'LAL', color:'#552583' },
+    'Toronto Raptors':        { abbr:'TOR', color:'#CE1141' },
+    'Phoenix Suns':           { abbr:'PHX', color:'#E56020' },
+    'Minnesota Timberwolves': { abbr:'MIN', color:'#0C2340' },
+    'Miami Heat':             { abbr:'MIA', color:'#98002E' },
+    'Utah Jazz':              { abbr:'UTA', color:'#753BBD' },
+    'Los Angeles Clippers':   { abbr:'LAC', color:'#C8102E' },
+    'Charlotte Hornets':      { abbr:'CHO', color:'#1D1160' },
+    'Milwaukee Bucks':        { abbr:'MIL', color:'#00471B' },
+    'Boston Celtics':         { abbr:'BOS', color:'#007A33' },
+    'Cleveland Cavaliers':    { abbr:'CLE', color:'#860038' },
+    'Memphis Grizzlies':      { abbr:'MEM', color:'#5D76A9' },
+    'Dallas Mavericks':       { abbr:'DAL', color:'#00538C' },
+  };
+  const logo = (name) => T[name] ? `logos/${T[name].abbr}.png` : '';
+  const color = (name) => T[name] ? T[name].color : '#8a8072';
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const att = (s) => esc(s).replace(/"/g,'&quot;');
+
+  const rows = [
+    { year:2030, type:'Pick', team:'Golden State Warriors', to:'Memphis Grizzlies', from:'Dallas Mavericks', prot:'Top 20 Protected; 21-30 Conveys' },
+    { year:2028, type:'Pick', team:'Multi-Team / Conditional', condTeam:'Philadelphia 76ers', to:'Boston Celtics', from:'Philadelphia 76ers', prot:'Multi-Team / Conditional' },
+    { year:2031, type:'Pick', team:'Philadelphia 76ers', to:'Boston Celtics', from:'Philadelphia 76ers', prot:'Unprotected' },
+    { year:2031, type:'Pick', team:'Los Angeles Lakers', to:'Utah Jazz', from:'Los Angeles Lakers', prot:'Unprotected' },
+    { year:2033, type:'Pick', team:'Los Angeles Lakers', to:'Utah Jazz', from:'Los Angeles Lakers', prot:'Unprotected' },
+    { year:2028, type:'Swap', team:'Los Angeles Lakers', to:'Utah Jazz', from:'Los Angeles Lakers', prot:'Unprotected' },
+    { year:2030, type:'Swap', team:'Los Angeles Lakers', to:'Utah Jazz', from:'Los Angeles Lakers', prot:'Unprotected' },
+    { year:2031, type:'Pick', team:'Toronto Raptors', to:'Los Angeles Clippers', from:'Toronto Raptors', prot:'Unprotected' },
+    { year:2033, type:'Pick', team:'Toronto Raptors', to:'Los Angeles Clippers', from:'Toronto Raptors', prot:'Unprotected' },
+    { year:2027, type:'Swap', team:'Toronto Raptors', to:'Los Angeles Clippers', from:'Toronto Raptors', prot:'Unprotected' },
+    { year:2033, type:'Pick', team:'Phoenix Suns', to:'Charlotte Hornets', from:'Phoenix Suns', prot:'Unprotected' },
+    { year:2029, type:'Pick', team:'Multi-Team / Conditional', condTeams:['Utah Jazz','Cleveland Cavaliers','Minnesota Timberwolves'], to:'Phoenix Suns', from:'Charlotte Hornets', prot:'Multi-Team / Conditional (least favorable of UTA, CLE, MIN)' },
+    { year:2033, type:'Pick', team:'Minnesota Timberwolves', to:'Charlotte Hornets', from:'Minnesota Timberwolves', prot:'Unprotected' },
+    { year:2028, type:'Swap', team:'Minnesota Timberwolves', to:'Charlotte Hornets', from:'Minnesota Timberwolves', prot:'Unprotected' },
+    { year:2029, type:'Swap', team:'Multi-Team / Conditional', to:'Charlotte Hornets', from:'Minnesota Timberwolves', prot:'Multi-Team / Conditional' },
+    { year:2030, type:'Swap', team:'Multi-Team / Conditional', to:'Charlotte Hornets', from:'Minnesota Timberwolves', prot:'Multi-Team / Conditional' },
+    { year:2031, type:'Pick', team:'Miami Heat', to:'Milwaukee Bucks', from:'Miami Heat', prot:'Unprotected' },
+    { year:2033, type:'Pick', team:'Miami Heat', to:'Milwaukee Bucks', from:'Miami Heat', prot:'Unprotected' },
+    { year:2030, type:'Swap', team:'Miami Heat', to:'Milwaukee Bucks', from:'Miami Heat', prot:'Unprotected' },
+  ];
+
+  const classify = (p) => /multi-team|conditional/i.test(p) ? 'conditional' : (/unprotected/i.test(p) ? 'unprotected' : 'protected');
+
+  const tile = 72, gap = 12, unit = tile + gap, maxCount = 5;
+  const chartHeight = maxCount * unit;
+  const tileBase = `position:relative; overflow:hidden; width:${tile}px; height:${tile}px; border-radius:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.12); animation:riseIn .5s cubic-bezier(.2,.8,.3,1) backwards;`;
+  const halfFill = (c, kind) => kind === 'unprotected' ? c : `${c}30`;
+
+  const yearsMap = {};
+  for (const y of [2027,2028,2029,2030,2031,2032,2033]) yearsMap[y] = [];
+  let totU = 0, totP = 0, totC = 0, totS = 0, totA = 0;
+
+  for (const r of rows) {
+    const kind = classify(r.prot);
+    const isSwap = r.type === 'Swap';
+    if (isSwap) totS++;
+    if (kind === 'unprotected') totU++; else if (kind === 'protected') totP++; else totC++;
+    if (!isSwap && kind === 'conditional') totA++;
+
+    const multiTeams = r.condTeams || null;
+    const singleTeam = T[r.team] ? r.team : (multiTeams ? null : (r.condTeam || null));
+
+    let bg;
+    if (isSwap) bg = kind === 'conditional' ? `background:#efe9dc; border:1.5px solid #cbb8b0;` : `background:#f6f3ec;`;
+    else if (kind === 'unprotected') bg = `background:${color(r.team)};`;
+    else if (kind === 'protected') bg = `background:${color(r.team)}1f; border:1.5px solid ${color(r.team)};`;
+    else if (singleTeam) bg = `background:${color(singleTeam)}1f; border:1.5px solid ${color(singleTeam)};`;
+    else if (multiTeams) bg = `background:#efe9dc; border:1.5px solid #8a8072;`;
+    else bg = `background:#efe9dc; border:1.5px solid #b9ae98;`;
+
+    yearsMap[r.year].push({
+      kind, isSwap,
+      sort: kind === 'unprotected' ? 0 : kind === 'protected' ? 1 : 2,
+      showSingle: !isSwap && !!singleTeam,
+      showMulti: !isSwap && !!multiTeams,
+      showQ: !isSwap && !singleTeam && !multiTeams,
+      asterisk: !isSwap && kind === 'conditional' && (!!singleTeam || !!multiTeams),
+      logo: logo(singleTeam), teamName: singleTeam,
+      logos: multiTeams ? multiTeams.map(t => ({ logo: logo(t), name: t })) : [],
+      fromLogo: logo(r.from), fromName: r.from, toLogo: logo(r.to), toName: r.to,
+      fromHalfStyle: `position:absolute; inset:0; clip-path:polygon(0 0,100% 0,0 100%); background:${halfFill(color(r.from), kind)};`,
+      toHalfStyle: `position:absolute; inset:0; clip-path:polygon(100% 0,100% 100%,0 100%); background:${halfFill(color(r.to), kind)};`,
+      title: `${r.year} · ${r.type} · ${isSwap ? r.from + ' ⇄ ' + r.to : (T[r.team] ? r.team : 'Multi-team / conditional')} · ${r.prot}`,
+      bg,
+    });
+  }
+
+  let n = 0;
+  const years = Object.keys(yearsMap).map(Number).sort((a, b) => a - b).map((year) => {
+    const picks = yearsMap[year].sort((a, b) => a.sort - b.sort);
+    picks.forEach((p) => { n++; p.tileStyle = tileBase + p.bg + `animation-delay:${n * 50}ms;`; });
+    return { year, picks };
+  });
+
+  const gridLines = [];
+  for (let v = 1; v <= maxCount; v++) gridLines.push({ label: String(v), top: chartHeight - v * unit + gap / 2 });
+  const yearCount = years.length;
+  const DIV = 'calc((100% - 84px)/7*3 + 35px)';
+
+  function tileInner(p) {
+    if (p.isSwap) {
+      return `<div style="${p.fromHalfStyle}"></div><div style="${p.toHalfStyle}"></div>` +
+        `<div style="position:absolute; top:50%; left:-21%; width:142%; height:2px; background:#f6f3ec; transform:rotate(-45deg); transform-origin:center;"></div>` +
+        `<div style="position:absolute; top:7px; left:7px; width:30px; height:30px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.16);"><img src="${p.fromLogo}" alt="${att(p.fromName)}" style="width:76%; height:76%; object-fit:contain;"></div>` +
+        `<div style="position:absolute; bottom:7px; right:7px; width:30px; height:30px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.16);"><img src="${p.toLogo}" alt="${att(p.toName)}" style="width:76%; height:76%; object-fit:contain;"></div>`;
+    }
+    if (p.showSingle) {
+      return `<div style="width:52px; height:52px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.14);"><img src="${p.logo}" alt="${att(p.teamName)}" style="width:78%; height:78%; object-fit:contain;"></div>`;
+    }
+    if (p.showMulti) {
+      const cluster = p.logos.map((lg) => `<div style="width:22px; height:22px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.14);"><img src="${lg.logo}" alt="${att(lg.name)}" style="width:78%; height:78%; object-fit:contain;"></div>`).join('');
+      return `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; justify-content:center; width:66px;">${cluster}</div>`;
+    }
+    return `<span style="font:700 26px 'Archivo',sans-serif; color:#8a8072;">?</span>`;
+  }
+
+  const columnsHtml = years.map((yr) => {
+    const picks = yr.picks.map((p) => {
+      const badge = p.asterisk ? `<span title="Multi-team / conditional" style="position:absolute; top:-9px; right:-9px; width:22px; height:22px; border-radius:50%; background:#a9534a; color:#f6f3ec; font:700 16px 'Archivo',sans-serif; line-height:22px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,.22);">∗</span>` : '';
+      return `<div style="position:relative;"><div class="tile" title="${att(p.title)}" style="${p.tileStyle}">${tileInner(p)}</div>${badge}</div>`;
+    }).join('');
+    return `<div style="display:flex; flex-direction:column-reverse; align-items:center; gap:12px;">${picks}</div>`;
+  }).join('');
+
+  const gridHtml = gridLines.map((g) =>
+    `<div style="position:absolute; left:0; right:0; top:${g.top}px; height:1px; background:#dcd4c2;"></div>` +
+    `<div style="position:absolute; left:-30px; top:${g.top}px; transform:translateY(-50%); font:600 12px 'IBM Plex Mono',monospace; color:#9a8f7a;">${g.label}</div>`).join('');
+
+  const yearLabels = years.map((yr) => `<div style="text-align:center;"><div style="font:700 26px 'Archivo',sans-serif; color:#191c21; letter-spacing:.01em;">${yr.year}</div></div>`).join('');
+
+  document.getElementById('card').innerHTML = `
+    <div style="font:600 13px 'IBM Plex Mono',monospace; letter-spacing:.1em; color:#c3bdb0;">04</div>
+    <div style="font:600 12px 'IBM Plex Mono',monospace; letter-spacing:.18em; text-transform:uppercase; color:#a9534a; margin-top:6px;">Draft Capital · Outgoing First-Round Picks &amp; Swaps · 2027–2033</div>
+    <h1 style="font:800 34px/1.1 'Archivo',sans-serif; color:#191c21; letter-spacing:-.015em; margin:8px 0 0;">Every Future First-Round Pick/Swap Moved This Offseason</h1>
+
+    <div style="display:flex; align-items:center; gap:26px; margin-top:22px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:9px;">
+        <span style="width:22px; height:22px; border-radius:6px; background:#191c21;"></span>
+        <span style="font:600 13px 'Archivo',sans-serif; color:#3a352c;">Unprotected · ${totU}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px;">
+        <span style="width:22px; height:22px; border-radius:6px; background:#191c211f; border:1.5px solid #191c21;"></span>
+        <span style="font:600 13px 'Archivo',sans-serif; color:#3a352c;">Protected · ${totP}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px;">
+        <span style="position:relative; display:inline-block; width:22px; height:22px; border-radius:6px; background:#8a80721f; border:1.5px solid #8a8072;">
+          <span style="position:absolute; top:-8px; right:-8px; width:18px; height:18px; border-radius:50%; background:#a9534a; color:#f6f3ec; font:700 13px 'Archivo',sans-serif; line-height:18px; text-align:center;">∗</span>
+        </span>
+        <span style="font:600 13px 'Archivo',sans-serif; color:#3a352c;">Multi-team / conditional · ${totA}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px;">
+        <span style="position:relative; width:22px; height:22px; border-radius:6px; overflow:hidden; background:#efe9dc; border:1.5px solid #cbb8b0;">
+          <span style="position:absolute; inset:0; clip-path:polygon(0 0,100% 0,0 100%); background:#c9c2b4;"></span>
+          <span style="position:absolute; top:50%; left:-21%; width:142%; height:1.5px; background:#f6f3ec; transform:rotate(-45deg);"></span>
+        </span>
+        <span style="font:600 13px 'Archivo',sans-serif; color:#3a352c;">Swap (from ↘ to) · ${totS}</span>
+      </div>
+    </div>
+
+    <div style="position:relative; height:18px; margin-top:28px;">
+      <div style="position:absolute; left:0; width:${DIV}; text-align:center; font:600 10.5px 'IBM Plex Mono',monospace; letter-spacing:.13em; text-transform:uppercase; color:#6f665a;">3–2–1 lottery system · through 2029</div>
+      <div style="position:absolute; right:0; left:${DIV}; text-align:center; font:600 10.5px 'IBM Plex Mono',monospace; letter-spacing:.13em; text-transform:uppercase; color:#a9534a;">no fixed lottery system · 2030+</div>
+    </div>
+
+    <div style="margin-top:8px; position:relative; height:${chartHeight}px;">
+      <div style="position:absolute; top:-30px; bottom:-8px; left:${DIV}; border-left:1.5px dashed #b9ae98;"></div>
+      ${gridHtml}
+      <div style="position:absolute; left:0; right:0; bottom:0; height:1.5px; background:#cfc7b6;"></div>
+      <div style="position:absolute; left:0; right:0; top:0; bottom:0; display:grid; grid-template-columns:repeat(${yearCount},1fr); gap:14px;">${columnsHtml}</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(${yearCount},1fr); gap:14px; margin-top:16px;">${yearLabels}</div>
+
+    <div style="border-top:1px solid #e3ddd1; margin-top:26px; padding-top:14px;">
+      <div style="font:400 12px/1.5 'Archivo',sans-serif; color:#a89d8a; letter-spacing:.01em;">Each tile is one first-round pick or swap, placed under the year it conveys. Solid tiles are unprotected; tinted tiles carry protections; a ∗ badge marks a multi-team or conditional pick. Split tiles are swaps — the originating team (top-left) exchanges position with the receiving team (bottom-right). 2032 is a clean year — no first-round obligations.</div>
+    </div>`;
+})();
+</script>
+</body>
+</html>
