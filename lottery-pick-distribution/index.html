@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3-2-1 Draft Lottery · Pick Distribution · Ducking The Tax</title>
+<meta name="description" content="The NBA 3-2-1 draft-lottery proposal vs. the previous lottery — chance of improving on position, top-five odds, and the full pick distribution for all 16 lottery positions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; background:#e9e4d9;}
+  .lt-card{background:#f6f3ec; border-radius:3px; box-shadow:0 1px 4px rgba(0,0,0,.10); padding:50px 54px; width:100%;}
+  .lt-eyebrow{font:600 12px 'IBM Plex Mono',monospace; letter-spacing:.18em; text-transform:uppercase; color:#a9534a;}
+  .lt-no{font:600 13px 'IBM Plex Mono',monospace; letter-spacing:.1em; color:#c3bdb0;}
+  .lt-title{font:800 34px/1.06 'Archivo',sans-serif; color:#191c21; letter-spacing:-.015em; margin:8px 0 0;}
+  .lt-swatch{width:13px; height:13px; border-radius:2px;}
+  .lt-legitem{display:flex; align-items:center; gap:8px; font:600 13px 'Archivo',sans-serif; color:#3a3d43;}
+  .lt-yl{position:absolute; right:0; transform:translateY(-50%); font:500 10px 'IBM Plex Mono',monospace; color:#b0aa9c;}
+  .lt-grid{position:absolute; left:0; right:0; height:1px; background:#e7e1d5;}
+  .lt-pos{margin-top:9px; font:700 12px 'Archivo',sans-serif; color:#191c21; font-variant-numeric:tabular-nums;}
+  .lt-bartop{font:600 9.5px 'IBM Plex Mono',monospace; margin-bottom:4px; white-space:nowrap;}
+  .lt-foot{font:500 11px/1.5 'IBM Plex Mono',monospace; letter-spacing:.02em; color:#a39d90; text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div id="dtt-nav"></div>
+<script src="/nav.js"></script>
+<div style="background:#e9e4d9; padding:40px 20px; overflow-x:auto; display:flex; flex-direction:column; align-items:center; gap:28px; font-family:'Archivo',sans-serif;">
+  <div id="card-impr" class="lt-card" style="min-width:760px; max-width:1080px;"></div>
+  <div id="card-top" class="lt-card" style="min-width:760px; max-width:1080px;"></div>
+  <div id="card-dist" class="lt-card" style="min-width:980px; max-width:1480px;"></div>
+</div>
+<div id="lt-tip" style="position:fixed; z-index:60; pointer-events:none; display:none; background:oklch(1 0 0); border:1px solid #dcd4c2; border-left:3px solid #2f7d4f; border-radius:6px; padding:7px 11px; font:600 12px 'IBM Plex Mono',monospace; color:#3a352c; white-space:nowrap; box-shadow:0 8px 20px -8px rgba(0,0,0,.3);"></div>
+<script>
+(function () {
+  // [pos, improve321, improvePrev, top5_321, top5_prev]  (percentages)
+  const raw = [
+    [1,0,0,28,100],[2,5.4,14,28,79.9],[3,10.9,27.4,28,66.9],[4,24,36.6,39.2,55.3],
+    [5,31.7,44.3,39.2,44.3],[6,39.2,37.2,39.2,37.2],[7,46.6,31.9,39.2,31.9],[8,53.8,26.2,39.2,26.2],
+    [9,60.8,20.2,39.2,20.2],[10,67.5,13.9,39.2,13.9],[11,58.5,9.4,28,9.4],[12,63.2,7.2,28,7.2],
+    [13,65.3,4.7,28,4.7],[14,74.3,2.4,28,2.4],[15,60.2,0,14.9,0],[16,75.1,0,14.9,0],
+  ];
+  const odds321 = [
+    [.054,.055,.056,.057,.058,.059,.06,.062,.064,.081,.145,.251,0,0,0,0],
+    [.054,.055,.056,.057,.058,.059,.06,.062,.064,.081,.145,.251,0,0,0,0],
+    [.054,.055,.056,.057,.058,.059,.06,.062,.064,.081,.145,.251,0,0,0,0],
+    [.081,.08,.079,.077,.075,.074,.072,.07,.067,.06,.044,.018,.066,.059,.048,.03],
+    [.081,.08,.079,.077,.075,.074,.072,.07,.067,.06,.044,.018,.066,.059,.048,.03],
+    [.081,.08,.079,.077,.075,.074,.072,.07,.067,.06,.044,.018,.066,.059,.048,.03],
+    [.081,.08,.079,.077,.075,.074,.072,.07,.067,.06,.044,.018,.066,.059,.048,.03],
+    [.081,.08,.079,.077,.075,.074,.072,.07,.067,.06,.044,.018,.066,.059,.048,.03],
+    [.081,.08,.079,.077,.075,.074,.072,.07,.067,.06,.044,.018,.066,.059,.048,.03],
+    [.081,.08,.079,.077,.075,.074,.072,.07,.067,.06,.044,.018,.066,.059,.048,.03],
+    [.054,.055,.056,.057,.058,.059,.06,.062,.063,.061,.047,.021,.09,.092,.091,.073],
+    [.054,.055,.056,.057,.058,.059,.06,.062,.063,.061,.047,.021,.09,.092,.091,.073],
+    [.054,.055,.056,.057,.058,.059,.06,.062,.063,.061,.047,.021,.09,.092,.091,.073],
+    [.054,.055,.056,.057,.058,.059,.06,.062,.063,.061,.047,.021,.09,.092,.091,.073],
+    [.027,.028,.03,.031,.033,.035,.038,.04,.044,.045,.036,.017,.089,.109,.149,.249],
+    [.027,.028,.03,.031,.033,.035,.038,.04,.044,.045,.036,.017,.089,.109,.149,.249],
+  ];
+  const oddsPrev = [
+    [.14,.134,.127,.12,.479,0,0,0,0,0,0,0,0,0,0,0],
+    [.14,.134,.127,.12,.278,.2,0,0,0,0,0,0,0,0,0,0],
+    [.14,.134,.127,.12,.148,.26,.07,0,0,0,0,0,0,0,0,0],
+    [.125,.122,.119,.115,.072,.257,.167,.022,0,0,0,0,0,0,0,0],
+    [.105,.105,.106,.105,.022,.196,.267,.087,.006,0,0,0,0,0,0,0],
+    [.09,.092,.094,.096,0,.086,.298,.205,.037,.001,0,0,0,0,0,0],
+    [.075,.078,.081,.085,0,0,.197,.341,.129,.013,.001,0,0,0,0,0],
+    [.06,.063,.067,.072,0,0,0,.345,.321,.067,.004,.001,0,0,0,0],
+    [.045,.048,.052,.057,0,0,0,0,.507,.259,.03,.001,.001,0,0,0],
+    [.03,.033,.036,.04,0,0,0,0,0,.659,.19,.012,.001,.001,0,0],
+    [.02,.022,.024,.028,0,0,0,0,0,0,.776,.126,.004,.001,0,0],
+    [.015,.017,.019,.021,0,0,0,0,0,0,0,.861,.067,.001,0,0],
+    [.01,.011,.012,.014,0,0,0,0,0,0,0,0,.929,.023,0,0],
+    [.005,.006,.006,.007,0,0,0,0,0,0,0,0,0,.976,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  ];
+  const PICKS = 16;
+  const rampGreen = (i) => { const t = i / (PICKS - 1); return `oklch(${(0.44 + t*0.48).toFixed(3)} ${(0.150 - t*0.120).toFixed(3)} ${(156 + t*8).toFixed(1)})`; };
+  const rampCool  = (i) => { const t = i / (PICKS - 1); return `oklch(${(0.45 + t*0.47).toFixed(3)} ${(0.130 - t*0.105).toFixed(3)} ${(256 - t*48).toFixed(1)})`; };
+  const buildBar = (arr, ramp) => {
+    const sum = arr.reduce((s, v) => s + v, 0) || 1;
+    return arr.map((v, i) => ({ h: (v/sum)*100, color: ramp(i), pick: i + 1, pct: (v/sum)*100 })).filter(s => s.h > 0.04);
+  };
+  const cumTop5 = (arr) => { const sum = arr.reduce((s, v) => s + v, 0) || 1; return (arr.slice(0,5).reduce((s, v) => s + v, 0) / sum) * 100; };
+
+  const YAXIS = ['0%','25%','50%','75%','100%'];
+  const yAxisHtml = (h) => `<div style="width:26px; height:${h}px; position:relative; flex:none;">` +
+    ['100','75','50','25','0%'].map((l, i) => `<div class="lt-yl" style="top:${i*25}%;">${l}</div>`).join('') + `</div>`;
+
+  // ---- summary grouped-bar card ----
+  function summaryCard(no, title, rows) {
+    const H = 300;
+    const grid = ['0%','25%','50%','75%','100%'].map((t, i) =>
+      `<div class="lt-grid" style="top:${i*25}%;${i===4?' background:#d6cfbf;':''}"></div>`).join('');
+    const bars = rows.map((r) =>
+      `<div style="display:flex; flex-direction:column; align-items:center;">
+        <div style="display:flex; align-items:flex-end; gap:4px; height:${H}px;">
+          <div style="display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; width:15px;">
+            <span class="lt-bartop" style="color:#c2532f;">${r.aL}</span>
+            <div title="3-2-1 · Position ${r.pos} · ${r.aL}" style="width:15px; height:${r.a}%; background:#c2532f; border-radius:1px 1px 0 0;"></div>
+          </div>
+          <div style="display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; width:15px;">
+            <span class="lt-bartop" style="color:#7a818b;">${r.bL}</span>
+            <div title="Previous · Position ${r.pos} · ${r.bL}" style="width:15px; height:${r.b}%; background:#5b6470; border-radius:1px 1px 0 0;"></div>
+          </div>
+        </div>
+        <div class="lt-pos">${r.pos}</div>
+      </div>`).join('');
+    return `<div class="lt-no">${no}</div>
+      <div class="lt-eyebrow" style="margin-top:6px;">NBA Draft Lottery · 3-2-1 Proposal</div>
+      <h1 class="lt-title">${title}</h1>
+      <div style="display:flex; gap:26px; margin:20px 0 30px;">
+        <div class="lt-legitem"><span class="lt-swatch" style="background:#c2532f;"></span>"3-2-1" Lottery</div>
+        <div class="lt-legitem"><span class="lt-swatch" style="background:#5b6470;"></span>Previous Lottery</div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        ${yAxisHtml(H)}
+        <div style="flex:1; position:relative;">
+          <div style="position:absolute; left:0; right:0; top:0; height:${H}px;">${grid}</div>
+          <div style="position:relative; display:flex; justify-content:space-between; align-items:flex-start;">${bars}</div>
+          <div style="text-align:center; margin-top:14px; font:600 10px 'IBM Plex Mono',monospace; letter-spacing:.14em; text-transform:uppercase; color:#b0aa9c;">Lottery Position</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #e3ddd1; margin-top:22px; padding-top:14px;"><div class="lt-foot">Source: 3-2-1 Lottery Proposal · Table</div></div>`;
+  }
+
+  const clamp = (n) => Math.max(0, Math.min(100, n));
+  const mk = (pos, a, b) => ({ pos, a: clamp(a), b: clamp(b), aL: Math.round(a) + '%', bL: Math.round(b) + '%' });
+  document.getElementById('card-impr').innerHTML = summaryCard('01', '% Chance of Improving on Lottery Position', raw.map(r => mk(r[0], r[1], r[2])));
+  document.getElementById('card-top').innerHTML = summaryCard('02', '% Chance of a Top-Five Pick', raw.map(r => mk(r[0], r[3], r[4])));
+
+  // ---- distribution (stacked) card ----
+  const H = 340;
+  const stackRows = odds321.map((r, idx) => ({
+    pos: idx + 1, a: buildBar(r, rampGreen), b: buildBar(oddsPrev[idx], rampCool),
+    aTop5: cumTop5(r), bTop5: cumTop5(oddsPrev[idx]),
+  }));
+  const seg = (s, sys, pos) => `<div data-sys="${sys}" data-pos="${pos}" data-pick="${s.pick}" data-pct="${s.pct.toFixed(1)}" style="height:${s.h}%; background:${s.color}; border-top:1px solid rgba(247,244,237,.65); cursor:pointer;"></div>`;
+  const stackBar = (segs, sys, pos, top5, underline) =>
+    `<div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="position:relative; width:18px; height:${H}px; border-radius:2px; overflow:hidden; display:flex; flex-direction:column-reverse;">
+        ${segs.map((s) => seg(s, sys, pos)).join('')}
+        <div style="position:absolute; left:0; right:0; bottom:${top5}%; height:2px; margin-bottom:-1px; background:#e11d2e; box-shadow:0 0 0 1px rgba(247,244,237,.92); z-index:2;"></div>
+      </div>
+      <div style="width:18px; height:3px; background:${underline}; margin-top:5px;"></div>
+    </div>`;
+  const groups = stackRows.map((row) =>
+    `<div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="display:flex; align-items:flex-start; gap:4px;">
+        ${stackBar(row.a, '&quot;3-2-1&quot;', row.pos, row.aTop5, '#2f7d4f')}
+        ${stackBar(row.b, 'Previous', row.pos, row.bTop5, '#3f5d8a')}
+      </div>
+      <div class="lt-pos">${row.pos}</div>
+    </div>`).join('');
+  const legend321 = Array.from({ length: PICKS }, (_, i) =>
+    `<div style="display:flex; flex-direction:column; align-items:center; gap:3px;"><div style="width:20px; height:12px; background:${rampGreen(i)};"></div><span style="font:500 9px 'IBM Plex Mono',monospace; color:#8c8678;">${i + 1}</span></div>`).join('');
+  const legendPrev = Array.from({ length: PICKS }, (_, i) => `<div style="width:20px; height:12px; background:${rampCool(i)};"></div>`).join('');
+
+  document.getElementById('card-dist').innerHTML = `
+    <div class="lt-no">03</div>
+    <div class="lt-eyebrow" style="margin-top:6px;">NBA Draft Lottery · 3-2-1 Proposal</div>
+    <h1 class="lt-title">Where Each Position Lands — Full Pick Distribution</h1>
+    <div style="display:flex; flex-direction:column; gap:7px; margin:20px 0 30px;">
+      <div style="font:600 10px 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:#a39d90;">Resulting pick · 1 (best) → 16</div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <span style="width:128px; font:700 12px 'Archivo',sans-serif; color:#2f7d4f;">"3-2-1" — left bar</span>
+        <div style="display:flex; align-items:flex-start;">${legend321}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <span style="width:128px; font:700 12px 'Archivo',sans-serif; color:#3f5d8a;">Previous — right bar</span>
+        <div style="display:flex; align-items:flex-start;">${legendPrev}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:9px; margin-top:3px;">
+        <span style="width:20px; height:2px; background:#e11d2e;"></span>
+        <span style="font:500 11px 'Archivo',sans-serif; color:#6f6a60;">Red line marks the top-five / rest-of-lottery cutoff</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:12px;">
+      ${yAxisHtml(H)}
+      <div style="flex:1; position:relative;">
+        <div id="dist-bars" style="position:relative; display:flex; justify-content:space-between; align-items:flex-start;">${groups}</div>
+        <div style="text-align:center; margin-top:14px; font:600 10px 'IBM Plex Mono',monospace; letter-spacing:.14em; text-transform:uppercase; color:#b0aa9c;">Lottery Position</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid #e3ddd1; margin-top:22px; padding-top:14px;"><div class="lt-foot">Source: 3-2-1 Lottery Proposal · "3-2-1" &amp; Historical Odds. Each bar = 100% of pick outcomes for that position.</div></div>`;
+
+  // ---- hover tooltips on distribution segments ----
+  const tip = document.getElementById('lt-tip');
+  const bars = document.getElementById('dist-bars');
+  const posTip = (e) => { tip.style.left = e.clientX + 'px'; tip.style.top = (e.clientY - 14) + 'px'; tip.style.transform = 'translate(-50%, -100%)'; };
+  bars.addEventListener('mouseover', (e) => {
+    const s = e.target.closest('[data-pick]'); if (!s) return;
+    const sys = s.getAttribute('data-sys');
+    tip.textContent = `${sys} · Position ${s.getAttribute('data-pos')} · Pick ${s.getAttribute('data-pick')} · ${s.getAttribute('data-pct')}%`;
+    tip.style.borderLeftColor = sys === 'Previous' ? '#3f5d8a' : '#2f7d4f';
+    tip.style.display = 'block'; posTip(e);
+  });
+  bars.addEventListener('mousemove', (e) => { if (tip.style.display === 'block') posTip(e); });
+  bars.addEventListener('mouseout', (e) => { if (e.target.closest('[data-pick]')) tip.style.display = 'none'; });
+})();
+</script>
+</body>
+</html>
